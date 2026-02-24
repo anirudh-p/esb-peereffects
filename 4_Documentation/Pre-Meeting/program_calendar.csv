@@ -1,0 +1,9 @@
+program,year,application_open_q,application_close_q,award_announcement_q,notes
+EPA_CSB_Rebate,2021,Q2,Q3,Q4,EDIT_ME: Placeholder quarters based on typical cycles; please verify.
+EPA_CSB_Rebate,2022,Q2,Q3,Q4,EDIT_ME: Placeholder.
+EPA_CSB_Grant,2023,Q2,Q3,Q4,EDIT_ME: Placeholder.
+ARP,2021,Q2,Q3,Q4,EDIT_ME: Placeholder inferred; confirm from ARP documentation.
+DERA,2020,Q2,Q3,Q4,EDIT_ME: Placeholder inferred; confirm from DERA documentation.
+DERA,2021,Q2,Q3,Q4,EDIT_ME: Placeholder inferred; confirm from DERA documentation.
+EPA_CSB_Rebate,2023,Q3,Q1,Q2,"2023 Rebate opened Sep 28, 2023; application deadline Jan 31, 2024 (4 PM ET); EPA anticipated notifying selections in April 2024. (Cross-year close/awards in 2024)."
+EPA_CSB_Rebate,2024,Q3,Q1,Q2,"2024 Rebate opened Sep 26, 2024; application deadline Jan 14, 2025 (4 PM ET); EPA anticipated notifying selections ~May 2025. (Cross-year close/awards in 2025)."

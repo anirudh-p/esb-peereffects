@@ -1,0 +1,38 @@
+================================================================================
+SAMPLE SUMMARY
+================================================================================
+
+Total Districts: 13,219
+
+Traditional Districts: 13,187 (99.8%)
+Charter Schools: 32 (0.2%)
+
+Adopted ESB: 925 (7.0%)
+Did Not Adopt: 12,294 (93.0%)
+
+
+Adoption by District Type:
+----------------------------------------
+             No Adoption  Adopted
+Traditional        93.0%     7.0%
+Charter            96.9%     3.1%
+
+Applied for Funding: 2,560 (19.4%)
+  Winners: 719 (28.1% of applicants)
+  Losers: 1,841 (71.9% of applicants)
+
+
+Priority Status (Among Applicants):
+  Priority Districts: 1,226 (47.9%)
+  Non-Priority: 1,334 (52.1%)
+
+
+Urbanicity Distribution:
+----------------------------------------
+  Rural: 6,978 (52.8%)
+  Suburban: 3,073 (23.2%)
+  Town: 2,354 (17.8%)
+  Urban: 814 (6.2%)
+
+States Represented: 52
+

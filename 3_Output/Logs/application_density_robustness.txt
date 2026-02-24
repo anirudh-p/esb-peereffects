@@ -1,0 +1,54 @@
+================================================================================
+APPLICATION DENSITY CONTROL & CONDITIONAL WIN-RATE INSTRUMENT
+================================================================================
+
+Full spatial sample: 13789
+  IS_APPLICANT==1: 3130
+  IV_Z==1 (winners): 1004
+
+Building KNN-6 weights...
+  w_adoption range:  [0.000, 1.000]
+  w_IV_Z range:      [0.000, 0.833]
+  w_applicant range: [0.000, 1.000]
+  w_applicant mean:  0.2389
+  w_loser range:     [0.000, 0.833]
+  w_loser mean:      0.1598
+  IS_LOSER count:    2126
+
+  Districts with >=1 applicant neighbor: 8855
+  Districts with 0 applicant neighbors:  4934
+  w_IV_Z_cond range (when defined): [0.000, 1.000]
+
+================================================================================
+ESTIMATION RESULTS
+================================================================================
+
+--- A. Baseline (replicating Script 11) ---
+  A1. Baseline (no w_applicant)                      | β=  0.2009 (SE=0.0335) p=0.0000*** | F=55572.8 | N=13572
+
+--- B. Add neighbor application density (w_applicant) control ---
+  NOTE: w_applicant includes IS_ADOPTER (bad control concern).
+  B1. + w_applicant control (BAD CTRL)               | β= -0.2043 (SE=0.0570) p=0.0003*** | F=21099.5 | N=13572
+
+--- B2. Add neighbor LOSER density (w_loser) control ---
+  w_loser = fraction of neighbors who applied but LOST.
+  This captures local ESB interest WITHOUT containing adoption.
+  B2. + w_loser control (CORRECT)                    | β=  0.1095 (SE=0.0386) p=0.0045*** | F=51841.8 | N=13572
+
+--- C. Conditional win-rate instrument (w_IV_Z_cond) ---
+  Conditional sample (≥1 applicant neighbor): 8855
+  C1. Conditional instrument (w_IV_Z_cond)           | β=  0.0208 (SE=0.0504) p=0.6797 | F=5074.9 | N=8739
+  C2. Conditional instr + w_applicant                | β= -0.0997 (SE=0.0487) p=0.0408** | F=6998.9 | N=8739
+
+--- D. K sensitivity with w_loser control ---
+  D. K=4 + w_loser                                   | β=  0.1266 (SE=0.0300) p=0.0000*** | F=55391.0 | N=13572
+  D. K=6 + w_loser                                   | β=  0.1095 (SE=0.0386) p=0.0045*** | F=51841.8 | N=13572
+  D. K=8 + w_loser                                   | β=  0.0792 (SE=0.0452) p=0.0801* | F=48659.5 | N=13572
+  D. K=10 + w_loser                                  | β=  0.0607 (SE=0.0460) p=0.1871 | F=45263.9 | N=13572
+
+--- E. Reduced Form (ITT: w_IV_Z -> IS_ADOPTER) ---
+  RF (baseline       ): coef=0.2120 (SE=0.0375) p=0.0000*** | N=13572
+  RF (+ w_loser      ): coef=0.1117 (SE=0.0405) p=0.0059*** | N=13572
+  RF (+ w_applicant  ): coef=-0.1869 (SE=0.0528) p=0.0004*** | N=13572
+
+Results saved to c:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\application_density_robustness.csv

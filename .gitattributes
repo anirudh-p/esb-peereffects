@@ -1,0 +1,5 @@
+1_Data/Raw/Spatial/EDGE_SCHOOLDISTRICT_TL21_SY2021.zip filter=lfs diff=lfs merge=lfs -text
+1_Data/Raw/Spatial/EDGE_SCHOOLDISTRICT_TL21_SY2021/schooldistrict_sy2021_tl21.shp filter=lfs diff=lfs merge=lfs -text
+4_Documentation/Pre-Meeting/lea_quarter_panel.csv filter=lfs diff=lfs merge=lfs -text
+4_Documentation/Pre-Meeting/lea_quarter_panel_with_peers.csv filter=lfs diff=lfs merge=lfs -text
+4_Documentation/Pre-Meeting/lea_quarter_panel_with_peers_test.csv filter=lfs diff=lfs merge=lfs -text

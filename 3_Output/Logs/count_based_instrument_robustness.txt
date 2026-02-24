@@ -1,0 +1,28 @@
+================================================================================
+COUNT-BASED INSTRUMENT ROBUSTNESS
+Instrument = # winning neighbors, controls = # applicant/#loser neighbors
+================================================================================
+
+Full spatial sample: 13789
+
+Neighbor count distributions (K=6):
+  n_win_neighbors   : mean=0.475, p50=0.000, max=5.0
+  n_app_neighbors   : mean=1.433, p50=1.000, max=6.0
+  n_loser_neighbors : mean=0.959, p50=1.000, max=5.0
+
+================================================================================
+2SLS SPECIFICATIONS
+================================================================================
+  A1. Baseline share instrument (w_IV_Z)        | beta=  0.2009 (SE=0.0335) p=0.0000*** | F=55572.8 | N=13572
+  A2. Count instrument (# winners)              | beta=  0.2009 (SE=0.0335) p=0.0000*** | F=55572.8 | N=13572
+  B1. # winners + # applicants control          | beta= -0.2043 (SE=0.0570) p=0.0003*** | F=21099.5 | N=13572
+  B2. # winners + # losers control              | beta=  0.1095 (SE=0.0386) p=0.0045*** | F=51841.8 | N=13572
+
+================================================================================
+REDUCED FORM (ITT) WITH COUNT INSTRUMENT
+================================================================================
+  C1. RF with # winners (no count controls)     | coef=  0.0353 (SE=0.0062) p=0.0000*** | N=13572
+  C2. RF with # winners + # applicants          | coef= -0.0312 (SE=0.0088) p=0.0004*** | N=13572
+  C3. RF with # winners + # losers              | coef=  0.0186 (SE=0.0068) p=0.0059*** | N=13572
+
+Results saved to c:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\count_based_instrument_robustness.csv

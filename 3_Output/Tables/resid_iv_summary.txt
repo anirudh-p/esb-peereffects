@@ -1,0 +1,58 @@
+PROPENSITY-SCORE RESIDUALIZED IV: SUMMARY
+======================================================================
+
+MOTIVATION
+----------------------------------------
+The EPA CSB Program lottery is stratified by priority status
+(high-poverty, rural, tribal) and state. Priority applicants
+had ~12% win rate vs ~43% for non-priority. The original
+spatial IV (w_geo_z) inherits this confounding, causing it to
+predict district characteristics (5/8 balance test failures).
+
+FIX: Residualize IV_Z on (is_priority x state) cell means,
+then recompute spatial lag. Also add spatial controls for
+neighbor application rates and priority status.
+
+PROPENSITY SCORE DISTRIBUTION
+----------------------------------------
+Applicants: 3130
+Propensity range: [0.0000, 1.0000]
+Propensity mean:  0.3209
+z_resid mean (applicants): -0.000141
+z_resid SD:   0.4385
+
+BALANCE TEST RESULTS
+----------------------------------------
+
+K = 6:
+  Original (w_geo_z): 5/8 significant (Bonferroni 5%)
+  Residualized (w_geo_z_resid): 3/8 significant (Bonferroni 5%)
+  Resid + Spatial Controls: 1/8 significant (Bonferroni 5%)
+
+K = 10:
+  Original (w_geo_z): 4/8 significant (Bonferroni 5%)
+  Residualized (w_geo_z_resid): 3/8 significant (Bonferroni 5%)
+  Resid + Spatial Controls: 1/8 significant (Bonferroni 5%)
+
+
+IV-2SLS ESTIMATION RESULTS
+----------------------------------------
+ k                     specification    instrument                 spatial_controls  peer_effect       se     pval      f_stat     n
+ 6                    A: Original IV       w_geo_z                             None     0.063526 0.021070 0.002569 6460.358616 13572
+ 6                B: Residualized IV w_geo_z_resid                             None     0.051069 0.030236 0.091216 1085.458279 13572
+ 6    C: Resid IV + Spatial Controls w_geo_z_resid w_geo_applicant + w_geo_priority     0.069193 0.034698 0.046135 1242.353594 13572
+ 6 D: Original IV + Spatial Controls       w_geo_z w_geo_applicant + w_geo_priority     0.068769 0.028947 0.017516 1449.212754 13572
+10                    A: Original IV       w_geo_z                             None     0.059414 0.023515 0.011516 2843.624848 13572
+10                B: Residualized IV w_geo_z_resid                             None     0.043198 0.035441 0.222890  698.660024 13572
+10    C: Resid IV + Spatial Controls w_geo_z_resid w_geo_applicant + w_geo_priority     0.063389 0.043876 0.148540  778.325431 13572
+10 D: Original IV + Spatial Controls       w_geo_z w_geo_applicant + w_geo_priority     0.064401 0.036057 0.074085  973.863607 13572
+
+INTERPRETATION
+----------------------------------------
+Compare balance failures across instrument types.
+If residualized IV passes balance but original fails,
+the stratified lottery was the source of confounding.
+If the peer effect estimate changes substantially,
+the original estimate was biased by confounding.
+If F-stat drops below 10, residualization weakened
+the instrument too much.

@@ -1,0 +1,43 @@
+================================================================================
+VARIABLE STATISTICS (FULL SAMPLE)
+================================================================================
+
+                                  Variable      N          Mean       Std Dev      Min 25th Pct    Median 75th Pct        Max
+median_income  Median Household Income ($)  13219  68947.259929   27708.81004  14375.0  51511.5   62455.0  78696.0   250000.0
+poverty_rate                  Poverty Rate  13219      0.122137       0.07275      0.0    0.068     0.109    0.161      0.757
+enrollment                Total Enrollment  13219   3782.916484  12546.563312      0.0    421.0    1135.0   3029.5   427795.0
+pm25                         PM2.5 (ug/m3)  13219      7.392204      1.706634      0.0  6.30959  7.658063  8.64572  12.003132
+pct_white                    Percent White  13219      0.868516      0.165623      0.0    0.828     0.935    0.976        1.0
+pct_black                    Percent Black  13219       0.06652      0.119873      0.0    0.008     0.022    0.063      0.945
+pct_hispanic              Percent Hispanic  13219      0.110436      0.165672      0.0    0.021     0.046    0.118        1.0
+fleet_size                  Bus Fleet Size   9275     41.603235    100.629658      0.0      8.0      17.0     38.0     1924.0
+IS_ADOPTER               Adopted ESB (0/1)  13219      0.069975      0.255115        0      0.0       0.0      0.0          1
+
+================================================================================
+VARIABLE STATISTICS BY DISTRICT TYPE
+================================================================================
+
+
+TRADITIONAL DISTRICTS (N = 13,187)
+--------------------------------------------------------------------------------
+                                  Variable      N          Mean       Std Dev    Median
+median_income  Median Household Income ($)  13187  68958.164708  27725.604608   62455.0
+poverty_rate                  Poverty Rate  13187      0.122114      0.072785     0.109
+enrollment                Total Enrollment  13187   3790.854326  12560.716929    1139.0
+pm25                         PM2.5 (ug/m3)  13187       7.39275      1.706152  7.661566
+pct_white                    Percent White  13187      0.868365      0.165764     0.935
+pct_black                    Percent Black  13187      0.066657      0.119982     0.022
+pct_hispanic              Percent Hispanic  13187      0.110378      0.165688     0.046
+fleet_size                  Bus Fleet Size   9248     41.699503    100.760318      17.0
+
+CHARTER SCHOOLS (N = 32)
+--------------------------------------------------------------------------------
+                                  Variable   N         Mean       Std Dev    Median
+median_income  Median Household Income ($)  32  64453.46875  19381.561683   60812.5
+poverty_rate                  Poverty Rate  32       0.1315      0.056752     0.129
+enrollment                Total Enrollment  32    511.78125     517.97252     283.0
+pm25                         PM2.5 (ug/m3)  32     7.167153      1.911713  6.350491
+pct_white                    Percent White  32     0.930781       0.06575    0.9455
+pct_black                    Percent Black  32     0.009812      0.019179    0.0035
+pct_hispanic              Percent Hispanic  32     0.134594      0.159374    0.0565
+fleet_size                  Bus Fleet Size  27      8.62963      4.985735       8.0
