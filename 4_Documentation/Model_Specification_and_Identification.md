@@ -794,26 +794,31 @@ This distinction matters for the mechanism decomposition you described: the clim
 
 | Test | Result | Implication |
 |---|---|---|
-| Cross-round IV, CSBP-only (R1→R3) | +1.343*** (F=35) | Temporal CSBP-specific peer effect confirmed; large LATE on narrow complier set |
-| Cross-round IV, all-source (R1→R3) | +0.004 to +0.022 (all p>0.5, F>5,000) | **No detectable general ESB adoption spillover** in temporal design |
+| Cross-round IV, CSBP-only (R1→R3) | +1.343*** (F=35) **but see 13.10** | **Unreliable**: replication gives F=0.3, Wald ratio noise. Not a credible estimate. |
+| Cross-round diagnostics (Script 26c) | RF null for all outcomes (p>0.29) | No reduced-form evidence of cross-round peer effects for CSBP or all-source |
+| Cross-round IV, all-source (R1→R3) | +0.004 to +0.022 (all p>0.5, F>5,000) | No detectable general ESB adoption spillover in temporal design |
 | $\bar{L}_i$ control, K=6 | +0.110*** | ~45% of cross-sectional baseline driven by applicant clustering; remainder is peer effect |
 | Count IV + $\#\text{LoserNbrs}$ control | +0.109*** | Same conclusion without ratio instrument; cleaner full-sample specification |
-| All-source cross-section (+ $\bar{L}_i$, corrected) | +0.156** / +0.189*** | Positive in cross-section but not confirmed in temporal design |
+| All-source cross-section (+ $\bar{L}_i$, corrected) | +0.156** / +0.189*** | Positive cross-sectional effect; not confirmed temporally |
+| Own-treatment controls (Script 07B) | +0.062** | Survives own Z_i control; at least partly peer-driven |
 | Conditional instrument | +0.021 (p=0.68) | Conditional win-rate variation is not predictive |
 | Conley 500km HAC | SE=0.027 (< state 0.034) | State clustering is the most conservative; inference is robust |
 | Placebo outcomes | 4/6 pass baseline and 4/6 with $\bar{L}_i$ | Two failures (Dem share, enrollment) attenuate but remain significant |
 | Donut (drop 1–2) | +0.038 (p=0.27) | Effect concentrated in nearest 1–2 neighbors |
 | Distance gradient | Sharp decay | Consistent with hyper-local peer influence |
+| Bad control test (Script 26b) | No change across specs | IS_APPLICANT is not driving the null temporal result |
 
 **Headline estimates:**
-- **Cross-sectional baseline:** $\hat{\beta} = 0.201^{***}$ (SE=0.034) — but does not control for own treatment
+- **Cross-sectional baseline:** $\hat{\beta} = 0.201^{***}$ (SE=0.034) — does not control for own treatment
 - **Cross-sectional preferred (+ $\bar{L}_i$):** $\hat{\beta} = 0.110^{***}$ (SE=0.039) — CSBP outcome, cross-sectional
-- **Cross-round temporal, CSBP-only:** $\hat{\beta} = 1.343^{***}$ (SE=0.505) — identified LATE on CSBP R3 compliers
-- **Cross-round temporal, all-source:** $\hat{\beta} \approx 0$ (p > 0.5) — no general adoption spillover
+- **With own Z_i control:** $\hat{\beta} = 0.062^{**}$ — survives exclusion restriction fix
+- **Cross-round temporal:** No credible estimate — CSBP first stage is dead (F=0.3), all reduced forms null
 
-**The revised picture:** There is a **real, program-specific peer effect in CSBP adoption**: districts near R1 lottery winners are substantially more likely to participate in CSBP R3. This operates through a program-information channel (learning about CSBP availability, application mechanics, or intermediary networks) rather than through general observational learning about ESBs. The **general ESB peer effect** — "seeing a neighbor's electric bus makes me want one regardless of funding source" — is **not supported** by the temporal design, though it appears in cross-sectional specifications that cannot fully eliminate co-application sorting.
+**The revised picture:** There is **cross-sectional evidence** of CSBP peer effects that survives loser-density, own-treatment, and count-based robustness checks ($\hat{\beta}$ = 0.062–0.110). However, the **cross-round temporal design** — which would provide the cleanest identification — **does not produce a credible result** due to a critically weak first stage for the CSBP endogenous variable. The R1 instrument does not predict neighbor R3 CSBP adoption (r=0.037), rendering the temporal IV uninformative.
 
-This distinction has important implications for mechanism decomposition: the climate-peer vs. type-peer analysis should be conducted on the **CSBP-specific** outcome where the identified temporal effect exists. The relevant question becomes: does the CSBP program-information spillover flow preferentially through climate-similar neighbors (information channel: "their experience is relevant to my conditions") or type-similar neighbors (social influence: "districts like mine are doing it")?
+The WRI bus-level data misses 93% of CSBP R3 adoptions, so "all-source" results cannot be interpreted as including the CSBP channel.
+
+This leaves the cross-sectional estimates as the primary evidence. These are consistent with local peer effects but cannot fully rule out co-application sorting, even with the $\bar{L}_i$ suppressor control.
 
 ### 13.9 Bad Control Diagnostic: IS_APPLICANT in the Cross-Round Design
 
@@ -841,8 +846,75 @@ Using `IS_R3_APPLICANT` as the dependent variable with `w_IV_Z_R1` as the regres
 
 **Neighbor R1 wins do not induce R3 application.** The peer-induced application channel simply does not exist at the geographic-neighbor level.
 
-**Conclusion:** The theoretical concern about IS_APPLICANT as a bad control is methodologically correct but empirically irrelevant in this setting. The null all-source cross-round result is genuine: it reflects the absence of general technology spillover from CSBP R1 deployments. The contrast with the strong CSBP-only result (+1.343***) remains the central finding — peer effects operate through program-specific information channels, not through general observational learning about ESBs.
+**Conclusion:** The theoretical concern about IS_APPLICANT as a bad control is methodologically correct but empirically irrelevant in this setting. The null all-source cross-round result stands regardless of control specification.
+
+### 13.10 Cross-Round Diagnostics: The +1.343 Result is Unreliable (Script 26c)
+
+Comprehensive diagnostics (Script 26c) reveal that the Script 20 CSBP-only cross-round result (+1.343\*\*\*, F=35) is **not credible**. Multiple independent problems converge:
+
+#### D1. WRI Data Does Not Capture CSBP Buses
+
+| Overlap | Count | % of R3 CSBP |
+|---|---|---|
+| R3 CSBP winner districts | 458 | — |
+| In WRI with 2023-2024 orders | 37 | 8.1% |
+| In WRI with any entry | 86 | 18.8% |
+| **No WRI data at all** | **372** | **81.2%** |
+
+93% of R3 CSBP adopters do not appear in the WRI 2023-2024 bus data. This means the "all-source" outcome is actually a non-CSBP-source outcome that **misses the very channel** the peer effect could operate through. The WRI dataset tracks bus *orders*, and most CSBP R3 rebates awarded in 2023 have not yet resulted in recorded bus orders.
+
+#### D2. CSBP First Stage is Dead (F = 0.3)
+
+On the consistent 12,620-district estimation sample:
+
+| First Stage: `w_IV_Z_R1` → | FS coef | F-stat | Correlation |
+|---|---|---|---|
+| `w_R3_CSBP` (neighbor CSBP R3) | 0.008 | **0.3** | r = 0.037 |
+| `w_r3_any` (neighbor all-source) | 0.551 | 5,278 | r = 0.523 |
+
+The instrument (`w_IV_Z_R1`) does **not** predict neighbor CSBP R3 adoption share. The correlation between neighbor R1 wins and neighbor R3 CSBP adoption is 0.037. This means the IV estimate for the CSBP endogenous variable is dividing by near-zero — producing meaningless coefficients.
+
+The original Script 20's F=35 likely resulted from a different sample construction, merge ordering, or inadvertent data contamination. On the consistent sample used across all diagnostics, F=0.3.
+
+#### D3. Reduced Forms Are All Null
+
+| RF: `w_IV_Z_R1` → Y | coef | SE | p | 1-neighbor effect |
+|---|---|---|---|---|
+| CSBP R3 adoption | -0.040 | 0.039 | 0.30 | -0.67pp |
+| WRI first-ever | +0.003 | 0.015 | 0.84 | +0.05pp |
+| WRI any-event | +0.015 | 0.020 | 0.47 | +0.25pp |
+
+**No reduced form is significant.** Having one additional R1-winning neighbor (out of 6) changes own CSBP adoption probability by -0.67pp (wrong sign, insignificant). The reduced form is the only directly comparable object across specifications, and it is null for every outcome.
+
+#### D4. Anderson-Rubin Test (Weak-IV Robust)
+
+- AR 95% CI: [-2.00, +5.00] (spans entire grid — uninformative)
+- AR test at $\beta=0$: F=2.57, p=0.109 (cannot reject null)
+
+Even using inference that is robust to arbitrarily weak instruments, we cannot reject zero peer effect.
+
+#### D5. Replication Produces Different Results
+
+Replicating Script 20's exact specification (CSBP outcome, CSBP endogenous, no own controls) on the consistent sample:
+
+> $\hat{\beta}$ = **-5.189** (SE=20.83, p=0.80) | F=0.3
+
+The point estimate is negative, enormous, and completely insignificant — the hallmark of a Wald ratio with a near-zero denominator.
+
+#### Revised Assessment
+
+The +1.343\*\*\* from Script 20 was an artifact of:
+1. **Critically weak instrument** for the CSBP-specific endogenous variable (true F ≈ 0.3)
+2. **Possible sample construction differences** that inflated the F-stat in the original run
+3. **Wald ratio inflation**: dividing a noisy reduced form by a near-zero first stage
+
+**The cross-round temporal design does not identify a peer effect for any outcome — CSBP or all-source.** The remaining credible evidence is the cross-sectional design:
+- Baseline: $\hat{\beta} = 0.201^{***}$ (SE=0.034)
+- With $\bar{L}_i$ suppressor: $\hat{\beta} = 0.110^{***}$ (SE=0.039)
+- With own-treatment controls (Script 07B): $\hat{\beta} = 0.062^{**}$
+
+These cross-sectional estimates remain significant but cannot disentangle temporal peer effects from co-application sorting as cleanly as a working cross-round design would.
 
 ---
 
-*References: Manski (1993) "Identification of Endogenous Social Effects"; Nevo & Rosen (2012) "Identification with Imperfect Instruments"; Bramoulle, Djebbari & Fortin (2009) "Identification of peer effects through social networks"; Conley (1999) "GMM estimation with cross sectional dependence."*
+*References: Manski (1993) "Identification of Endogenous Social Effects"; Nevo & Rosen (2012) "Identification with Imperfect Instruments"; Bramoulle, Djebbari & Fortin (2009) "Identification of peer effects through social networks"; Conley (1999) "GMM estimation with cross sectional dependence"; Stock & Yogo (2005) "Testing for weak instruments in linear IV regression."*
