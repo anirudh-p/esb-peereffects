@@ -815,6 +815,34 @@ This distinction matters for the mechanism decomposition you described: the clim
 
 This distinction has important implications for mechanism decomposition: the climate-peer vs. type-peer analysis should be conducted on the **CSBP-specific** outcome where the identified temporal effect exists. The relevant question becomes: does the CSBP program-information spillover flow preferentially through climate-similar neighbors (information channel: "their experience is relevant to my conditions") or type-similar neighbors (social influence: "districts like mine are doing it")?
 
+### 13.9 Bad Control Diagnostic: IS_APPLICANT in the Cross-Round Design
+
+**Concern:** In the cross-round design (R1→R3), `IS_APPLICANT` is pooled across all CSBP rounds (R1+R2+R3). If the peer effect operates through *inducing R3 application* — i.e., neighbor R1 win → I learn about CSBP → I apply for R3 — then controlling for `IS_APPLICANT` blocks the very mediator we are trying to detect. This is a classic "bad control" problem (Angrist & Pischke 2009, Ch. 3.2.3).
+
+**Data:**
+- R1 applicants: 1,546 districts (predetermined, safe to control for)
+- R3 applicants: 338 districts (potentially post-treatment mediator)
+- R3-only applicants (new entrants, not in R1): 202 districts
+
+**Test (Script 26b):** Re-ran the cross-round all-source IV under three control specifications:
+
+| Spec | Controls | K=6 First-ever (p) | K=6 Any-event (p) |
+|------|----------|--------------------|--------------------|
+| (A) Original | IS_APPLICANT + pre_r1_adopter | +0.005 (0.855) | +0.024 (0.506) |
+| (B) No app control | pre_r1_adopter only | +0.006 (0.826) | +0.025 (0.476) |
+| (C) Predetermined | IS_R1_APPLICANT + pre_r1_adopter | +0.004 (0.895) | +0.021 (0.549) |
+
+Results are virtually identical across all three specifications and all K values (4, 6, 8, 10). Removing IS_APPLICANT shifts coefficients by <0.003.
+
+**Stage-0 test — R3 application as outcome:**
+Using `IS_R3_APPLICANT` as the dependent variable with `w_IV_Z_R1` as the regressor (K=6):
+- No app control: coef = -0.008 (p = 0.770)
+- + IS_R1_APP: coef = -0.003 (p = 0.909)
+
+**Neighbor R1 wins do not induce R3 application.** The peer-induced application channel simply does not exist at the geographic-neighbor level.
+
+**Conclusion:** The theoretical concern about IS_APPLICANT as a bad control is methodologically correct but empirically irrelevant in this setting. The null all-source cross-round result is genuine: it reflects the absence of general technology spillover from CSBP R1 deployments. The contrast with the strong CSBP-only result (+1.343***) remains the central finding — peer effects operate through program-specific information channels, not through general observational learning about ESBs.
+
 ---
 
 *References: Manski (1993) "Identification of Endogenous Social Effects"; Nevo & Rosen (2012) "Identification with Imperfect Instruments"; Bramoulle, Djebbari & Fortin (2009) "Identification of peer effects through social networks"; Conley (1999) "GMM estimation with cross sectional dependence."*
