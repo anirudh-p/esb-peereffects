@@ -163,11 +163,13 @@ outcomes['new_first_window'] = (
 
 outcomes['new_any_window'] = (outcomes['any_event_count_window'] > 0).astype(int)
 outcomes['repeat_event_window'] = (outcomes['any_event_count_window'] > 1).astype(int)
+outcomes['pre_window_adopter'] = (outcomes['first_order_year'] < WINDOW_START).astype(int)
 
 log('\nConstructed district-level outcomes:')
 log(f"  Districts with first-ever order in {WINDOW_START}-{WINDOW_END}: {int(outcomes['new_first_window'].sum()):,}")
 log(f"  Districts with any order in {WINDOW_START}-{WINDOW_END}: {int(outcomes['new_any_window'].sum()):,}")
 log(f"  Districts with multiple orders in window: {int(outcomes['repeat_event_window'].sum()):,}")
+log(f"  Districts with pre-window ESB adoption:    {int(outcomes['pre_window_adopter'].sum()):,}")
 
 # Source mix among districts with activity in window
 source_window = window_rows[['nces_id', 'source_category']].drop_duplicates()
@@ -191,17 +193,20 @@ df_base, locale_vars = load_analysis_data()
 df_base['nces_id'] = clean_lea_id(df_base['nces_id'])
 
 df_analysis = df_base.merge(
-    outcomes[['nces_id', 'new_first_window', 'new_any_window', 'repeat_event_window']],
+    outcomes[['nces_id', 'new_first_window', 'new_any_window', 'repeat_event_window', 'pre_window_adopter']],
     on='nces_id',
     how='left'
 )
 
-for c in ['new_first_window', 'new_any_window', 'repeat_event_window']:
+for c in ['new_first_window', 'new_any_window', 'repeat_event_window', 'pre_window_adopter']:
     df_analysis[c] = df_analysis[c].fillna(0).astype(int)
 
 log(f"\nBase analysis rows: {len(df_analysis):,}")
-log(f"  Mean(new_first_window): {df_analysis['new_first_window'].mean():.4f}")
-log(f"  Mean(new_any_window):   {df_analysis['new_any_window'].mean():.4f}")
+log(f"  Mean(new_first_window):   {df_analysis['new_first_window'].mean():.4f}")
+log(f"  Mean(new_any_window):     {df_analysis['new_any_window'].mean():.4f}")
+log(f"  Mean(pre_window_adopter): {df_analysis['pre_window_adopter'].mean():.4f}")
+log(f"  Own CSBP winners (IV_Z=1): {int(df_analysis['IV_Z'].sum()):,}")
+log(f"  Own CSBP applicants:       {int(df_analysis['IS_APPLICANT'].sum()):,}")
 
 geo_df = load_shapefile_and_merge(df_analysis)
 log(f"  Spatial merged rows: {len(geo_df):,}")
@@ -223,7 +228,12 @@ state_dummies = pd.get_dummies(geo_df['state'], prefix='st', drop_first=True)
 geo_df = pd.concat([geo_df.reset_index(drop=True), state_dummies.reset_index(drop=True)], axis=1)
 state_fe_cols = list(state_dummies.columns)
 
-base_controls = FULL_CONTROLS + locale_vars
+# Own-district controls to isolate the peer channel:
+# - IV_Z: own CSBP lottery winner status (direct adoption channel)
+# - IS_APPLICANT: own CSBP application (unobserved ESB enthusiasm)
+# - pre_window_adopter: had ESB orders before study window
+own_controls = ['IV_Z', 'IS_APPLICANT', 'pre_window_adopter']
+base_controls = FULL_CONTROLS + locale_vars + own_controls
 
 results = []
 

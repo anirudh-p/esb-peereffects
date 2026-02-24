@@ -10,28 +10,32 @@ Constructed district-level outcomes:
   Districts with first-ever order in 2022-2024: 558
   Districts with any order in 2022-2024: 668
   Districts with multiple orders in window: 463
+  Districts with pre-window ESB adoption:    339
 
 Saved source mix table: c:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\new_adopter_source_mix_window.csv
 
 Base analysis rows: 13,219
-  Mean(new_first_window): 0.0416
-  Mean(new_any_window):   0.0505
+  Mean(new_first_window):   0.0416
+  Mean(new_any_window):     0.0505
+  Mean(pre_window_adopter): 0.0250
+  Own CSBP winners (IV_Z=1): 719
+  Own CSBP applicants:       2,560
   Spatial merged rows: 13,789
 
 ================================================================================
 IV RESULTS: NEW-ADOPTER OUTCOMES
 ================================================================================
-  A1. First-ever window baseline           | coef=  0.3185 (SE=0.0575) p=0.0000*** | F=1839.6 | N=13572
-  A2. First-ever + w_loser                 | coef=  0.3049 (SE=0.0630) p=0.0000*** | F=1569.5 | N=13572
-  B1. Any-event window baseline            | coef=  0.3810 (SE=0.0604) p=0.0000*** | F=2045.8 | N=13572
-  B2. Any-event + w_loser                  | coef=  0.3790 (SE=0.0680) p=0.0000*** | F=1721.3 | N=13572
+  A1. First-ever window baseline           | coef=  0.0926 (SE=0.0663) p=0.1625 | F=1808.3 | N=13572
+  A2. First-ever + w_loser                 | coef=  0.1561 (SE=0.0691) p=0.0240** | F=1572.8 | N=13572
+  B1. Any-event window baseline            | coef=  0.1199 (SE=0.0685) p=0.0799* | F=1970.9 | N=13572
+  B2. Any-event + w_loser                  | coef=  0.1894 (SE=0.0725) p=0.0090*** | F=1696.7 | N=13572
 
 ================================================================================
 REDUCED FORM (ITT) FOR NEW-ADOPTER OUTCOMES
 ================================================================================
-  C1. RF first-ever baseline               | coef=  0.1094 (SE=0.0292) p=0.0002*** | N=13572
-  C2. RF first-ever + w_loser              | coef=  0.0998 (SE=0.0293) p=0.0007*** | N=13572
-  D1. RF any-event baseline                | coef=  0.1491 (SE=0.0361) p=0.0000*** | N=13572
-  D2. RF any-event + w_loser               | coef=  0.1403 (SE=0.0371) p=0.0002*** | N=13572
+  C1. RF first-ever baseline               | coef=  0.0320 (SE=0.0258) p=0.2154 | N=13572
+  C2. RF first-ever + w_loser              | coef=  0.0517 (SE=0.0276) p=0.0605* | N=13572
+  D1. RF any-event baseline                | coef=  0.0466 (SE=0.0303) p=0.1248 | N=13572
+  D2. RF any-event + w_loser               | coef=  0.0702 (SE=0.0326) p=0.0311** | N=13572
 
 Saved estimation results: c:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\new_adopter_alternative_specs.csv
