@@ -91,20 +91,21 @@ log(f'  R1 AND R3 winners: {len(set(r1_winners.nces_id) & set(r3_winners.nces_id
 # WRI bus-level data
 df_bus = pd.read_excel(str(WRI_EXCEL_FILE), sheet_name='2. Bus-level data')
 df_bus['nces_id'] = clean_lea_id(df_bus['1c. LEA ID'])
-df_bus['order_year'] = extract_year_from_quarter(df_bus['3q. Quarter ordered'])
-valid = df_bus['order_year'].between(1990, 2035) & df_bus['nces_id'].ne('0000000')
+# FIXED: use award date (3p) not order date (3q) -- 3q is 55% NaN
+df_bus['award_year'] = extract_year_from_quarter(df_bus['3p. Quarter awarded'])
+valid = df_bus['award_year'].between(1990, 2035) & df_bus['nces_id'].ne('0000000')
 df_bus = df_bus[valid].copy()
 
 # District-level outcomes from WRI
-first_year = df_bus.groupby('nces_id')['order_year'].min().rename('first_order_year').reset_index()
-first_year['pre_r1_adopter'] = (first_year['first_order_year'] < 2022).astype(int)
+first_year = df_bus.groupby('nces_id')['award_year'].min().rename('first_award_year').reset_index()
+first_year['pre_r1_adopter'] = (first_year['first_award_year'] < 2022).astype(int)
 
-r3_window_buses = df_bus[df_bus['order_year'].between(2023, 2024)]
+r3_window_buses = df_bus[df_bus['award_year'].between(2023, 2024)]
 r3_any = r3_window_buses.groupby('nces_id').size().rename('r3_bus_count').reset_index()
 
 outcomes = first_year.merge(r3_any, on='nces_id', how='left')
 outcomes['r3_bus_count'] = outcomes['r3_bus_count'].fillna(0)
-outcomes['new_r3_first'] = ((outcomes['first_order_year'] >= 2023) & (outcomes['first_order_year'] <= 2024)).astype(int)
+outcomes['new_r3_first'] = ((outcomes['first_award_year'] >= 2023) & (outcomes['first_award_year'] <= 2024)).astype(int)
 outcomes['new_r3_any'] = (outcomes['r3_bus_count'] > 0).astype(int)
 
 # Applicants
@@ -138,46 +139,30 @@ log(f'  R3 CSBP winners IN WRI any-event:  {len(overlap_any):,} ({100*len(overla
 log(f'  R3 CSBP winners NOT in WRI first:  {len(r3_not_in_wri_first):,} ({100*len(r3_not_in_wri_first)/len(r3_set):.1f}%)')
 log(f'  R3 CSBP winners NOT in WRI any:    {len(r3_not_in_wri_any):,} ({100*len(r3_not_in_wri_any)/len(r3_set):.1f}%)')
 
-# Check: where are the R3 winners in the WRI data?
+# Check: where are the R3 winners in the WRI data (using award_year)?
 bus_by_r3 = df_bus[df_bus['nces_id'].isin(r3_set)]
 if len(bus_by_r3) > 0:
-    r3_order_years = bus_by_r3.groupby('nces_id')['order_year'].agg(['min', 'max']).reset_index()
+    r3_award_years = bus_by_r3.groupby('nces_id')['award_year'].agg(['min', 'max']).reset_index()
     log(f'\n  Among R3 CSBP winners that appear in WRI:')
-    log(f'    Districts with ANY WRI entry: {len(r3_order_years):,}')
-    log(f'    Earliest order: {r3_order_years["min"].min():.0f}')
-    log(f'    Latest order:   {r3_order_years["max"].max():.0f}')
-    has_2324 = r3_order_years[(r3_order_years['min'] <= 2024) | (r3_order_years['max'] >= 2023)]
-    log(f'    With 2023-2024 orders: {len(bus_by_r3[bus_by_r3["order_year"].between(2023, 2024)]["nces_id"].unique()):,}')
-    log(f'    With orders only AFTER 2024: {len(r3_order_years[r3_order_years["min"] > 2024]):,}')
-    log(f'    No WRI data at all: {len(r3_set) - len(r3_order_years):,}')
+    log(f'    Districts with ANY WRI entry: {len(r3_award_years):,}')
+    log(f'    Earliest award: {r3_award_years["min"].min():.0f}')
+    log(f'    Latest award:   {r3_award_years["max"].max():.0f}')
+    log(f'    With 2023-2024 awards: {len(bus_by_r3[bus_by_r3["award_year"].between(2023, 2024)]["nces_id"].unique()):,}')
+    log(f'    With awards only AFTER 2024: {len(r3_award_years[r3_award_years["min"] > 2024]):,}')
+    log(f'    No WRI data at all: {len(r3_set) - len(r3_award_years):,}')
 else:
     log(f'  WARNING: No WRI bus entries found for R3 CSBP winners!')
 
 # What funding sources are the WRI 2023-2024 buses?
-if '3b. Funding source(s)' in df_bus.columns:
-    wri_2324_buses = df_bus[df_bus['order_year'].between(2023, 2024)]
-    log(f'\n  WRI 2023-2024 bus funding sources:')
-    funding_col = '3b. Funding source(s)'
-    fund_counts = wri_2324_buses[funding_col].value_counts().head(15)
-    for src, cnt in fund_counts.items():
-        log(f'    {src}: {cnt:,}')
-elif '3c. Primary funding source' in df_bus.columns:
-    wri_2324_buses = df_bus[df_bus['order_year'].between(2023, 2024)]
-    funding_col = '3c. Primary funding source'
-    log(f'\n  WRI 2023-2024 bus funding sources ({funding_col}):')
-    fund_counts = wri_2324_buses[funding_col].value_counts().head(15)
-    for src, cnt in fund_counts.items():
-        log(f'    {src}: {cnt:,}')
-else:
-    funding_cols = [c for c in df_bus.columns if 'fund' in c.lower() or 'source' in c.lower()]
-    log(f'  Funding-related columns: {funding_cols}')
-    if funding_cols:
-        wri_2324_buses = df_bus[df_bus['order_year'].between(2023, 2024)]
-        for fc in funding_cols[:2]:
-            log(f'\n  {fc} distribution:')
-            vc = wri_2324_buses[fc].value_counts().head(10)
-            for src, cnt in vc.items():
-                log(f'    {src}: {cnt:,}')
+funding_cols = [c for c in df_bus.columns if 'fund' in c.lower() or 'source' in c.lower()]
+log(f'  Funding-related columns: {funding_cols}')
+if funding_cols:
+    wri_2324_buses = df_bus[df_bus['award_year'].between(2023, 2024)]
+    for fc in funding_cols[:2]:
+        log(f'\n  {fc} distribution:')
+        vc = wri_2324_buses[fc].value_counts().head(10)
+        for src, cnt in vc.items():
+            log(f'    {src}: {cnt:,}')
 
 # ==============================================================================
 # D2-D7: FULL ESTIMATION DIAGNOSTICS (requires spatial weights)

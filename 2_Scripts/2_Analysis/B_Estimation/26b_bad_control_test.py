@@ -152,27 +152,28 @@ log('\n--- Building all-source outcomes from WRI bus-level data ---')
 
 df_bus = pd.read_excel(str(WRI_EXCEL_FILE), sheet_name='2. Bus-level data')
 df_bus['nces_id'] = clean_lea_id(df_bus['1c. LEA ID'])
-df_bus['order_year'] = extract_year_from_quarter(df_bus['3q. Quarter ordered'])
+# Use award date (3p) not order date (3q) -- 3q is 55% NaN
+df_bus['award_year'] = extract_year_from_quarter(df_bus['3p. Quarter awarded'])
 
-valid = df_bus['order_year'].between(1990, 2035) & df_bus['nces_id'].ne('0000000')
+valid = df_bus['award_year'].between(1990, 2035) & df_bus['nces_id'].ne('0000000')
 df_bus = df_bus[valid].copy()
 
 log(f'  Bus-level rows with valid year+LEA: {len(df_bus):,}')
 
-# District-level earliest order year
-first_year = df_bus.groupby('nces_id')['order_year'].min().rename('first_order_year').reset_index()
-first_year['pre_r1_adopter'] = (first_year['first_order_year'] < 2022).astype(int)
+# District-level earliest award year
+first_year = df_bus.groupby('nces_id')['award_year'].min().rename('first_award_year').reset_index()
+first_year['pre_r1_adopter'] = (first_year['first_award_year'] < 2022).astype(int)
 
 # R3-window outcomes (2023-2024)
-r3_window = df_bus[df_bus['order_year'].between(2023, 2024)].copy()
+r3_window = df_bus[df_bus['award_year'].between(2023, 2024)].copy()
 r3_any = r3_window.groupby('nces_id').size().rename('r3_bus_count').reset_index()
 
 outcomes = first_year.merge(r3_any, on='nces_id', how='left')
 outcomes['r3_bus_count'] = outcomes['r3_bus_count'].fillna(0)
 
 outcomes['new_r3_first'] = (
-    (outcomes['first_order_year'] >= 2023) &
-    (outcomes['first_order_year'] <= 2024)
+    (outcomes['first_award_year'] >= 2023) &
+    (outcomes['first_award_year'] <= 2024)
 ).astype(int)
 outcomes['new_r3_any'] = (outcomes['r3_bus_count'] > 0).astype(int)
 

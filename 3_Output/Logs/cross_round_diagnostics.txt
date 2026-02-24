@@ -11,38 +11,38 @@ CROSS-ROUND IV DIAGNOSTICS: WHY +1.343 (CSBP) vs ~0.00 (ALL-SOURCE)?
 D1. OUTCOME OVERLAP: Do R3 CSBP winners appear in WRI 2023-2024 bus data?
 ==========================================================================================
   R3 CSBP winner districts: 458
-  WRI first-ever 2023-2024 districts: 294
-  WRI any-event 2023-2024 districts: 356
+  WRI first-ever 2023-2024 districts: 629
+  WRI any-event 2023-2024 districts: 817
 
-  R3 CSBP winners IN WRI first-ever: 25 (5.5%)
-  R3 CSBP winners IN WRI any-event:  37 (8.1%)
-  R3 CSBP winners NOT in WRI first:  433 (94.5%)
-  R3 CSBP winners NOT in WRI any:    421 (91.9%)
+  R3 CSBP winners IN WRI first-ever: 301 (65.7%)
+  R3 CSBP winners IN WRI any-event:  381 (83.2%)
+  R3 CSBP winners NOT in WRI first:  157 (34.3%)
+  R3 CSBP winners NOT in WRI any:    77 (16.8%)
 
   Among R3 CSBP winners that appear in WRI:
-    Districts with ANY WRI entry: 86
-    Earliest order: 2017
-    Latest order:   2024
-    With 2023-2024 orders: 37
-    With orders only AFTER 2024: 0
-    No WRI data at all: 372
+    Districts with ANY WRI entry: 384
+    Earliest award: 2017
+    Latest award:   2024
+    With 2023-2024 awards: 381
+    With awards only AFTER 2024: 0
+    No WRI data at all: 74
   Funding-related columns: ['3y. Multiple funding sources used?', '3z. Funding source 1', '3aa. Agency administering funds 1', '3z. Funding source 2', '3aa. Agency administering funds 2', '3z. Funding source 3', '3aa. Agency administering funds 3', '3z. Funding source 4', '3aa. Agency administering funds 4', '3ad. Charging funding source']
 
   3y. Multiple funding sources used? distribution:
-    No: 2,077
-    Yes: 109
+    No: 6,839
+    Yes: 47
 
   3z. Funding source 1 distribution:
-    Clean School Bus Rebate Program: 1,281
-    California's Hybrid and Zero-Emission Truck and Bus Voucher Incentive Program (HVIP): 276
-    Clean School Bus Grant Program: 133
-    VW Settlement: 66
-    RGGI: 65
-    West Virginia GreenPower Launch All-Electric Pilot Project reimbursement: 43
+    Clean School Bus Rebate Program: 3,437
+    Clean School Bus Grant Program: 2,698
+    California's Hybrid and Zero-Emission Truck and Bus Voucher Incentive Program (HVIP): 220
+    RGGI: 112
+    Electric School Bus Grant Program: 36
+    VW Settlement: 33
     Colorado Electric School Bus Grant Program: 25
+    Diesel Emissions Reduction Act (DERA) grant: 25
+    Clean Transportation Program: 20
     ESSER II: 20
-    Operating budget: 19
-    Grant: 7
 
 --- Loading base dataset and building spatial weights ---
   Full spatial sample: 13,219
@@ -52,39 +52,39 @@ D1. OUTCOME OVERLAP: Do R3 CSBP winners appear in WRI 2023-2024 bus data?
 D2. OUTCOME VARIABLE COMPARISON (estimation sample)
 ==========================================================================================
   IS_R3_ADOPTER (CSBP R3):   mean=0.04842  sum=611
-  new_r3_first (WRI first):   mean=0.00792  sum=100
-  new_r3_any (WRI any):       mean=0.01220  sum=154
+  new_r3_first (WRI first):   mean=0.05293  sum=668
+  new_r3_any (WRI any):       mean=0.06640  sum=838
 
   Cross-tab: IS_R3_ADOPTER (rows) x new_r3_any (cols):
 new_r3_any         0    1    All
 IS_R3_ADOPTER                   
-0              11898  111  12009
-1                568   43    611
-All            12466  154  12620
+0              11668  341  12009
+1                114  497    611
+All            11782  838  12620
 
-  R3 CSBP adopters NOT captured by WRI 2023-2024: 568/611 (93.0%)
+  R3 CSBP adopters NOT captured by WRI 2023-2024: 114/611 (18.7%)
 
 ==========================================================================================
 D3. ENDOGENOUS (SPATIAL LAG) VARIABLE COMPARISON
 ==========================================================================================
   w_R3_CSBP      : mean=0.051466 sd=0.116839 min=0.0000 max=0.8333 nonzero=2,456
-  w_r3_first     : mean=0.022029 sd=0.069709 min=0.0000 max=1.0000 nonzero=1,342
-  w_r3_any       : mean=0.027536 sd=0.079102 min=0.0000 max=1.0000 nonzero=1,628
+  w_r3_first     : mean=0.053196 sd=0.112977 min=0.0000 max=0.8333 nonzero=2,797
+  w_r3_any       : mean=0.070734 sd=0.134047 min=0.0000 max=1.0000 nonzero=3,484
   w_IV_Z_R1      : mean=0.026968 sd=0.075850 min=0.0000 max=0.6667 nonzero=1,633
 
   Correlation matrix:
             w_R3_CSBP  w_r3_first  w_r3_any  w_IV_Z_R1
-w_R3_CSBP      1.0000      0.0986    0.1575     0.0371
-w_r3_first     0.0986      1.0000    0.8940     0.5554
-w_r3_any       0.1575      0.8940    1.0000     0.5227
-w_IV_Z_R1      0.0371      0.5554    0.5227     1.0000
+w_R3_CSBP      1.0000      0.6257    0.7302     0.0371
+w_r3_first     0.6257      1.0000    0.8470    -0.0256
+w_r3_any       0.7302      0.8470    1.0000     0.0804
+w_IV_Z_R1      0.0371     -0.0256    0.0804     1.0000
 
 ==========================================================================================
 D4. FIRST-STAGE COMPARISON: w_IV_Z_R1 predicting different endogenous variables
 ==========================================================================================
   w_R3_CSBP      : FS_coef= 0.00777  t=    0.57  F=       0.3  R2=0.26044  partialR2=0.000026
-  w_r3_first     : FS_coef= 0.50856  t=   77.35  F=    5982.9  R2=0.46674  partialR2=0.322618
-  w_r3_any       : FS_coef= 0.55129  t=   72.65  F=    5278.3  R2=0.45888  partialR2=0.295863
+  w_r3_first     : FS_coef=-0.06135  t=   -4.68  F=      21.9  R2=0.27249  partialR2=0.001738
+  w_r3_any       : FS_coef= 0.12135  t=    8.08  F=      65.3  R2=0.35327  partialR2=0.005175
 
   KEY INSIGHT: F=35 means w_IV_Z_R1 has modest predictive power for w_R3_CSBP
   which is correct -- R1 wins are SPATIALLY correlated with but not mechanically
@@ -95,8 +95,8 @@ D4. FIRST-STAGE COMPARISON: w_IV_Z_R1 predicting different endogenous variables
 D5. REDUCED FORM COMPARISON: w_IV_Z_R1 -> different outcomes (OLS, clustered)
 ==========================================================================================
   Y=IS_R3_ADOPTER     : RF_coef= -0.04030 (SE=0.03875) p=0.2984  y_mean=0.04842
-  Y=new_r3_first      : RF_coef=  0.00287 (SE=0.01459) p=0.8438  y_mean=0.00792
-  Y=new_r3_any        : RF_coef=  0.01481 (SE=0.02046) p=0.4689  y_mean=0.01220
+  Y=new_r3_first      : RF_coef= -0.01220 (SE=0.03132) p=0.6968  y_mean=0.05293
+  Y=new_r3_any        : RF_coef= -0.00444 (SE=0.03311) p=0.8934  y_mean=0.06640
 
   If RF for IS_R3_ADOPTER is significant but RF for all-source is not,
   it means R1 neighbor exposure ONLY affects CSBP adoption, not general ESB.
@@ -106,13 +106,13 @@ D6. IV-2SLS COMPARISON (K=6, state-clustered, same sample)
 ==========================================================================================
   Script20 replication                     | coef= -5.1891 (SE=20.8346) p=0.8033 | F=0.3
     [CSBP outcome, CSBP endogenous, no own controls]
-  Script20 + own Z                         | coef= -6.8221 (SE=30.1597) p=0.8210 | F=0.2
+  Script20 + own Z                         | coef= -7.9743 (SE=39.9274) p=0.8417 | F=0.2
     [CSBP outcome + own treatment controls]
-  All-source, all-source endog             | coef=  0.0251 (SE=0.0352) p=0.4762 | F=5289.9
+  All-source, all-source endog             | coef= -0.0863 (SE=0.2624) p=0.7422 | F=63.8
     [All-source outcome, all-source endogenous]
-  CSBP outcome, all-source endog           | coef= -0.0731 (SE=0.0697) p=0.2944 | F=5278.3
+  CSBP outcome, all-source endog           | coef= -0.3321 (SE=0.3277) p=0.3108 | F=65.3
     [CSBP outcome but all-source endogenous]
-  All-source outcome, CSBP endog           | coef=  1.9076 (SE=7.7294) p=0.8051 | F=0.3
+  All-source outcome, CSBP endog           | coef= -0.5714 (SE=4.6476) p=0.9021 | F=0.3
     [All-source outcome but CSBP endogenous]
 
 ==========================================================================================
@@ -156,8 +156,8 @@ D9. REDUCED FORM COMPARISON (the ONLY fair comparison)
   "Does having R1-winning neighbors predict MY adoption?"
 
   Y = CSBP R3        : RF =  -0.04030 (SE=0.03875) p=0.2984  | 1-neighbor effect: -0.00672 (-0.672pp)
-  Y = WRI first-ever : RF =   0.00287 (SE=0.01459) p=0.8438  | 1-neighbor effect: 0.00048 (0.048pp)
-  Y = WRI any-event  : RF =   0.01481 (SE=0.02046) p=0.4689  | 1-neighbor effect: 0.00247 (0.247pp)
+  Y = WRI first-ever : RF =  -0.01220 (SE=0.03132) p=0.6968  | 1-neighbor effect: -0.00203 (-0.203pp)
+  Y = WRI any-event  : RF =  -0.00444 (SE=0.03311) p=0.8934  | 1-neighbor effect: -0.00074 (-0.074pp)
 
 ==========================================================================================
 SUMMARY: DIAGNOSING THE +1.343 vs ~0.00 DISCREPANCY

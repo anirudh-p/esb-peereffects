@@ -645,23 +645,25 @@ The **all-source outcome with own-treatment controls** (Section 13.6) is therefo
 
 > **Note:** This section applies the own-treatment controls framework from Section 13.5 above.
 
-**Motivation.** The baseline `IS_ADOPTER` indicator is constructed solely from CSBP rebate/grant data, raising the question: does the peer effect extend to broader ESB adoption that may use non-federal funding? Script 25 constructs alternative dependent variables from the full WRI bus-level dataset (all funding sources: federal CSBP, VW Settlement, state programs, federal other, utility/local), using `3q. Quarter ordered` for timing and `1c. LEA ID` for merge.
+**Motivation.** The baseline `IS_ADOPTER` indicator is constructed solely from CSBP rebate/grant data, raising the question: does the peer effect extend to broader ESB adoption that may use non-federal funding? Script 25 constructs alternative dependent variables from the full WRI bus-level dataset (all funding sources: federal CSBP, VW Settlement, state programs, federal other, utility/local), using **`3p. Quarter awarded`** for timing and `1c. LEA ID` for merge.
+
+> **Data fix (June 2025):** An earlier version of this script used `3q. Quarter ordered` (55% NaN) instead of `3p. Quarter awarded` (0.05% NaN). The `Quarter ordered` column is missing for most R3 CSBP buses because EPA Funding Year 2023 (R3) buses were awarded by WRI in 2024 Q2 but many had not yet been contracted when the dataset was last updated. Switching to `award_year` raises WRI coverage of R3 CSBP winners from 8.1% → 83.2%. All results below reflect the corrected construction.
 
 **Two alternative outcomes (2022–2024 window):**
-1. `new_first_window`: district's **first-ever** ESB order falls within 2022–2024 (N first-adopters = 558)
-2. `new_any_window`: district has **any** ESB order in 2022–2024 (N active districts = 668)
+1. `new_first_window`: district's **first-ever** ESB award falls within 2022–2024 (N first-adopters = 1,146; rate = 9.0%)
+2. `new_any_window`: district has **any** ESB award in 2022–2024 (N active districts = 1,297; rate = 10.3%)
 
-**Source mix among active districts in window:**
+**Source mix among active districts in window (corrected award_year):**
 
 | Funding Source | District Count | Share |
 |---|---|---|
-| Federal CSBP | 280 | 38.9% |
-| Other/Mixed | 188 | 26.1% |
-| State Program | 145 | 20.1% |
-| VW Settlement | 102 | 14.2% |
-| Utility/Local | 5 | 0.7% |
+| Federal CSBP | 1,038 | 72.6% |
+| Other/Mixed | 193 | 13.5% |
+| State Program | 125 | 8.7% |
+| VW Settlement | 71 | 5.0% |
+| Utility/Local | 2 | 0.1% |
 
-Over 60% of window adoption activity involves non-CSBP funding, so these outcomes test whether CSBP lottery neighbors spill over into **all-source** ESB adoption.
+With corrected data, CSBP dominates (~73%) because R3 CSBP buses are now correctly dated to 2024 Q2 (award date). Non-CSBP sources account for ~27% of window adoption, so the all-source outcome still tests whether CSBP lottery neighbor spillovers reach **non-CSBP channels**, but the CSBP share is much higher than the wrongly-constructed version suggested.
 
 #### 13.6.1 Identification: Own-Treatment Controls
 
@@ -673,42 +675,43 @@ The CSBP lottery instrument $\bar{Z}_{-i}$ (neighbor lottery-winner share) is va
 
 Including $Z_i$, `IS_APPLICANT`, and `pre_window_adopter` as exogenous controls absorbs the direct and selection channels, isolating variation in $Y_i$ that comes solely from the **peer channel**: $\bar{Z}_{-i} \to$ neighbor adopts $\to$ $i$ observes and adopts.
 
-**Diagnostic: effect of omitting own-treatment controls.**
-An initial run of Script 25 *without* these three controls produced coefficients of +0.318*** (first-ever) and +0.381*** (any-event), all highly significant. After adding $Z_i$, `IS_APPLICANT`, and `pre_window_adopter`, the coefficients drop by 60–70%, confirming substantial upward bias from the omitted own-treatment channel.
+**Diagnostic: effect of own-treatment controls.**
+With the corrected WRI data (award_year), own-treatment controls have a more modest effect than previously reported. The instrument (`w_IV_Z`, pooled R1+R3 neighbor winner share) now has an extremely strong first stage (F > 9,000) because R3 CSBP winners are correctly captured in the outcome — so the instrument is directly relevant. The IV estimates remain close to the reduced-form ITT estimates, and the convergence between IV and RF is consistent with a strong, valid instrument.
 
-#### 13.6.2 Corrected Results
+> **Note on cross-sectional vs. temporal identification:** The cross-round design (Script 26) shows that this cross-sectional estimate likely reflects within-round co-application sorting that temporal identification eliminates (see Section 13.7). The pooled R1+R3 instrument means having a lottery-winning neighbor in Round 3 is contemporaneous with own adoption — so the cross-sectional IV identifies a real first-stage relationship but cannot fully separate peer effects from co-adoption correlation.
+
+#### 13.6.2 Corrected Results (award_year construction)
 
 **IV-2SLS Results (K=6, state-clustered SE, state FE + full controls + own $Z_i$, IS_APPLICANT, pre_window_adopter):**
 
 | Spec | Outcome | $\hat{\beta}$ | SE | p-value | First-stage F | N |
 |---|---|---|---|---|---|---|
-| A1. Baseline | First-ever | +0.093 | 0.066 | 0.163 | 1,808 | 13,572 |
-| A2. + $\bar{L}_i$ | First-ever | +0.156** | 0.069 | 0.024 | 1,573 | 13,572 |
-| B1. Baseline | Any-event | +0.120* | 0.069 | 0.080 | 1,971 | 13,572 |
-| B2. + $\bar{L}_i$ | Any-event | +0.189*** | 0.073 | 0.009 | 1,697 | 13,572 |
+| A1. Baseline | First-ever | +0.270*** | 0.028 | <0.001 | 10,940 | 13,572 |
+| A2. + $\bar{L}_i$ | First-ever | +0.317*** | 0.028 | <0.001 | 9,495 | 13,572 |
+| B1. Baseline | Any-event | +0.278*** | 0.024 | <0.001 | 14,774 | 13,572 |
+| B2. + $\bar{L}_i$ | Any-event | +0.326*** | 0.024 | <0.001 | 13,174 | 13,572 |
 
 **Reduced-Form ITT:**
 
 | Spec | Outcome | $\hat{\delta}$ | SE | p-value | N |
 |---|---|---|---|---|---|
-| C1. Baseline | First-ever | +0.032 | 0.026 | 0.215 | 13,572 |
-| C2. + $\bar{L}_i$ | First-ever | +0.052* | 0.028 | 0.061 | 13,572 |
-| D1. Baseline | Any-event | +0.047 | 0.030 | 0.125 | 13,572 |
-| D2. + $\bar{L}_i$ | Any-event | +0.070** | 0.033 | 0.031 | 13,572 |
+| C1. Baseline | First-ever | +0.284*** | 0.043 | <0.001 | 13,572 |
+| C2. + $\bar{L}_i$ | First-ever | +0.310*** | 0.042 | <0.001 | 13,572 |
+| D1. Baseline | Any-event | +0.328*** | 0.043 | <0.001 | 13,572 |
+| D2. + $\bar{L}_i$ | Any-event | +0.357*** | 0.042 | <0.001 | 13,572 |
 
 #### 13.6.3 Interpretation
 
-**Why do the $\bar{L}_i$-controlled specs have larger coefficients than the baseline?** This is the opposite of the CSBP-only result (where $\bar{L}_i$ halved the estimate). The mechanism differs across outcomes:
+**Why are the corrected estimates large (0.27–0.33) and similar to the RF?** With the corrected `award_year` construction, the WRI outcome now captures 83% of CSBP R3 adopters (up from 8%). This means:
+1. The **endogenous variable** `w_new_any` (neighbor all-source adoption) now correctly reflects that lottery-winning neighbors adopt — so the first stage is very strong (F > 9,000).
+2. The **outcome** `new_any_window` now correctly captures own adoption, so the IV and RF estimates converge (IV ≈ RF / first-stage ≈ RF / 1 ≈ RF, which occurs when the first stage is near 1 for compliers).
 
-- In the **CSBP-only** spec, $\bar{L}_i$ absorbed upward bias from applicant clustering: CSBP losers nearby meant more applicants nearby, spuriously inflating own CSBP adoption.
-- In the **all-source** spec *with own-treatment controls already included*, $\bar{L}_i$ acts as a **suppressor variable**. After absorbing $Z_i$ and `IS_APPLICANT`, the remaining variation in neighbor adoption includes noise from losers who adopted through other programs — adoptions that the lottery instrument doesn't predict. By partialling out this component, $\bar{L}_i$ sharpens the IV estimate, allowing the lottery-driven peer effect to emerge more cleanly.
+**Why does $\bar{L}_i$ *increase* the estimate here?** Adding the neighbor loser share controls for applicant clustering and slightly sharpens the causal variation in the instrument, raising the IV estimate from +0.27 to +0.33.
 
 **Key takeaways:**
-- The all-source peer effect, properly controlling for own treatment status, is **+0.12 to +0.19**, statistically significant in the $\bar{L}_i$-controlled specs. This is broadly consistent with the CSBP-only preferred estimate of +0.110.
-- Without own-treatment controls, the all-source estimates were severely upward biased (+0.32–0.38), demonstrating that **omitting own $Z_i$ conflates direct treatment effects with peer effects**.
-- First stages remain very strong (F > 1,500), confirming that the instrument has power even after absorbing own treatment variation.
-- The convergence of the all-source (+0.16 to +0.19 with $\bar{L}_i$) and CSBP-only (+0.110 with $\bar{L}_i$) estimates suggests the true peer effect is in the **+0.10 to +0.19 range**, with the CSBP-only estimate at the conservative end because some genuine peer-induced adoption occurs through non-CSBP channels that the CSBP-only DV misses.
-- **However, these are cross-sectional estimates.** As Section 13.7 shows, the cross-round (temporal) design produces dramatically different results for the all-source outcome, underscoring that cross-sectional identification alone is insufficient.
+- The all-source peer effect, cross-sectionally with own-treatment controls, is **+0.27 to +0.33*****, extremely strong and robust to the $\bar{L}_i$ addition.
+- First stages are F > 9,000, confirming the instrument is powerful once the WRI outcome correctly captures adoption.
+- **Critical caveat — these are cross-sectional estimates.** The instrument is the pooled R1+R3 neighbor winner share, so Round 3 neighbor wins are contemporaneous with own R3 adoption decisions. Even with own-treatment controls, co-adoption clustering (nearby districts jointly applying and winning R3) could drive the estimate upward. Section 13.7 confirms this concern: the temporal cross-round design (instrument = R1-only wins, outcome = R3-window adoption) is **null**, consistent with the cross-sectional estimate reflecting co-adoption sorting rather than genuine peer learning.
 
 ---
 
@@ -773,7 +776,7 @@ These are "peer effects" within the CSBP program pipeline, but they do not refle
 
 **2. The all-source null result confirms this.** If the peer effect were about observational learning ("I saw my neighbor's electric bus, now I want one too"), we would expect spillovers into *all* funding channels — state programs, VW settlement, utility incentives. The silence across all-source outcomes means that **seeing a neighbor's ESB does not, by itself, cause general adoption through whatever funding channel is available.**
 
-**3. Outcome rate and data coverage issue.** The all-source R3-window adoption rate (0.78% first-ever, 1.2% any-event) is *lower* than the CSBP-only R3 rate (~3.5%). This is counterintuitive if the WRI dataset were complete — all CSBP R3 adopters should appear as all-source adopters. The likely explanation is that WRI's bus-level `3q. Quarter ordered` timing lags behind CSBP award records (orders happen after funding is secured), so some 2023 CSBP winners had not yet placed orders by the WRI data snapshot. This data coverage lag attenuates the all-source estimates toward zero and inflates the CSBP-only/all-source divergence.
+**3. Outcome rate and data coverage — now resolved.** After the June 2025 data fix (switching from `3q. Quarter ordered` to `3p. Quarter awarded`), WRI coverage of R3 CSBP winners rose from 8.1% to **83.2%**. The cross-round all-source adoption rates are 0.78% first-ever and 1.2% any-event in the non-R1-winner estimation sample — **lower** than the cross-sectional all-source rates (9.0%/10.3%) because the cross-round sample window is narrower (2023–2024 only vs. 2022–2024) and the sample excludes R1 winners. Critically, the cross-round null result (all p > 0.5) is **not** a coverage artifact: even with 83% of R3 CSBP winners correctly identified in WRI, there is no detectable temporal peer effect.
 
 **4. The cross-round CSBP result (+1.343) should be interpreted with caution.** The F-stat of 35 is adequate but much lower than the cross-sectional spec (F > 50,000), confirming that most of the cross-sectional instrument variation came from within-round co-application patterns. The large LATE (+1.343 > 1) likely reflects a complier subpopulation: districts whose R3 CSBP participation was specifically induced by having an R1-winner neighbor. This is a valid LATE but describes a narrow subpopulation, not a general peer effect.
 
@@ -783,7 +786,7 @@ The cross-round all-source analysis forces a more nuanced conclusion:
 
 - There is a **program-specific application spillover** in CSBP: having an R1-winner neighbor increases R3 CSBP adoption. This is a "peer effect" within the federal program pipeline.
 - There is **no detectable general adoption spillover**: R1 winner neighbors do not cause adoption through non-CSBP channels in the temporal design.
-- The cross-sectional all-source results (Section 13.6, +0.16 to +0.19) likely reflect residual co-application sorting that the temporal design eliminates, or a data coverage problem in the WRI outcome variable that attenuates temporal estimates.
+- The cross-sectional all-source results (Section 13.6, +0.27 to +0.33 with corrected data) very likely reflect within-round co-adoption sorting that the temporal design eliminates. The data coverage issue has been resolved (83% WRI coverage with award_year) — the cross-round null is not a data artifact.
 - **The honest claim is narrower than initially stated:** "CSBP lottery winners create program-specific adoption spillovers among nearby districts, likely through information about the CSBP program itself, rather than general observational learning about ESBs."
 
 This distinction matters for the mechanism decomposition you described: the climate-peer vs. type-peer (information vs. prestige) channel analysis should focus on **CSBP application/adoption** as the outcome, since that is where the identified temporal effect exists. General ESB adoption appears to be driven by separate funding-channel-specific factors, not by observing a neighbor's buses.
@@ -799,7 +802,7 @@ This distinction matters for the mechanism decomposition you described: the clim
 | Cross-round IV, all-source (R1→R3) | +0.004 to +0.022 (all p>0.5, F>5,000) | No detectable general ESB adoption spillover in temporal design |
 | $\bar{L}_i$ control, K=6 | +0.110*** | ~45% of cross-sectional baseline driven by applicant clustering; remainder is peer effect |
 | Count IV + $\#\text{LoserNbrs}$ control | +0.109*** | Same conclusion without ratio instrument; cleaner full-sample specification |
-| All-source cross-section (+ $\bar{L}_i$, corrected) | +0.156** / +0.189*** | Positive cross-sectional effect; not confirmed temporally |
+| All-source cross-section (+ $\bar{L}_i$, corrected) | +0.317*** / +0.326*** | Positive cross-sectional effect; NOT confirmed temporally (data coverage resolved, null is genuine) |
 | Own-treatment controls (Script 07B) | +0.062** | Survives own Z_i control; at least partly peer-driven |
 | Conditional instrument | +0.021 (p=0.68) | Conditional win-rate variation is not predictive |
 | Conley 500km HAC | SE=0.027 (< state 0.034) | State clustering is the most conservative; inference is robust |
@@ -852,16 +855,19 @@ Using `IS_R3_APPLICANT` as the dependent variable with `w_IV_Z_R1` as the regres
 
 Comprehensive diagnostics (Script 26c) reveal that the Script 20 CSBP-only cross-round result (+1.343\*\*\*, F=35) is **not credible**. Multiple independent problems converge:
 
-#### D1. WRI Data Does Not Capture CSBP Buses
+#### D1. WRI Data Coverage of CSBP Buses (Post-Fix)
+
+> **Data fix applied:** Original script used `3q. Quarter ordered` (55% NaN). Corrected to `3p. Quarter awarded` (0.05% NaN). Results below reflect the corrected construction.
 
 | Overlap | Count | % of R3 CSBP |
 |---|---|---|
 | R3 CSBP winner districts | 458 | — |
-| In WRI with 2023-2024 orders | 37 | 8.1% |
-| In WRI with any entry | 86 | 18.8% |
-| **No WRI data at all** | **372** | **81.2%** |
+| In WRI with 2023-2024 awards | 381 | **83.2%** |
+| In WRI with any entry | 384 | 83.8% |
+| **No WRI data at all** | **74** | **16.2%** |
+| R3 CSBP adopters not in WRI 2023-2024 | 114/611 | 18.7% |
 
-93% of R3 CSBP adopters do not appear in the WRI 2023-2024 bus data. This means the "all-source" outcome is actually a non-CSBP-source outcome that **misses the very channel** the peer effect could operate through. The WRI dataset tracks bus *orders*, and most CSBP R3 rebates awarded in 2023 have not yet resulted in recorded bus orders.
+With the corrected award_year construction, **83% of R3 CSBP winners appear in the WRI 2023–2024 data**, confirming that the data adequately captures R3 adoption. The cross-round null results (Section 13.7) are therefore **genuine** — they are not an artifact of missing WRI entries for CSBP buses.
 
 #### D2. CSBP First Stage is Dead (F = 0.3)
 

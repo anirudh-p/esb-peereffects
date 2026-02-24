@@ -5,7 +5,7 @@ Alternative specifications using WRI bus-level timing and all funding sources.
 
 User-selected construction choices:
 - Merge key: 1c. LEA ID
-- Timing column: 3q. Quarter ordered
+- Timing column: 3p. Quarter awarded  (NOTE: 3q. Quarter ordered has 55% NaN; award date is 99.95% complete)
 - Scope: all funding sources in WRI bus-level data
 - Two dependent variables for robustness:
     (1) new_first_window: district's first-ever ESB order falls in window
@@ -109,7 +109,7 @@ df_bus = pd.read_excel(str(WRI_EXCEL_FILE), sheet_name='2. Bus-level data')
 
 required_cols = [
     '1c. LEA ID',
-    '3q. Quarter ordered',
+    '3p. Quarter awarded',
     '3z. Funding source 1', '3aa. Agency administering funds 1',
     '3z. Funding source 2', '3aa. Agency administering funds 2',
     '3z. Funding source 3', '3aa. Agency administering funds 3',
@@ -121,7 +121,8 @@ if missing_cols:
 
 df_bus = df_bus[required_cols].copy()
 df_bus['nces_id'] = clean_lea_id(df_bus['1c. LEA ID'])
-df_bus['order_year'] = extract_year_from_quarter(df_bus['3q. Quarter ordered'])
+# Use award date (3p) not order date (3q) -- 3q is 55% NaN; 3p is 99.95% complete
+df_bus['award_year'] = extract_year_from_quarter(df_bus['3p. Quarter awarded'])
 
 # Construct a text field combining up to 4 funding source + agency pairs
 source_parts = []
@@ -137,18 +138,18 @@ for s in source_parts[1:]:
 
 df_bus['source_category'] = combined_source_text.apply(categorize_source)
 
-valid_year = df_bus['order_year'].between(1990, 2035, inclusive='both')
+valid_year = df_bus['award_year'].between(1990, 2035, inclusive='both')
 df_bus_valid = df_bus[valid_year & df_bus['nces_id'].ne('0000000')].copy()
 
 log(f'  Bus-level rows total: {len(df_bus):,}')
-log(f'  Bus-level rows with valid order year + LEA ID: {len(df_bus_valid):,}')
+log(f'  Bus-level rows with valid award year + LEA ID: {len(df_bus_valid):,}')
 
 # District-level first-ever year and any-event indicator in window
-first_year = df_bus_valid.groupby('nces_id')['order_year'].min().rename('first_order_year').reset_index()
+first_year = df_bus_valid.groupby('nces_id')['award_year'].min().rename('first_award_year').reset_index()
 
 window_rows = df_bus_valid[
-    (df_bus_valid['order_year'] >= WINDOW_START) &
-    (df_bus_valid['order_year'] <= WINDOW_END)
+    (df_bus_valid['award_year'] >= WINDOW_START) &
+    (df_bus_valid['award_year'] <= WINDOW_END)
 ].copy()
 
 any_window = window_rows.groupby('nces_id').size().rename('any_event_count_window').reset_index()
@@ -157,13 +158,13 @@ outcomes = first_year.merge(any_window, on='nces_id', how='left')
 outcomes['any_event_count_window'] = outcomes['any_event_count_window'].fillna(0)
 
 outcomes['new_first_window'] = (
-    (outcomes['first_order_year'] >= WINDOW_START) &
-    (outcomes['first_order_year'] <= WINDOW_END)
+    (outcomes['first_award_year'] >= WINDOW_START) &
+    (outcomes['first_award_year'] <= WINDOW_END)
 ).astype(int)
 
 outcomes['new_any_window'] = (outcomes['any_event_count_window'] > 0).astype(int)
 outcomes['repeat_event_window'] = (outcomes['any_event_count_window'] > 1).astype(int)
-outcomes['pre_window_adopter'] = (outcomes['first_order_year'] < WINDOW_START).astype(int)
+outcomes['pre_window_adopter'] = (outcomes['first_award_year'] < WINDOW_START).astype(int)
 
 log('\nConstructed district-level outcomes:')
 log(f"  Districts with first-ever order in {WINDOW_START}-{WINDOW_END}: {int(outcomes['new_first_window'].sum()):,}")
