@@ -708,31 +708,112 @@ An initial run of Script 25 *without* these three controls produced coefficients
 - Without own-treatment controls, the all-source estimates were severely upward biased (+0.32–0.38), demonstrating that **omitting own $Z_i$ conflates direct treatment effects with peer effects**.
 - First stages remain very strong (F > 1,500), confirming that the instrument has power even after absorbing own treatment variation.
 - The convergence of the all-source (+0.16 to +0.19 with $\bar{L}_i$) and CSBP-only (+0.110 with $\bar{L}_i$) estimates suggests the true peer effect is in the **+0.10 to +0.19 range**, with the CSBP-only estimate at the conservative end because some genuine peer-induced adoption occurs through non-CSBP channels that the CSBP-only DV misses.
+- **However, these are cross-sectional estimates.** As Section 13.7 shows, the cross-round (temporal) design produces dramatically different results for the all-source outcome, underscoring that cross-sectional identification alone is insufficient.
 
 ---
 
-### 13.7 Summary Assessment: What the Robustness Battery Tells Us
+### 13.7 Cross-Round All-Source IV: The Temporal Test (Script 26)
+
+**Motivation.** The cross-sectional analysis (Script 25) uses the pooled R1+R3 lottery instrument, which conflates temporal demonstration effects with within-round co-application sorting — even with own-treatment controls. The cleanest identification is **temporal**: did a neighbor's R1 (2022) lottery win — and subsequent ESB deployment — cause district $i$ to adopt ESBs (from any source) in the R3 window (2023–2024)?
+
+This is the **identified peer effect**: the exogenous shock (R1 lottery) is fully predetermined relative to R3-window adoption decisions, with a 12–18 month lag for buses to be delivered and observed.
+
+#### 13.7.1 Design
+
+- **Instrument:** $\bar{Z}_{-i}^{R1}$ = share of K nearest neighbors who won R1 lottery (2022)
+- **Outcome (all-source):** first-ever ESB order in 2023–2024, or any ESB order in 2023–2024 (from WRI bus-level data, all funding sources)
+- **Sample:** All districts excluding R1 winners (N = 12,620)
+- **Own-treatment controls:** `IS_APPLICANT`, `pre_r1_adopter` (+ full controls, state FE)
+- **Note:** Own $Z_i$ not needed as a control since R1 winners are excluded from the sample
+
+#### 13.7.2 Results
+
+**IV-2SLS (state-clustered SE, state FE + full controls + own-treatment controls):**
+
+| K | Outcome | $\hat{\beta}$ | SE | p-value | First-stage F | N |
+|---|---|---|---|---|---|---|
+| 4 | First-ever | +0.004 | 0.027 | 0.878 | 6,289 | 12,620 |
+| 4 | Any-event | +0.017 | 0.032 | 0.602 | 5,533 | 12,620 |
+| 6 | First-ever | +0.004 | 0.029 | 0.896 | 5,979 | 12,620 |
+| 6 | Any-event | +0.022 | 0.035 | 0.537 | 5,287 | 12,620 |
+| 8 | First-ever | +0.003 | 0.036 | 0.935 | 5,817 | 12,620 |
+| 8 | Any-event | +0.022 | 0.043 | 0.614 | 5,212 | 12,620 |
+| 10 | First-ever | −0.020 | 0.033 | 0.553 | 5,842 | 12,620 |
+| 10 | Any-event | −0.006 | 0.043 | 0.894 | 5,204 | 12,620 |
+
+**Reduced Form ITT (K=6):**
+
+| Outcome | $\hat{\delta}$ | SE | p-value | N |
+|---|---|---|---|---|
+| First-ever | +0.002 | 0.015 | 0.897 | 12,620 |
+| Any-event | +0.012 | 0.020 | 0.542 | 12,620 |
+
+All coefficients are near zero and far from statistical significance. First stages are extremely strong (F > 5,000), so weak instruments are not the issue — the instrument **has power** to predict neighbor R3-window adoption, but that predicted peer adoption has **no detectable effect** on own all-source adoption.
+
+#### 13.7.3 Comparison with CSBP-Only Cross-Round
+
+| Spec | Outcome | Coef | SE | p | F |
+|---|---|---|---|---|---|
+| Script 20 (CSBP-only) | IS_R3_ADOPTER | +1.343*** | 0.505 | 0.008 | 35 |
+| Script 26 (all-source) | First-ever 2023–24 | +0.004 | 0.029 | 0.896 | 5,979 |
+| Script 26 (all-source) | Any-event 2023–24 | +0.022 | 0.035 | 0.537 | 5,287 |
+
+The CSBP-only cross-round spec found a large positive effect (+1.343) but with a relatively weak first stage (F=35). The all-source spec has a massively stronger first stage (F~5,000) but a near-zero point estimate.
+
+#### 13.7.4 Interpretation: What Explains the Divergence?
+
+The divergence between the CSBP-only and all-source cross-round results reveals something fundamental about what the "cross-round peer effect" is actually measuring:
+
+**1. The CSBP-only effect (+1.343) is driven by within-program application clustering, not observational learning.** If district $i$'s neighbor won R1 and deployed buses, the CSBP result says district $i$ is much more likely to receive R3 CSBP funding. But this could reflect:
+- **Information about the CSBP program specifically** (neighbor tells $i$ about the program, $i$ applies for R3)
+- **Intermediary/consultant networks** (the same grant-writing firm serves nearby districts)
+- **EPA regional outreach patterns** (EPA targets geographic clusters for application assistance)
+
+These are "peer effects" within the CSBP program pipeline, but they do not reflect broader **adoption spillovers** — they reflect **application spillovers** within a specific federal program.
+
+**2. The all-source null result confirms this.** If the peer effect were about observational learning ("I saw my neighbor's electric bus, now I want one too"), we would expect spillovers into *all* funding channels — state programs, VW settlement, utility incentives. The silence across all-source outcomes means that **seeing a neighbor's ESB does not, by itself, cause general adoption through whatever funding channel is available.**
+
+**3. Outcome rate and data coverage issue.** The all-source R3-window adoption rate (0.78% first-ever, 1.2% any-event) is *lower* than the CSBP-only R3 rate (~3.5%). This is counterintuitive if the WRI dataset were complete — all CSBP R3 adopters should appear as all-source adopters. The likely explanation is that WRI's bus-level `3q. Quarter ordered` timing lags behind CSBP award records (orders happen after funding is secured), so some 2023 CSBP winners had not yet placed orders by the WRI data snapshot. This data coverage lag attenuates the all-source estimates toward zero and inflates the CSBP-only/all-source divergence.
+
+**4. The cross-round CSBP result (+1.343) should be interpreted with caution.** The F-stat of 35 is adequate but much lower than the cross-sectional spec (F > 50,000), confirming that most of the cross-sectional instrument variation came from within-round co-application patterns. The large LATE (+1.343 > 1) likely reflects a complier subpopulation: districts whose R3 CSBP participation was specifically induced by having an R1-winner neighbor. This is a valid LATE but describes a narrow subpopulation, not a general peer effect.
+
+#### 13.7.5 Revised Assessment
+
+The cross-round all-source analysis forces a more nuanced conclusion:
+
+- There is a **program-specific application spillover** in CSBP: having an R1-winner neighbor increases R3 CSBP adoption. This is a "peer effect" within the federal program pipeline.
+- There is **no detectable general adoption spillover**: R1 winner neighbors do not cause adoption through non-CSBP channels in the temporal design.
+- The cross-sectional all-source results (Section 13.6, +0.16 to +0.19) likely reflect residual co-application sorting that the temporal design eliminates, or a data coverage problem in the WRI outcome variable that attenuates temporal estimates.
+- **The honest claim is narrower than initially stated:** "CSBP lottery winners create program-specific adoption spillovers among nearby districts, likely through information about the CSBP program itself, rather than general observational learning about ESBs."
+
+This distinction matters for the mechanism decomposition you described: the climate-peer vs. type-peer (information vs. prestige) channel analysis should focus on **CSBP application/adoption** as the outcome, since that is where the identified temporal effect exists. General ESB adoption appears to be driven by separate funding-channel-specific factors, not by observing a neighbor's buses.
+
+---
+
+### 13.8 Summary Assessment: What the Robustness Battery Tells Us
 
 | Test | Result | Implication |
 |---|---|---|
-| Cross-round IV (R1→R3) | +1.343*** (F=35) | Temporal ordering confirmed; F-stat collapse shows contemporaneous F was inflated |
-| $\bar{L}_i$ control, K=6 | +0.110*** | ~45% of baseline driven by applicant clustering; remainder is peer effect |
+| Cross-round IV, CSBP-only (R1→R3) | +1.343*** (F=35) | Temporal CSBP-specific peer effect confirmed; large LATE on narrow complier set |
+| Cross-round IV, all-source (R1→R3) | +0.004 to +0.022 (all p>0.5, F>5,000) | **No detectable general ESB adoption spillover** in temporal design |
+| $\bar{L}_i$ control, K=6 | +0.110*** | ~45% of cross-sectional baseline driven by applicant clustering; remainder is peer effect |
 | Count IV + $\#\text{LoserNbrs}$ control | +0.109*** | Same conclusion without ratio instrument; cleaner full-sample specification |
-| Conditional instrument | +0.021 (p=0.68) | Conditional win-rate variation is not predictive; suggestive of threshold/extensive-margin channel but based on a different estimand and sample |
+| All-source cross-section (+ $\bar{L}_i$, corrected) | +0.156** / +0.189*** | Positive in cross-section but not confirmed in temporal design |
+| Conditional instrument | +0.021 (p=0.68) | Conditional win-rate variation is not predictive |
 | Conley 500km HAC | SE=0.027 (< state 0.034) | State clustering is the most conservative; inference is robust |
-| Placebo outcomes | 4/6 pass baseline and 4/6 with $\bar{L}_i$ | Two failures (Dem share, enrollment) attenuate but remain significant; residual clustering concern persists |
+| Placebo outcomes | 4/6 pass baseline and 4/6 with $\bar{L}_i$ | Two failures (Dem share, enrollment) attenuate but remain significant |
 | Donut (drop 1–2) | +0.038 (p=0.27) | Effect concentrated in nearest 1–2 neighbors |
 | Distance gradient | Sharp decay | Consistent with hyper-local peer influence |
-| All-source new-adopter (+ $\bar{L}_i$, corrected) | +0.156** (first-ever), +0.189*** (any-event) | Peer effect generalizes to all-source ESB adoption; convergent with CSBP-only preferred estimate |
 
 **Headline estimates:**
-- **Primary (unconditional, baseline):** $\hat{\beta} = 0.201^{***}$ (SE=0.034)
-- **Preferred (+ loser-density control):** $\hat{\beta} = 0.110^{***}$ (SE=0.039)
-- **All-source new-adopter (+ $\bar{L}_i$, corrected):** $\hat{\beta} = 0.156^{**}$ (first-ever, SE=0.069) / $0.189^{***}$ (any-event, SE=0.073)
-- **Cross-round (temporal, R1→R3):** $\hat{\beta} = 1.343^{***}$ (SE=0.505, LATE on rare subsample)
-- **Reduced-form ITT (+ $\bar{L}_i$):** $\hat{\delta} = 0.112^{***}$ (SE=0.041)
+- **Cross-sectional baseline:** $\hat{\beta} = 0.201^{***}$ (SE=0.034) — but does not control for own treatment
+- **Cross-sectional preferred (+ $\bar{L}_i$):** $\hat{\beta} = 0.110^{***}$ (SE=0.039) — CSBP outcome, cross-sectional
+- **Cross-round temporal, CSBP-only:** $\hat{\beta} = 1.343^{***}$ (SE=0.505) — identified LATE on CSBP R3 compliers
+- **Cross-round temporal, all-source:** $\hat{\beta} \approx 0$ (p > 0.5) — no general adoption spillover
 
-The picture that emerges: there is a **real, positive, statistically significant peer effect in ESB adoption**, approximately **+0.10 to +0.19** depending on the outcome definition and specification. It is (a) about half as large as the uncorrected CSBP-only baseline after purging applicant clustering, (b) hyper-local (nearest 1–2 neighbors), and (c) robust to switching from CSBP-only to all-source ESB adoption outcomes. Critically, **controlling for own treatment status ($Z_i$, `IS_APPLICANT`, pre-window adoption) is essential** (Section 13.5) — without these controls, the all-source estimates are 60–70% upward biased. The convergence of the CSBP-only preferred estimate (+0.110) with the all-source $\bar{L}_i$-controlled estimates (+0.156 to +0.189) provides meaningful triangulation. The reduced-form ITT — "nearby lottery-funded deployments causally raise own adoption" — remains the most defensible claim.
+**The revised picture:** There is a **real, program-specific peer effect in CSBP adoption**: districts near R1 lottery winners are substantially more likely to participate in CSBP R3. This operates through a program-information channel (learning about CSBP availability, application mechanics, or intermediary networks) rather than through general observational learning about ESBs. The **general ESB peer effect** — "seeing a neighbor's electric bus makes me want one regardless of funding source" — is **not supported** by the temporal design, though it appears in cross-sectional specifications that cannot fully eliminate co-application sorting.
+
+This distinction has important implications for mechanism decomposition: the climate-peer vs. type-peer analysis should be conducted on the **CSBP-specific** outcome where the identified temporal effect exists. The relevant question becomes: does the CSBP program-information spillover flow preferentially through climate-similar neighbors (information channel: "their experience is relevant to my conditions") or type-similar neighbors (social influence: "districts like mine are doing it")?
 
 ---
 
