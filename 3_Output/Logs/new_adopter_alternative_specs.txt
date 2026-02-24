@@ -1,0 +1,37 @@
+================================================================================
+ALTERNATIVE SPEC: NEW ADOPTERS (ALL-SOURCE WRI BUS-LEVEL)
+================================================================================
+
+Loading WRI bus-level sheet...
+  Bus-level rows total: 12,549
+  Bus-level rows with valid order year + LEA ID: 5,644
+
+Constructed district-level outcomes:
+  Districts with first-ever order in 2022-2024: 558
+  Districts with any order in 2022-2024: 668
+  Districts with multiple orders in window: 463
+
+Saved source mix table: c:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\new_adopter_source_mix_window.csv
+
+Base analysis rows: 13,219
+  Mean(new_first_window): 0.0416
+  Mean(new_any_window):   0.0505
+  Spatial merged rows: 13,789
+
+================================================================================
+IV RESULTS: NEW-ADOPTER OUTCOMES
+================================================================================
+  A1. First-ever window baseline           | coef=  0.3185 (SE=0.0575) p=0.0000*** | F=1839.6 | N=13572
+  A2. First-ever + w_loser                 | coef=  0.3049 (SE=0.0630) p=0.0000*** | F=1569.5 | N=13572
+  B1. Any-event window baseline            | coef=  0.3810 (SE=0.0604) p=0.0000*** | F=2045.8 | N=13572
+  B2. Any-event + w_loser                  | coef=  0.3790 (SE=0.0680) p=0.0000*** | F=1721.3 | N=13572
+
+================================================================================
+REDUCED FORM (ITT) FOR NEW-ADOPTER OUTCOMES
+================================================================================
+  C1. RF first-ever baseline               | coef=  0.1094 (SE=0.0292) p=0.0002*** | N=13572
+  C2. RF first-ever + w_loser              | coef=  0.0998 (SE=0.0293) p=0.0007*** | N=13572
+  D1. RF any-event baseline                | coef=  0.1491 (SE=0.0361) p=0.0000*** | N=13572
+  D2. RF any-event + w_loser               | coef=  0.1403 (SE=0.0371) p=0.0002*** | N=13572
+
+Saved estimation results: c:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\new_adopter_alternative_specs.csv

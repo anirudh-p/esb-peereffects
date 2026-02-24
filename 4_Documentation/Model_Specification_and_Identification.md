@@ -609,7 +609,53 @@ Use donut rings at increasing distance to test whether the peer effect attenuate
 
 ---
 
-### 13.5 Summary Assessment: What the Robustness Battery Tells Us
+### 13.5 Alternative Outcome: All-Source New-Adopter Specifications (Script 25)
+
+**Motivation.** The baseline `IS_ADOPTER` indicator is constructed solely from CSBP rebate/grant data, raising the question: does the peer effect extend to broader ESB adoption that may use non-federal funding? Script 25 constructs alternative dependent variables from the full WRI bus-level dataset (all funding sources: federal CSBP, VW Settlement, state programs, federal other, utility/local), using `3q. Quarter ordered` for timing and `1c. LEA ID` for merge.
+
+**Two alternative outcomes (2022–2024 window):**
+1. `new_first_window`: district's **first-ever** ESB order falls within 2022–2024 (N first-adopters = 558)
+2. `new_any_window`: district has **any** ESB order in 2022–2024 (N active districts = 668)
+
+**Source mix among active districts in window:**
+
+| Funding Source | District Count | Share |
+|---|---|---|
+| Federal CSBP | 280 | 38.9% |
+| Other/Mixed | 188 | 26.1% |
+| State Program | 145 | 20.1% |
+| VW Settlement | 102 | 14.2% |
+| Utility/Local | 5 | 0.7% |
+
+Over 60% of window adoption activity involves non-CSBP funding, so these outcomes test whether CSBP lottery neighbors spill over into **all-source** ESB adoption.
+
+**IV-2SLS Results (K=6, state-clustered SE, state FE + full controls):**
+
+| Spec | Outcome | $\hat{\beta}$ | SE | p-value | First-stage F | N |
+|---|---|---|---|---|---|---|
+| A1. Baseline | First-ever | +0.318*** | 0.058 | <0.001 | 1,840 | 13,572 |
+| A2. + $\bar{L}_i$ | First-ever | +0.305*** | 0.063 | <0.001 | 1,570 | 13,572 |
+| B1. Baseline | Any-event | +0.381*** | 0.060 | <0.001 | 2,046 | 13,572 |
+| B2. + $\bar{L}_i$ | Any-event | +0.379*** | 0.068 | <0.001 | 1,721 | 13,572 |
+
+**Reduced-Form ITT:**
+
+| Spec | Outcome | $\hat{\delta}$ | SE | p-value | N |
+|---|---|---|---|---|---|
+| C1. Baseline | First-ever | +0.109*** | 0.029 | <0.001 | 13,572 |
+| C2. + $\bar{L}_i$ | First-ever | +0.100*** | 0.029 | <0.001 | 13,572 |
+| D1. Baseline | Any-event | +0.149*** | 0.036 | <0.001 | 13,572 |
+| D2. + $\bar{L}_i$ | Any-event | +0.140*** | 0.037 | <0.001 | 13,572 |
+
+**Key takeaways:**
+- All 8 specifications are significant at the 0.1% level with strong first stages (F > 1,500).
+- The peer effect on all-source adoption is **larger** than on CSBP-only adoption (baseline +0.318 vs. +0.201), consistent with CSBP lottery neighbors spurring ESB uptake through any available funding channel.
+- Adding the loser-density control $\bar{L}_i$ barely attenuates the coefficients (first-ever: 0.318→0.305; any-event: 0.381→0.379), in stark contrast to the ~45% attenuation in the CSBP-only spec. This suggests that the applicant-clustering confound is specific to the CSBP outcome (where applicant neighbors are mechanically more likely to be CSBP adopters), not to broader ESB adoption.
+- The "any-event" outcome is slightly larger than "first-ever," consistent with peer effects operating on both the extensive margin (new entry) and intensifying existing activity.
+
+---
+
+### 13.6 Summary Assessment: What the Robustness Battery Tells Us
 
 | Test | Result | Implication |
 |---|---|---|
@@ -621,14 +667,16 @@ Use donut rings at increasing distance to test whether the peer effect attenuate
 | Placebo outcomes | 4/6 pass baseline and 4/6 with $\bar{L}_i$ | Two failures (Dem share, enrollment) attenuate but remain significant; residual clustering concern persists |
 | Donut (drop 1–2) | +0.038 (p=0.27) | Effect concentrated in nearest 1–2 neighbors |
 | Distance gradient | Sharp decay | Consistent with hyper-local peer influence |
+| All-source new-adopter (+ $\bar{L}_i$) | +0.305*** (first-ever), +0.379*** (any-event) | Peer effect extends to all-source ESB adoption; $\bar{L}_i$ attenuation negligible for broader outcome |
 
 **Headline estimates:**
 - **Primary (unconditional, baseline):** $\hat{\beta} = 0.201^{***}$ (SE=0.034)
 - **Preferred (+ loser-density control):** $\hat{\beta} = 0.110^{***}$ (SE=0.039)
+- **All-source new-adopter (+ $\bar{L}_i$, first-ever):** $\hat{\beta} = 0.305^{***}$ (SE=0.063)
 - **Cross-round (temporal, R1→R3):** $\hat{\beta} = 1.343^{***}$ (SE=0.505, LATE on rare subsample)
 - **Reduced-form ITT (+ $\bar{L}_i$):** $\hat{\delta} = 0.112^{***}$ (SE=0.041)
 
-The picture that emerges: there is a **real, positive, statistically significant peer effect in CSBP adoption**, but it is (a) about half as large as the uncorrected baseline after purging applicant clustering, (b) hyper-local (nearest 1–2 neighbors), and (c) more consistent with exposure to nearby CSBP engagement than with exact local win-rate intensity, though that mechanism split is not point-identified by the conditional-ratio test. The reduced-form ITT — "nearby lottery-funded deployments causally raise own adoption" — is the most defensible claim.
+The picture that emerges: there is a **real, positive, statistically significant peer effect in CSBP adoption**, but it is (a) about half as large as the uncorrected baseline after purging applicant clustering, (b) hyper-local (nearest 1–2 neighbors), and (c) more consistent with exposure to nearby CSBP engagement than with exact local win-rate intensity, though that mechanism split is not point-identified by the conditional-ratio test. Critically, the effect **generalizes to all-source ESB adoption** (Section 13.5), where the loser-density control barely attenuates the estimate, suggesting that the applicant-clustering confound is specific to the CSBP-only outcome. The reduced-form ITT — "nearby lottery-funded deployments causally raise own adoption" — is the most defensible claim.
 
 ---
 
