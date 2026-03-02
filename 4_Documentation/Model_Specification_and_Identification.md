@@ -924,3 +924,265 @@ These cross-sectional estimates remain significant but cannot disentangle tempor
 ---
 
 *References: Manski (1993) "Identification of Endogenous Social Effects"; Nevo & Rosen (2012) "Identification with Imperfect Instruments"; Bramoulle, Djebbari & Fortin (2009) "Identification of peer effects through social networks"; Conley (1999) "GMM estimation with cross sectional dependence"; Stock & Yogo (2005) "Testing for weak instruments in linear IV regression."*
+
+---
+
+## 14. Deployment Timing and Signal Quality: Why the Cross-Round IV is Null
+
+**Last Updated:** February 24, 2026
+
+The cross-round temporal design (R1 lottery wins as instrument for R3-window adoption) produced null results across all specifications. This section documents additional diagnostic analysis investigating **why** the temporal specification fails — specifically, whether the deployment timing of R1 buses explains the null effect.
+
+### 14.1 The Deployment Lag Hypothesis
+
+R1 lottery awards were announced in February 2022 (EPA FY2022). However, ESB deliveries typically take 12–24 months due to manufacturing backlogs and infrastructure installation. R3 application deadlines were October 2023. If R1 buses weren't yet operational when R3 applicants made their decisions, the observation channel is blocked.
+
+**WRI Bus-Level Delivery Data (Script 27):**
+
+| Metric | Value | Implication |
+|---|---|---|
+| R1 CSBP buses | 2,208 | — |
+| With delivery date recorded | 869 (39%) | Most missing |
+| Delivered before R3 deadline (Oct 2023) | **48%** | Half not yet visible |
+| R1 districts with ≥1 bus delivered by deadline | **63%** | 1/3 had no buses on road |
+
+**Conclusion:** Deployment lag is real — approximately half of R1 buses were not on the road when R3 applicants were making decisions.
+
+### 14.2 Signal Quality: Early vs. Late Delivery
+
+A more nuanced hypothesis: the *quality* of the peer signal matters. If neighbors with smooth deployments (early delivery) signal "ESB works," that should generate positive peer effects. But neighbors with problematic deployments (late/missing delivery) may signal "ESB adoption is risky."
+
+**Reduced Form Results (Script 28, K=6):**
+
+| Instrument | Coefficient | SE | p-value | Interpretation |
+|---|---|---|---|---|
+| w_R1_early (neighbors with early delivery) | **-0.022** | 0.036 | 0.55 | **Null** |
+| w_R1_late (neighbors with late/missing delivery) | **-0.097** | 0.036 | 0.007*** | **Negative** |
+| Difference (early - late) | +0.076 | 0.051 | 0.13 | Not significant |
+
+**Key Finding:** The negative cross-round effect is driven entirely by **late-delivery R1 neighbors**. Early-delivery neighbors show a null effect (no positive peer influence), while late-delivery neighbors generate strong *negative* spillovers.
+
+### 14.3 The "Bad News Travels" Interpretation
+
+The pattern is consistent with **negativity bias in technology adoption**:
+
+| Neighbor Signal | Effect | Mechanism |
+|---|---|---|
+| Bus deployed smoothly (early) | Null | "Buses exist" — not especially motivating |
+| Bus deployment problematic (late/missing) | Negative | "This is a disaster" — actively discouraging |
+
+Potential adopters weight negative information more heavily than positive information. A neighbor's smooth deployment is unremarkable ("it worked"), but a neighbor's troubled deployment is salient ("they're still waiting for their buses after 18 months").
+
+### 14.4 All-Source vs. CSBP-Specific Effects
+
+**Script 29 tested whether the negative late-delivery effect extends to non-CSBP adoption:**
+
+| Outcome | w_R1_early | p | w_R1_late | p |
+|---|---|---|---|---|
+| First-ever ESB (all-source) | +0.009 | 0.80 | **-0.048** | 0.23 |
+| Any ESB (all-source) | +0.018 | 0.63 | **-0.062** | 0.14 |
+| R3 CSBP adoption | -0.022 | 0.55 | **-0.097** | 0.007*** |
+
+**Finding:** The strong negative effect is **CSBP-specific**. Late-delivery neighbors discourage R3 CSBP applications (p=0.007) but do not significantly reduce all-source adoption (p=0.14–0.23). This suggests:
+
+1. The negative signal is about **program reputation** (CSBP has delivery problems), not technology (ESBs don't work)
+2. Districts may substitute to alternative funding channels (VW Settlement, state programs) when CSBP signals are bad
+3. The all-source null reflects offsetting effects: negative CSBP channel + neutral/positive alternative channels
+
+### 14.5 Geographic Concentration
+
+**The negative late-delivery effect is geographically concentrated (Script 29):**
+
+| Census Division | N | Late Effect | p-value |
+|---|---|---|---|
+| **Pacific** | 1,486 | **-0.34*** | 0.0003 |
+| **East South Central** | 568 | **-0.31*** | 0.001 |
+| **New England** | 904 | **-0.26** | 0.026 |
+| **Mountain** | 1,060 | **-0.21*** | 0.002 |
+| **East North Central** | 2,689 | **-0.16** | 0.012 |
+| West North Central | 1,971 | -0.08 | 0.21 |
+| West South Central | 1,796 | -0.02 | 0.84 |
+| South Atlantic | 639 | +0.04 | 0.76 |
+| Mid-Atlantic | 1,720 | +0.05 | 0.71 |
+
+**California dominates the Pacific effect** (state-level late coefficient: -0.40***, p<0.0001), followed by Wisconsin (-0.37**), Pennsylvania (-0.19**), and Ohio (-0.15*).
+
+California's outsized contribution may reflect:
+- Dense school district information networks
+- High baseline ESB activity (HVIP program since 2015) creating salient reference points
+- Media attention to deployment problems in an early-adopter state
+
+### 14.6 California Deep Dive: General Deterrence
+
+California-specific analysis (Script 30) reveals that late-delivery effects in California represent **general deterrence** rather than substitution to state programs:
+
+**R1 CSBP Timing in CA:**
+- 171 R1 CSBP buses, only 20 (12%) delivered before R3 deadline
+- 13 CA districts with ALL buses late/missing
+- Major districts affected: Compton USD, Stockton USD, LA County Office of Ed
+
+**CA Reduced Form Results (K=6):**
+
+| Outcome | w_R1_early | p | w_R1_late | p |
+|---|---|---|---|---|
+| CSBP R3 adoption | **-0.21*** | 0.08 | **-0.38*** | <0.001 |
+| HVIP (state program) | **-0.14*** | 0.01 | **-0.15*** | 0.01 |
+| Any state program | **-0.14*** | 0.01 | **-0.15*** | 0.01 |
+
+**Key finding:** Late-delivery neighbors discourage BOTH federal CSBP and state HVIP adoption in California. This is **not** program-specific substitution (districts don't shift from CSBP to HVIP when they see bad CSBP signals). Instead, it's **general deterrence** — bad ESB deployment experiences reduce adoption through ALL channels.
+
+The early-delivery coefficient is also negative (though smaller), suggesting that even deployed buses may generate negative signals if the broader news environment is dominated by deployment problems.
+
+### 14.7 Implications for Identification
+
+These findings revise the interpretation of the cross-round null result:
+
+| Original Hypothesis | Evidence | Status |
+|---|---|---|
+| Deployment lag → null because buses not visible | 48% delivered by deadline | ✓ Partially supported |
+| Information spillover (learn about CSBP) | Negative effect on R3 application | ✗ Rejected |
+| Bus observation channel | Early-delivery effect is null | ✗ Rejected |
+| Thin LATE | CSBP reduced form is null/negative | ✓ Supported |
+| **NEW: Negative signal from problems** | Late delivery → -0.10*** | ✓ Discovered |
+
+### 14.7 Revised Assessment
+
+The cross-round design does not show positive peer effects because:
+
+1. **Deployment lag** meant most R1 buses weren't visible by R3 deadline
+2. **Late deliveries generated negative information spillovers** — the opposite of what peer effects models assume
+3. **The negative effect is CSBP-specific** — program reputation, not technology, drives the signal
+4. **Geographic concentration** in CA, Great Lakes, and New England suggests non-nationally-representative variation
+
+The positive cross-sectional IV result likely reflects **contemporaneous co-application** rather than genuine temporal peer effects. Districts apply together because they share information networks, not because one observes the other's buses.
+
+**Reference scripts:**
+- [27_temporal_mechanism_diagnostics.py](../2_Scripts/2_Analysis/B_Estimation/27_temporal_mechanism_diagnostics.py)
+- [28_delivery_timing_iv.py](../2_Scripts/2_Analysis/B_Estimation/28_delivery_timing_iv.py)
+- [29_delivery_timing_extended.py](../2_Scripts/2_Analysis/B_Estimation/29_delivery_timing_extended.py)
+
+**Output tables:**
+- [temporal_mechanism_diagnostics.csv](../3_Output/Tables/temporal_mechanism_diagnostics.csv)
+- [delivery_timing_iv.csv](../3_Output/Tables/delivery_timing_iv.csv)
+- [delivery_timing_extended.csv](../3_Output/Tables/delivery_timing_extended.csv)
+
+---
+
+## 15. Summary: What We Learn About Peer Effects in ESB Adoption
+
+### 15.1 Cross-Sectional Evidence
+
+| Specification | Estimate | SE | p | Interpretation |
+|---|---|---|---|---|
+| Baseline (pooled R1+R3 IV) | +0.201*** | 0.034 | <0.001 | Strong cross-sectional peer effect |
+| + Loser density control | +0.110*** | 0.039 | 0.005 | ~45% from applicant clustering |
+| + Own treatment controls | +0.062** | 0.022 | 0.006 | Survives exclusion fix |
+
+### 15.2 Temporal Evidence
+
+| Design | Result | Credibility |
+|---|---|---|
+| R1→R3 CSBP | Unreliable (F=0.3) | ✗ First stage dead |
+| R1→R3 all-source | Null (+0.02, p>0.5) | ✓ Strong first stage, genuine null |
+| Early delivery → adoption | Null (-0.02, p=0.55) | ✓ No positive peer effect |
+| Late delivery → adoption | **Negative (-0.10***, p=0.007)** | ✓ Bad signal discourages |
+
+### 15.3 The Honest Claim
+
+> *"There is cross-sectional evidence of CSBP-specific peer effects that survives applicant-density and own-treatment controls (β ≈ 0.06–0.11). However, the cleanest temporal identification (R1→R3) fails: early-delivery neighbors do not encourage adoption, and late-delivery neighbors actively discourage it. The peer channel appears to be program-specific information sharing rather than general observational learning about electric school buses."*
+
+---
+
+## 16. Mechanism Decomposition: Can We Disentangle "Status vs. Strategy"?
+
+**Last Updated:** March 2, 2026
+
+The initial submission (*"Status or Strategy? Disentangling Peer Effects in Electric School Bus Adoption"*) framed the question as a binary between **Emulation** (copying immediate geographic neighbors — "keeping up with the Joneses") and **Social Learning** (learning from climate-similar peers facing analogous operational challenges). The original results suggested social learning dominated (climate peer effect positive and significant; geographic effect insignificant after priority controls). The current robustness battery has overturned this framing, but the heterogeneity patterns in the updated results tell a *more informative* disentangling story — through different variation.
+
+### 16.1 Original Framing vs. Current Evidence
+
+| Channel | Initial Submission | Current Results |
+|---|---|---|
+| Geographic ("Emulation") | Insignificant after priority controls | **+0.11–0.19***, robust across specifications |
+| Climate ("Social Learning") | +0.15*, significant | **Null or negative** once state FE included |
+| Mechanism story | Social learning > emulation | Geographic information sharing; climate was spurious |
+
+The original climate result was an artifact: climate-similar districts cluster within states and share state-level policy environments (EV mandates, co-funding programs, diesel regulations). Once state FE absorb these, climate peer effects vanish. The horse-race specification confirms this: climate coefficient = +0.02 (p=0.43) vs. geographic = +0.04 (p=0.25) in the orthogonalized design, and in the standardized sample with state FE the climate coefficient turns **negative** (K=6: −0.017, p<0.001).
+
+**Reference tables:** [geo_vs_climate_peer_effects.csv](../3_Output/Tables/geo_vs_climate_peer_effects.csv), [standardized_horserace_results.csv](../3_Output/Tables/standardized_horserace_results.csv), [climate_decomposition_results.csv](../3_Output/Tables/climate_decomposition_results.csv)
+
+### 16.2 What Current Results Can Disentangle (Indirect Evidence)
+
+While no single regression cleanly separates "emulation" from "learning" with a label, the robustness battery provides four pieces of indirect evidence about the dominant mechanism:
+
+#### Evidence 1: Rural Concentration → Information Frictions, Not Status
+
+| Subsample | $\hat{\beta}$ | SE | p | N |
+|---|---|---|---|---|
+| **Rural** | **+0.178*** | 0.050 | 0.0004 | 7,053 |
+| Urban | +0.053 | 0.062 | 0.397 | 3,153 |
+| Town/Suburban | +0.031 | 0.058 | 0.599 | 3,366 |
+
+If the mechanism were status/emulation ("keeping up with the Joneses"), urban districts — with more visible peers, denser networks, and greater social comparison pressure — should show *stronger* effects. They don't. Rural concentration is consistent with **information scarcity**: rural districts have fewer channels to learn about federal programs, so a nearby adopter is a uniquely valuable signal.
+
+#### Evidence 2: Donut Decay → Hyper-Local, Not Regional Learning
+
+| Network Ring | $\hat{\beta}$ | SE | p |
+|---|---|---|---|
+| Close (1–6) | **+0.201*** | 0.034 | <0.001 |
+| Donut (3–8) | +0.038 | 0.034 | 0.268 |
+| Medium (4–9) | −0.032 | 0.030 | 0.283 |
+| Far (7–12) | +0.021 | 0.029 | 0.481 |
+
+The effect dies off within ~2 neighbors. This is consistent with direct interpersonal contact (superintendent networks, shared transportation cooperatives, regional education service agencies) rather than either broad emulation or technical learning from climate-similar regions.
+
+#### Evidence 3: Delivery Timing → Program Information, Not Technology Observation
+
+| Instrument | Coefficient | SE | p | Interpretation |
+|---|---|---|---|---|
+| w_R1_early (early delivery) | −0.022 | 0.036 | 0.55 | **Null** — seeing working buses doesn't help |
+| w_R1_late (late/missing delivery) | **−0.097*** | 0.036 | 0.007 | **Negative** — bad program signal discourages |
+
+If emulation drove the effect, deployment quality wouldn't matter — you'd copy regardless. If *technological* social learning drove it, early deployments should be positive ("my neighbor's electric buses work in our climate"). Instead, the pattern suggests districts learn about **program logistics** (application process, delivery timelines, hassle costs), not about the technology itself. Bad news about program execution ("they're still waiting for their buses after 18 months") actively deters future applicants.
+
+#### Evidence 4: Climate Null → Not About Operational Similarity
+
+The fact that climate-similar peers (who share the most relevant operational conditions for ESBs — cold weather range anxiety, battery degradation, heating loads) show zero effect once state FE are included rules out the "Strategy" channel as originally framed. Districts aren't looking to climate-similar peers for technical validation of ESB performance.
+
+### 16.3 Revised Mechanism: Program Information Spillovers
+
+Instead of "Emulation vs. Social Learning," the weight of evidence points to a **third channel** not present in the initial submission:
+
+> **Program Information Spillovers**: Nearby districts share knowledge about a specific federal funding opportunity (CSBP) — how to apply, which consultants to use, what to expect — rather than learning about the technology or competing for status.
+
+**Supporting evidence:**
+
+| Finding | Consistent with program info? | Inconsistent with emulation? | Inconsistent with tech learning? |
+|---|---|---|---|
+| Rural concentration (β=0.18***) | ✓ Info scarcity | ✓ Urban should be stronger | Ambiguous |
+| Hyper-local decay (effect in 1–2 nearest only) | ✓ Personal network | ✓ Would be broader | ✓ Would be broader/climate-based |
+| Early delivery → null | ✓ Don't need to see buses | ✓ Would copy regardless | ✗ Should be positive |
+| Late delivery → negative | ✓ Bad program signal | ✗ Would copy regardless | Ambiguous |
+| Climate peers → null | ✓ Not about operations | N/A | ✗ Should be the strongest channel |
+| Cross-round temporal → null | ✓ Effect is contemporaneous co-application | ✓ Would persist over time | ✗ Would persist over time |
+| CSBP-specific, not all-source | ✓ Program-specific channel | Ambiguous | ✗ Should be technology-general |
+
+### 16.4 Potential Further Tests
+
+Several feasible approaches with existing data could sharpen the mechanism identification:
+
+1. **Application as outcome:** Model `IS_APPLICANT_R3` as the dependent variable, instrumented by neighbor R1 wins. If positive while adoption-conditional-on-application shows no peer effect, that cleanly identifies the channel as "information about the program." **Already tested** (Section 13.9): neighbor R1 → R3 application link is null (coef = −0.003, p=0.91), meaning even the application channel isn't detectable temporally.
+
+2. **Consultant/intermediary networks:** If vendor or grant-writing firm identifiers are available in WRI bus-level data, testing whether the geographic peer effect operates through shared intermediaries would directly identify the information conduit. The hyper-local decay pattern is consistent with shared regional education service agencies or transportation cooperatives.
+
+3. **Round-specific co-application:** Testing whether neighbors are more likely to apply *in the same round* (vs. different rounds) would distinguish co-application sorting from sequential learning. If the cross-sectional peer effect is driven entirely by within-round co-application, neighbors should cluster in the same round at rates exceeding what geography alone would predict.
+
+4. **Additional rounds (R4–R5):** Future CSBP rounds (2024–2025) would substantially increase the cross-round observation window. With R1 buses having 2+ additional years to be deployed and observed, a temporal design using R1 wins to instrument R4/R5 adoption would have much stronger a priori plausibility for detecting observational learning if it exists.
+
+### 16.5 Summary
+
+The original "Status or Strategy?" framing can be updated to a more nuanced conclusion:
+
+> *"Neither pure emulation nor climate-based social learning explains ESB adoption spillovers. The dominant channel is hyper-local program information sharing: rural districts learn about the CSBP application process from their 1–2 nearest neighbors, but do not appear to learn about ESB technology by observing deployed buses. Bad deployment experiences actively discourage adoption through the same local channel. This suggests federal subsidy programs should invest in technical assistance and deployment logistics for early adopters, as negative program signals carry outsized influence on neighboring districts' decisions."*
+
+---

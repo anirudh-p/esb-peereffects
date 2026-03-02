@@ -1,0 +1,101 @@
+================================================================================
+CALIFORNIA DEEP DIVE: LATE-DELIVERY PEER EFFECTS
+================================================================================
+
+--- Loading WRI bus-level data ---
+California LEAs in WRI: 2,133
+
+--- R1 CSBP buses in California ---
+R1 CSBP buses in CA: 171
+  Early delivery (before Oct 2023): 20
+  Late/missing delivery: 151
+
+R1 CA districts: 20
+  With at least one early delivery: 7
+  All buses late/missing: 13
+
+--- CA R1 districts with late/missing deliveries ---
+
+Districts with ALL buses late/missing (potential bad signals):
+LEA Name                                 First Delivery  NCES ID
+----------------------------------------------------------------------
+Hesperia Unified                         2024-07         0600014
+Yosemite Unified                         2024-07         0600160
+Palisades Charter High District          2024-07         0601488
+Atwater Elementary                       2024-07         0603420
+Coalinga-Huron Unified                   2024-07         0609120
+Corning Union Elementary                 2024-07         0609780
+Lakeside Union Elementary                2024-07         0620790
+Modesto City Elementary                  2024-07         0625130
+Princeton Joint Unified                  2024-07         0631620
+Stockton Unified                         2024-07         0638010
+Los Angeles County Office of Education   2024-07         0691078
+Warner Unified                           Missing         0600042
+Compton Unified                          Missing         0609620
+
+--- CA ESB adoption by funding source (2023-2024) ---
+
+CA buses in 2023-2024 by funding source:
+  EPA_CSBP: 678 buses
+  CA_HVIP: 220 buses
+  Unknown: 178 buses
+  Other_State: 23 buses
+  VW_Settlement: 13 buses
+  EPA_CSBP district count: 63
+  CA_HVIP district count: 34
+  Unknown district count: 6
+  Other_State district count: 4
+  VW_Settlement district count: 5
+
+--- Testing substitution hypothesis ---
+Do late-delivery R1 neighbors push CA districts toward state programs?
+
+CA districts in analysis dataset: 957
+CA R3 CSBP adopters: 56
+CA HVIP adopters (2023-24): 37
+CA state program adopters: 37
+
+--- Building CA-only spatial weights ---
+CA spatial sample: 957
+CA estimation sample: 935
+Mean(w_R1_early): 0.0048
+Mean(w_R1_late): 0.0141
+
+--- Reduced form regressions (CA only) ---
+
+  Outcome: CSBP R3 (N adopters = 51)
+    w_R1_early: coef = -0.2142 (SE = 0.1236) p = 0.0830 *
+    w_R1_late:  coef = -0.3845 (SE = 0.0888) p = 0.0000 ***
+
+  Outcome: HVIP (N adopters = 32)
+    w_R1_early: coef = -0.1379 (SE = 0.0548) p = 0.0119 **
+    w_R1_late:  coef = -0.1509 (SE = 0.0614) p = 0.0141 **
+
+  Outcome: Any State Program (N adopters = 32)
+    w_R1_early: coef = -0.1379 (SE = 0.0548) p = 0.0119 **
+    w_R1_late:  coef = -0.1509 (SE = 0.0614) p = 0.0141 **
+
+--- County-level heterogeneity within CA ---
+County analysis failed: "['10a. County Name'] not in index"
+
+================================================================================
+CALIFORNIA DEEP DIVE SUMMARY
+================================================================================
+
+1. R1 DELIVERY TIMING IN CA:
+   - R1 CSBP buses: 171
+   - Districts with late/missing delivery: 13
+
+2. SUBSTITUTION HYPOTHESIS:
+   If late CSBP delivery signals "avoid federal program", do districts
+   substitute to state programs (HVIP, Carl Moyer, CAPP)?
+
+   CSBP R3 adoption: late effect = -0.3845 *** (p=0.0000)
+   State program adoption: late effect = -0.1509 ** (p=0.0141)
+
+3. INTERPRETATION:
+   - If CSBP effect is negative and state effect is positive: SUBSTITUTION
+   - If both negative: GENERAL DETERRENCE
+   - If CSBP negative, state null: PROGRAM-SPECIFIC BAD SIGNAL
+
+Saved: c:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\california_deep_dive.csv
