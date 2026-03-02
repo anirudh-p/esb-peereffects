@@ -1,0 +1,7 @@
+estimand,K,loser_ctrl,spec,n_obs,y_mean,rf_coef,rf_se,rf_pval,rf_stars,iv_coef,iv_se,iv_pval,fs_fstat
+ITT,6,False,"K=6, loser=No ",12721,0.05589,0.010167,0.023259,0.662,,,,,
+ITT,6,True,"K=6, loser=Yes",12721,0.05589,0.009926,0.023986,0.679,,,,,
+ITT,10,False,"K=10, loser=No ",12721,0.05589,0.00818,0.031244,0.7935,,,,,
+ITT,10,True,"K=10, loser=Yes",12721,0.05589,0.008109,0.031331,0.7958,,,,,
+ITT,15,False,"K=15, loser=No ",12721,0.05589,0.016225,0.038924,0.6768,,,,,
+ITT,15,True,"K=15, loser=Yes",12721,0.05589,0.020751,0.037594,0.581,,,,,

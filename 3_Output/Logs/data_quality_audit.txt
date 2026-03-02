@@ -1,0 +1,228 @@
+======================================================================
+STEP 1  —  District universe (wri_data.csv)
+======================================================================
+  Rows loaded     : 19,517
+  Unique NCES IDs : 19,516
+  Sample IDs      : ['4500690', '2800360', '0100002', '1700105', '0100006']
+
+  Control availability (of 19,517 districts):
+    enrollment          : 18,554  ( 95.1%)
+    median_income       : 13,014  ( 66.7%)
+    poverty_rate        : 13,073  ( 67.0%)
+    pct_white           : 13,080  ( 67.0%)
+    pm25                : 13,192  ( 67.6%)
+    urbanicity          : 19,516  (100.0%)
+    priority_r1         : 19,516  (100.0%)
+    priority_r23        : 19,516  (100.0%)
+    state               : 19,516  (100.0%)
+
+======================================================================
+STEP 2  —  CSBP lottery winners (CSB_Rebates.xlsx)
+======================================================================
+  CSB_Rebates rows          : 826
+  After excluding ['WITHDRAWN', 'CANCELLED', 'NOT SELECTED']... : 826
+
+  Funding Year distribution :
+Project Status
+Funds Awarded            422
+Project Complete         325
+Selected                  77
+Tentatively Selected*      2
+
+Funding Year
+2022    368
+2023    458
+
+  Unique R1 lottery winners : 368
+  Unique R3 lottery winners : 458
+  Won both R1 and R3        : 24
+
+======================================================================
+STEP 3  —  R2 grant awardees (CSB_Grants.xlsx)  — EXCLUDED from IV
+======================================================================
+  Unique R2 grantees  : 234  (all Funding Year 2023)
+  Overlap with R1 win : 14
+  Overlap with R3 win : 37
+
+======================================================================
+STEP 4  —  CSBP applicant file (waitlisted & rejected)
+======================================================================
+  Total rows : 2,208
+
+  Round breakdown:
+Round
+R1 - 2022 Rebates    1546
+R3 - 2023 Rebates     338
+R2 - Grants           324
+
+  Status breakdown:
+Project Status
+Waitlist    1884
+Rejected     324
+
+  After excluding R2 rows : 1,884
+
+  R1 waitlisted/rejected (unique districts) : 1,546
+  Overlap with R1 winners                   : 12  ← multi-application districts: treating as winners
+  R1 losers after removing winner overlap    : 1,534
+
+  R3 waitlisted/rejected (unique districts) : 338
+  Overlap with R3 winners                   : 41  ← multi-application districts: treating as winners
+  R3 losers after removing winner overlap    : 297
+
+  Full R3 applicant universe (win ∪ waitlist): 755
+
+======================================================================
+STEP 5  —  WRI all-source adoption outcomes (bus-level data)
+======================================================================
+  Bus-level rows total         : 12,549
+  Rows with valid year + NCES  : 12,543
+
+  Award year distribution:
+award_year
+2012.0       2
+2013.0       2
+2014.0       2
+2015.0       3
+2016.0      10
+2017.0      89
+2018.0     190
+2019.0     446
+2020.0     480
+2021.0    1110
+2022.0    3285
+2023.0    3393
+2024.0    3531
+
+  Districts with ≥1 bus awarded in 2023: 355
+    of which first-ever adopters          : 298
+
+  Districts with ≥1 bus awarded in 2024: 533
+    of which first-ever adopters          : 479
+
+  Districts with ≥1 bus awarded in 2023_24: 817
+    of which first-ever adopters          : 722
+
+  R1 bus delivery timing:
+    R1 buses total            : 2,245
+    Delivery date available   : 2,099 (93.5%)
+    Delivery year distribution:
+delivery_year
+2022.0      14
+2023.0    1006
+2024.0    1079
+NaN        146
+
+    R1 districts with early delivery (<2024) : 217
+    R1 districts with late/unknown delivery  : 143
+
+======================================================================
+STEP 6  —  Political control (county presidential 2020)
+======================================================================
+  2020 counties with vote data : 3,154
+  LEA-county crosswalk rows  : 25,407
+  Unique LEAs with political : 19,486
+  pct_dem_2020 coverage      : 19,218 (98.6%)
+
+======================================================================
+STEP 7  —  Merge onto district universe
+======================================================================
+  Total districts in dataset : 19,517
+
+======================================================================
+STEP 8  —  Data quality audit
+======================================================================
+
+━━ 8a. Key binary variable rates ━━
+  R1 lottery winner                            :   365  ( 1.87%)
+  R3 lottery winner                            :   454  ( 2.33%)
+  Any lottery winner (R1+R3)                   :   795  ( 4.07%)
+  R2 grant awardee                             :   234  ( 1.20%)
+  IS_ADOPTER (csbp lottery only)               :   795  ( 4.07%)
+  IS_ADOPTER_CSBP_ANY (incl. R2)               :   982  ( 5.03%)
+  R1 lottery loser                             : 1,522  ( 7.80%)
+  R3 lottery loser                             :   296  ( 1.52%)
+  Pooled lottery loser                         : 1,696  ( 8.69%)
+  Applied to R3 (Estimand 2 outcome)           :   750  ( 3.84%)
+  WRI any adoption 2023                        :   355  ( 1.82%)
+  WRI any adoption 2024                        :   533  ( 2.73%)
+  WRI any adoption 2023-24                     :   817  ( 4.19%)
+  Pre-R1 ESB adopter                           :   411  ( 2.11%)
+
+━━ 8b. Control variable missing-data audit ━━
+  enrollment               : 18,554 non-null  |    963 missing (4.9%)
+  median_income            : 13,014 non-null  |  6,503 missing (33.3%)
+  poverty_rate             : 13,073 non-null  |  6,444 missing (33.0%)
+  pct_white                : 13,080 non-null  |  6,437 missing (33.0%)
+  pm25                     : 13,192 non-null  |  6,325 missing (32.4%)
+  urbanicity               : 19,516 non-null  |      1 missing (0.0%)
+  priority_r1              : 19,516 non-null  |      1 missing (0.0%)
+  priority_r23             : 19,516 non-null  |      1 missing (0.0%)
+  state                    : 19,516 non-null  |      1 missing (0.0%)
+  pct_dem_2020             : 19,217 non-null  |    300 missing (1.5%)
+
+  Estimation sample (all controls present): 12,721 / 19,517 (65.2%)
+
+  Does sample restriction create systematic bias?
+    IV_Z_R1                       : full=1.87%  est=2.62%  dropped=0.47%
+    IV_Z_R3                       : full=2.33%  est=3.14%  dropped=0.81%
+    IS_ADOPTER                    : full=4.07%  est=5.59%  dropped=1.24%
+    Y_R3_apply                    : full=3.84%  est=5.14%  dropped=1.41%
+    wri_any_2023_24               : full=4.19%  est=5.45%  dropped=1.82%
+
+━━ 8c. Lottery winner / loser / non-applicant breakdown ━━
+lottery_group
+non-applicant    17229
+R1 loser          1217
+R3 winner          430
+R1 winner          321
+R3 loser           296
+R1+R3 winner        24
+
+━━ 8d. Priority status ━━
+
+  priority_r1:
+priority_r1
+0       11946
+1        7570
+<NA>        1
+
+  priority_r23:
+priority_r23
+0       13996
+1        5520
+<NA>        1
+
+━━ 8e. Control variable summary statistics ━━
+
+  enrollment:  mean=3.53e+03  sd=1.13e+04  p10=163  p90=7.12e+03  missing=0
+
+  median_income:  mean=6.86e+04  sd=2.75e+04  p10=4.31e+04  p90=1.01e+05  missing=0
+
+  poverty_rate:  mean=0.122  sd=0.0726  p10=0.043  p90=0.218  missing=0
+
+  pct_white:  mean=0.822  sd=0.175  p10=0.58  p90=0.969  missing=0
+
+  pm25:  mean=7.42  sd=1.66  p10=4.89  p90=9.25  missing=0
+
+  Urbanicity distribution (estimation sample):
+urbanicity
+Rural       6790
+Suburban    2904
+Town        2296
+Urban        731
+
+━━ 8f. Lottery balance: R1 winners vs R1 losers on pre-treatment controls ━━
+  R1 applicants in estimation sample: 1,782 (333 winners, 1,449 losers)
+  median_income            : coef=-1.097e+04  p=0.0000  ***
+  poverty_rate             : coef=+0.02359  p=0.0000  ***
+  enrollment               : coef=-1450  p=0.3408
+  pm25                     : coef=-0.1235  p=0.1853
+  pct_white                : coef=+0.0008451  p=0.9494
+
+======================================================================
+STEP 9  —  Save
+======================================================================
+
+  Saved: C:\BC PhD\Research\Peer-Effects and Adoption\1_Data\Cleaned\analysis_dataset.csv
+  Final dataset shape: (19517, 30)

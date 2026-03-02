@@ -1,0 +1,45 @@
+======================================================================
+ESTIMAND 1 — Cross-sectional ITT
+======================================================================
+  Full dataset rows: 19,517
+  Estimation sample: 12,721
+
+  [K=6, loser=No ]  RF coef=+0.01017  SE=0.02326  p=0.6620  N=12,721  Ymean=0.0559
+           2SLS failed: Singular matrix
+
+  [K=6, loser=Yes]  RF coef=+0.00993  SE=0.02399  p=0.6790  N=12,721  Ymean=0.0559
+           2SLS failed: Singular matrix
+
+  [K=10, loser=No ]  RF coef=+0.00818  SE=0.03124  p=0.7935  N=12,721  Ymean=0.0559
+           2SLS failed: Singular matrix
+
+  [K=10, loser=Yes]  RF coef=+0.00811  SE=0.03133  p=0.7958  N=12,721  Ymean=0.0559
+           2SLS failed: Singular matrix
+
+  [K=15, loser=No ]  RF coef=+0.01622  SE=0.03892  p=0.6768  N=12,721  Ymean=0.0559
+           2SLS failed: Singular matrix
+
+  [K=15, loser=Yes]  RF coef=+0.02075  SE=0.03759  p=0.5810  N=12,721  Ymean=0.0559
+           2SLS failed: Singular matrix
+
+======================================================================
+SUMMARY TABLE — Estimand 1 ITT reduced forms
+======================================================================
+
+Spec                                 N   RF coef       SE   p-val Stars
+-----------------------------------------------------------------
+  K=6, loser=No                 12,721  +0.01017  0.02326  0.6620      
+  K=6, loser=Yes                12,721  +0.00993  0.02399  0.6790      
+  K=10, loser=No                12,721  +0.00818  0.03124  0.7935      
+  K=10, loser=Yes               12,721  +0.00811  0.03133  0.7958      
+  K=15, loser=No                12,721  +0.01622  0.03892  0.6768      
+  K=15, loser=Yes               12,721  +0.02075  0.03759  0.5810      
+
+Interpretation note:
+  RF coef = δ = marginal effect of a 1/K increase in the share of lottery-winning
+  neighbours on own CSBP adoption probability (ITT, LPM), state-clustered SE.
+  The 'loser=Yes' spec controls for neighbour application density (w_loser_pooled).
+  A positive δ that survives the loser control is attributable to lottery LUCK,
+  not merely geographic clustering of application propensity.
+
+  Saved: C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\estimand1_itt.csv

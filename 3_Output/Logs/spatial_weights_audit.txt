@@ -1,0 +1,51 @@
+======================================================================
+1  Analysis dataset
+======================================================================
+  Rows: 19,517  |  NCES IDs: 19,516
+
+======================================================================
+2  Shapefile (NCES EDGE SY2021)
+======================================================================
+  Shapefile rows: 13,280
+  CRS: EPSG:4269
+  ID column candidates: ['GEOID']
+  Using ID column: 'GEOID'
+  Unique NCES IDs in shapefile: 13,280
+  Sample: ['1200180', '1200240', '1200330', '1200390', '1200420']
+
+  Matched districts (shapefile ∩ analysis dataset): 13,075
+  Districts in analysis dataset with no shapefile entry: 6,442
+
+======================================================================
+3  KNN weight matrices & spatial lags
+======================================================================
+  Districts entering W construction: 13,075
+
+  ── K = 6 ──
+    Sparse W saved: knn_weights_k6.npz
+    Spatial lag columns created: 21
+    mean w_IV_Z_R1 = 0.02732  |  districts with ≥1 R1 winner neighbor: 1,960
+
+  ── K = 10 ──
+    Sparse W saved: knn_weights_k10.npz
+    Spatial lag columns created: 21
+    mean w_IV_Z_R1 = 0.02614  |  districts with ≥1 R1 winner neighbor: 2,898
+
+  ── K = 15 ──
+    Sparse W saved: knn_weights_k15.npz
+    Spatial lag columns created: 21
+    mean w_IV_Z_R1 = 0.02590  |  districts with ≥1 R1 winner neighbor: 3,979
+
+
+======================================================================
+4  Merge and save enriched dataset
+======================================================================
+  Final shape: (19517, 93)
+  Columns: ['nces_id', 'state', 'urbanicity', 'enrollment', 'median_income', 'poverty_rate', 'pct_white', 'pm25', 'priority_r1', 'priority_r23', 'IV_Z_R1', 'IV_Z_R3'] ...
+
+  Estimation sample (all controls + K=6 lag): 12,721 / 19,517
+    R1 winners in sample : 333
+    R3 winners in sample : 399
+    R1 losers in sample  : 1,449
+
+  Saved: C:\BC PhD\Research\Peer-Effects and Adoption\1_Data\Cleaned\analysis_dataset_spatial.csv

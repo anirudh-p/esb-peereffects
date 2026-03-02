@@ -1,0 +1,47 @@
+======================================================================
+ESTIMAND 2 — Application Extensive Margin
+======================================================================
+  Full dataset: 19,517
+  Non-R1-winner estimation sample: 12,388
+  Of which applied to R3 (Y=1): 617  (4.98%)
+
+  [K=6, R1-loser=No ]  RF coef=+0.05320  SE=0.03048  p=0.0809*  N=12,388  Ymean=0.0498
+
+  [K=6, R1-loser=Yes]  RF coef=+0.05430  SE=0.03026  p=0.0728*  N=12,388  Ymean=0.0498
+
+  [K=10, R1-loser=No ]  RF coef=+0.08399  SE=0.04322  p=0.0520*  N=12,388  Ymean=0.0498
+
+  [K=10, R1-loser=Yes]  RF coef=+0.08463  SE=0.04297  p=0.0489**  N=12,388  Ymean=0.0498
+
+  [K=15, R1-loser=No ]  RF coef=+0.06874  SE=0.05345  p=0.1984  N=12,388  Ymean=0.0498
+
+  [K=15, R1-loser=Yes]  RF coef=+0.06872  SE=0.05340  p=0.1981  N=12,388  Ymean=0.0498
+
+────────────────────────────────────────────────────────────
+  Subsample: Priority-district applicants only (K=6)
+────────────────────────────────────────────────────────────
+  Priority-district non-R1-winners: 6,402  (R3-apply rate: 4.70%)
+  Priority subset, loser=No                    coef=+0.11591  SE=0.05045  p=0.0216**  N=6,402
+  Priority subset, loser=Yes                   coef=+0.11890  SE=0.05047  p=0.0185**  N=6,402
+
+======================================================================
+SUMMARY — Estimand 2
+======================================================================
+
+Spec                                             N   RF coef       SE   p-val Stars
+------------------------------------------------------------------------------
+  K=6, R1-loser=No                          12,388  +0.05321  0.03048  0.0809     *
+  K=6, R1-loser=Yes                         12,388  +0.05430  0.03026  0.0728     *
+  K=10, R1-loser=No                         12,388  +0.08399  0.04322  0.0520     *
+  K=10, R1-loser=Yes                        12,388  +0.08463  0.04297  0.0489    **
+  K=15, R1-loser=No                         12,388  +0.06874  0.05345  0.1984      
+  K=15, R1-loser=Yes                        12,388  +0.06872  0.05340  0.1981      
+    Priority subset, loser=No                6,402  +0.11591  0.05045  0.0216    **
+    Priority subset, loser=Yes               6,402  +0.11890  0.05047  0.0185    **
+
+Interpretation:
+  RF coef = share of K=6 neighbours with R1 lottery wins by which R3 application
+  probability rises — measuring the application margin of the peer effect.
+  Restricted to non-R1-winners so own R1 outcome does not contaminate.
+
+  Saved: C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\estimand2_application.csv
