@@ -97,49 +97,74 @@ The raw data consists of:
 
 ### What is credibly estimable
 
-**Estimand 1: Intention-to-treat (ITT) — the most defensible number**
+**Estimand 1: Intention-to-treat (ITT) — the most defensible starting point**
 
-Does having a lottery-winning neighbor *in the same pool of applicants* increase own adoption probability? This requires only lottery randomness (which holds unconditionally), not the full exclusion restriction. It does not claim to identify a structural peer effect; it estimates the causal effect of *neighbor lottery wins* on own adoption:
+Does having a lottery-winning neighbor increase own CSBP adoption probability? This requires only lottery randomness (which holds unconditionally), not the full exclusion restriction. It does not claim to identify a structural peer effect; it estimates the causal effect of *neighbor lottery wins* on own adoption — the ITT effect of the lottery assignment on diffusion:
 
 $$\delta = \frac{\partial \Pr(Y_i = 1)}{\partial \bar{Z}_i}$$
 
-The estimate with the loser-density control (absorbing local application clustering) is δ ≈ 0.11. This is interpretable as: *an additional lottery-winning neighbor in a pool of 6 raises own adoption probability by ~1.8pp, conditional on local application interest.* This is the ITT effect of the lottery assignment on diffusion.
+The estimate with the loser-density control (absorbing geographic application clustering) from the prior branch was δ ≈ 0.11 at K=6. Interpretable as: *an additional lottery-winning neighbor in a pool of 6 raises own CSBP adoption probability by ~1.8pp, conditional on local application interest.* The ITT establishes whether any effect of winning-neighbor exposure exists before attempting decomposition.
 
-**Limitation:** This conflates several mechanisms — informational demonstration, vendor referrals, administrative learning, shared budget — all of which are "effects of having a funded neighbor nearby." It does not identify which channel dominates.
+**Limitation:** This conflates several mechanisms — informational demonstration, vendor referrals, administrative learning — all of which are "effects of having a funded neighbor nearby." It does not identify which channel dominates.
 
 ---
 
-**Estimand 2: Application extensive margin (requires round-specific applicant data)**
+**Estimand 2: Application extensive margin — the cleanest behavioral outcome**
 
-If the application roster can be split by round (R1 applicants, R3 applicants — separate lists), then the outcome can be reframed as:
+The peer effect mechanism is: *observation of neighbor's ESB → updated beliefs about feasibility/desirability → decision to pursue adoption.* The act of applying to a subsequent round is the direct behavioral signal of updated beliefs — it precedes and is logically separable from whether the applicant then wins the lottery. If own adoption (win + apply) is the outcome, the measurement conflates the peer effect signal with a subsequent random event. Application is the cleaner outcome.
 
-$$Y_i^{R3} = \mathbf{1}[\text{district } i \text{ applied to R3}]$$
+Additionally, fiscal constraints may prevent adoption even among motivated districts. Measuring application rather than adoption avoids ruling out peer effects that are real but budget-constrained at the final step.
 
-instrumented by `w_IV_Z_R1` (share of R1 lottery winners among K nearest neighbors). This directly tests whether R1 neighbor deployments caused R3 application — the extensive margin of program interest. It sidesteps the weak first-stage problem because we no longer require R1 winners to also re-apply in R3; we only require that R1 neighbor wins predict R3 *interest* (application), which is a weaker and more plausible condition.
+Specification:
 
-**Data requirement:** Clean separation of R3 applicants from R1 applicants. The existing waitlisted/rejected file (`CSBP Applicants waitlisted and rejected.xlsx`) contains applicants without explicit round separation — this needs to be verified.
+$$Y_i^{R3} = \mathbf{1}[\text{district } i \text{ applied to R3 rebates}]$$
+
+instrumented by `w_IV_Z_R1` (share of R1 lottery winners among K nearest neighbors). This sidesteps the weak first-stage problem because we no longer require R1 winners to re-apply in R3; we only require that R1 neighbor deployments predict R3 *interest* (application), which is a weaker and more plausible condition.
+
+**Data status — confirmed available.** The file `CSBP Applicants waitlisted and rejected_11.18.25.xlsx` (N = 2,208 rows) contains a clean `Round` column with explicit labels:
+- `R1 - 2022 Rebates`: 1,546 applicants (waitlisted/rejected from R1 lottery)
+- `R2 - Grants`: 324 applicants (competitive grant, not a lottery)
+- `R3 - 2023 Rebates`: 338 applicants (waitlisted/rejected from R3 lottery)
+
+**Important caveat:** R2 entries are from a competitive (non-lottery) selection process. They must not be included in the loser-density control or treated as lottery non-winners. They are a distinct administrative group and should be excluded from all lottery-based instrument construction.
 
 ---
 
 **Estimand 3: Longer-horizon all-source diffusion**
 
-The R1 → R3 window (~15 months, Oct 2022 → Jan 2024) may be too short for deployment-and-observation to occur. A longer window — R1 wins (2022) → all-source WRI adoption 2024–2025 — allows more time for buses to be delivered (delivery data in WRI field `3r. Quarter delivered`), operate, and influence neighbor decisions.
+The R1 → R3 window (~15 months, Oct 2022 → Jan 2024) is likely too short for the deployment-and-observation mechanism to operate. WRI delivery data showed that most R1 buses were not operational before the R3 deadline. Extending the outcome window to include 2024 all-source WRI adoption allows more time for buses to be delivered, observed, and acted upon.
 
-**Data requirement:** Extend the WRI adoption window beyond the current 2023–2024 cutoff. The WRI v9 dataset (June 2025) should contain 2025 entries. This requires re-extracting the WRI bus-level data without the current year filter.
+Specification: R1 lottery wins (2022) as instrument → all-source WRI adoption through end of 2024 as outcome.
+
+**Data status — available, no new data needed.** The WRI v9 dataset (June 2025 update) already contains 2024 bus award data. Award year distribution in the bus-level sheet:
+
+| Award Year | Bus Count |
+|---|---|
+| 2022 | 3,285 |
+| 2023 | 3,393 |
+| **2024** | **3,531** |
+
+The previous analysis imposed an artificial `award_year ∈ {2023, 2024}` window filter. Re-extraction simply means setting the all-source outcome to include all WRI awards in 2023–2024 (or 2024-only for an even cleaner post-R1 window). No new dataset is required.
+
+**Delivery data caveat:** Of the 12,549 bus-level rows, only ~38% have a recorded delivery date (`3r. Quarter delivered`) and ~36% have a service start date (`3s. Quarter first operating`). The delivery and service distributions through 2024 are substantial (1,389 delivered in 2024; 1,040 first operating in 2024), but the high missingness rate limits the precision of any delivery-timing split.
 
 ---
 
-**Estimand 4: Heterogeneity by deployment visibility**
+**Estimand 4: Heterogeneity by R1 deployment visibility**
 
-Among R1 winners, buses delivered *before* the R3 deadline (early delivery) should generate stronger peer effects than those delivered after (late delivery). This is a more targeted test of the demonstration mechanism. Script 28 explored this but found null reduced-form effects even for early-delivery neighbors (RF coef ≈ +0.009, p = 0.80 for WRI first-ever R3 adoption). However, this used the CSBP-specific outcome; re-running with all-source adoption and a longer window is a natural extension.
+If the mechanism is demonstration, R1 buses that were delivered *and operational* before a neighboring district's R3 (or next-cycle) decision should generate stronger peer effects. This splits R1 winners into early-delivery and late/no-delivery groups and uses each as a separate instrument.
+
+The prior branch (Script 28) tested this with CSBP-specific R3 adoption as the outcome and found null reduced-form effects even for early-delivery neighbors. The natural extension is to use: (a) the all-source WRI outcome, and (b) the extended 2024 window from Estimand 3, where more delivery has occurred and observation is more plausible.
+
+This estimand is best treated as a heterogeneity/mechanism check nested within Estimand 3, rather than a standalone design.
 
 ---
 
 **What is likely not identifiable with current data**
 
-- **Structural peer effect β** (the social multiplier): requires temporal ordering, a valid exclusion restriction, and a first stage that isn't near-tautological. None of these are cleanly available.
-- **Mechanism decomposition** (information vs. vendor vs. infrastructure): cross-sectional data cannot separate these channels. The donut test (effect concentrates in 1–2 nearest neighbors) is suggestive of very local spillovers but cannot distinguish mechanisms.
-- **Dynamic learning / Bayesian updating**: requires at least two pre-adoption time periods per district. The current data is effectively cross-sectional.
+- **Structural peer effect β** (the social multiplier): requires temporal ordering, a valid exclusion restriction, and a first stage that is not near-tautological. The core problem — R1 lottery winners rarely re-enter R3 — limits the first-stage power for the clean temporal design. This may be estimable from the application margin (Estimand 2) if the first stage is stronger there.
+- **Mechanism decomposition** (information vs. vendor vs. infrastructure vs. political emulation): cross-sectional data cannot separate these channels. The donut test result (effect concentrates in 1–2 nearest neighbors) from the prior branch is suggestive of very local spillovers but cannot distinguish mechanisms.
+- **Dynamic learning / Bayesian updating**: requires multiple pre-adoption time periods per district. The current data is effectively cross-sectional with a single adoption event per district.
 
 ---
 
@@ -151,9 +176,13 @@ The goal of this branch is:
 
 2. **Define clean variable construction from scratch.** Decide on the outcome, the endogenous variable, the instrument, and the sample *before* writing any estimation code. Apply the right temporal structure from the start.
 
-3. **Scope a feasible paper.** The most defensible result is the ITT (δ ≈ 0.11 after loser control). The paper can be framed around the ITT as the headline, with the structural β as an additional result that requires the exclusion restriction.
+3. **Scope a feasible paper across the four estimands:**
+   - **Estimand 1 (ITT):** Establish that any effect of winning-neighbor exposure exists at all, using the loser-density-controlled ITT as the headline.
+   - **Estimand 2 (Application margin):** Use round-separated applicant data (confirmed available, `Round` column clean) to test whether R1 neighbor wins predict R3 *application* — the cleanest behavioral outcome for the mechanism. R2 grant applicants must be excluded from all lottery-based construction.
+   - **Estimand 3 (Longer-horizon all-source):** Re-extract WRI outcomes extending to 2024 (already in v9 data: 3,531 buses awarded in 2024). Remove the prior 2023-only cutoff; use all-source adoption through end of 2024 as the temporal outcome.
+   - **Estimand 4 (Delivery visibility heterogeneity):** Nest within Estimand 3 — split R1 winners by early/late delivery to 2024 outcome, noting that delivery date coverage is ~38% populated and limits precision.
 
-4. **Potentially extend the WRI time window** to capture longer-horizon diffusion (2024–2025 all-source adoption), which is the most natural fix for the timing problem.
+4. **Work sequentially:** ITT first (establishes existence), then Estimand 2 and 3 as the primary causal designs, then Estimand 4 as a mechanism check.
 
 ---
 
