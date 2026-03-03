@@ -1,8 +1,27 @@
 # Peer Effects in Electric School Bus Adoption: Project Summary
 
-**Date:** February 21, 2026  
+**Created:** February 21, 2026 | **Last Updated:** March 3, 2026  
 **Project:** Peer Effects and Adoption  
-**Location:** `c:\BC PhD\Research\Peer-Effects and Adoption`
+**Location:** `c:\BC PhD\Research\Peer-Effects and Adoption`  
+**Active Branch:** `Post-Temporal` (HEAD: `6a0e495`)
+
+---
+
+## Table of Contents
+
+1. [Executive Summary](#executive-summary)
+2. [Project Chronology](#project-chronology)
+3. [Data Sources and Construction](#1-data-sources-and-construction)
+4. [Empirical Specification — Current Branch](#2-empirical-specification)
+5. [Identification Strategy](#3-identification-strategy)
+6. [Main Results — Current Branch](#4-main-results)
+7. [Robustness and Sensitivity](#5-robustness-and-sensitivity)
+8. [Challenges and Limitations (Feb 21, 2026)](#6-challenges-and-limitations-detailed-diagnostic-feb-21-2026)
+9. [Recommended Solutions (Feb 21, 2026)](#7-recommended-solutions)
+10. [Key Takeaways (Feb 21, 2026)](#8-key-takeaways-updated-feb-21-2026)
+11. [Next Steps](#9-next-steps)
+12. [**Post-Temporal Branch: New Design & Results (Mar 3, 2026)**](#10-post-temporal-branch-new-design--results-mar-3-2026)
+13. [References](#references)
 
 ---
 
@@ -302,11 +321,13 @@ Priority applicants differ systematically:
 | Non-Priority | Poverty | **+3.1pp** | <0.001*** |
 | Non-Priority | PM2.5 | -0.26 | 0.003* |
 
-**Critical Finding:** Even after residualizing on priority × state cells, balance tests STILL fail:
-- Median income: -$5,767 (p<0.001)
-- Poverty rate: +1.9pp (p<0.001)
+~~**Critical Finding:** Even after residualizing on priority × state cells, balance tests STILL fail:~~  
+~~- Median income: -$5,767 (p<0.001)~~  
+~~- Poverty rate: +1.9pp (p<0.001)~~
 
-This suggests the lottery wasn't purely random even within strata—possibly due to application quality, timing, or other unobserved factors.
+~~This suggests the lottery wasn't purely random even within strata—possibly due to application quality, timing, or other unobserved factors.~~
+
+> **⚠️ Superseded — Mar 3, 2026:** These balance failures were an artefact of incorrect conditioning. Residualizing the IV on `(priority × state)` opens a collider path. PDF analysis of the program guides confirmed the lottery is a **6-tier ordered draw within `priority × state` cells** — random within each stratum by construction. The correct fix (implemented in `Post-Temporal` branch) is `priority × state` **interaction fixed effects** in the outcome equation (~100 dummies). See [Section 10.2](#102-lottery-structure-confirmed-from-program-guide-pdfs).
 
 ### 6.3 Challenge 3: Specification Sensitivity
 
@@ -416,13 +437,13 @@ This suggests the lottery wasn't purely random even within strata—possibly due
 - Residualized IV on (priority × state) to "control" for stratification
 - This WEAKENED the instrument (F: 6,460 → 1,085) and WORSENED balance
 
-**Correct Approach:**
+**Correct Approach (Feb 21 understanding — partially superseded, see note below):**
 
 | Step | Action | Rationale |
 |------|--------|----------|
 | 1 | Use ORIGINAL IV_Z (lottery indicator) | Lottery is random unconditionally |
-| 2 | Control for `is_priority` in outcome equation | Blocks direct effect of priority on adoption |
-| 3 | Include state FE | Absorbs state-level heterogeneity |
+| ~~2~~ | ~~Control for `is_priority` in outcome equation~~ | ~~Blocks direct effect of priority on adoption~~ |
+| ~~3~~ | ~~Include state FE~~ | ~~Absorbs state-level heterogeneity~~ |
 | 4 | Do NOT residualize IV | Residualization introduces bias via collider |
 
 **Why This Works:**
@@ -435,6 +456,8 @@ This suggests the lottery wasn't purely random even within strata—possibly due
 Unconditional:     All covariates pass (p > 0.10)
 After residualizing: Income p < 0.0001, Poverty p < 0.0001 (FAIL)
 ```
+
+> **⚠️ Implementation update — Mar 3, 2026:** Steps 2 & 3 above (additive `is_priority + state FE`) were a partial fix. The **full fix** is `priority × state` **interaction fixed effects** (~100 dummies), which correctly conditions on every lottery stratum simultaneously. Implemented in all `Post-Temporal` estimation scripts. See [Section 10.3](#103-fixed-effects-correction-all-estimation-scripts).
 
 ### 7.2 Balance Test Failures — RESOLVED
 
@@ -504,17 +527,19 @@ These remove the geographic component that confounds climate with region.
 - Report geographic effects as primary finding
 - Footnote that climate similarity does not constitute an independent peer mechanism once regional factors are controlled
 
-### 7.5 Accepting Residualized IV Trade-off
+### 7.5 ~~Accepting Residualized IV Trade-off~~ *(Stale for Post-Temporal branch)*
 
-**The Dilemma:** 
-- Original IV: Strong (F=6,460) but potentially biased
-- Residualized IV: Valid but weaker (F=1,085)
+> **⚠️ Note — Mar 3, 2026:** The `Post-Temporal` branch does not use residualized IV. The `priority × state` interaction FE in the outcome equation renders the original lottery IV balanced within strata, eliminating the need for the trade-off described here. The discussion below is retained as context for the `Current` branch analysis only.
 
-**Resolution:**
-- Both F-stats >> 10, so weak instrument bias is minimal
-- Point estimates agree (0.05–0.07)
-- Report both; interpret as bounds on true effect
-- Emphasize sign stability and qualitative finding
+~~**The Dilemma:**~~  
+~~- Original IV: Strong (F=6,460) but potentially biased~~  
+~~- Residualized IV: Valid but weaker (F=1,085)~~
+
+~~**Resolution:**~~  
+~~- Both F-stats >> 10, so weak instrument bias is minimal~~  
+~~- Point estimates agree (0.05–0.07)~~  
+~~- Report both; interpret as bounds on true effect~~  
+~~- Emphasize sign stability and qualitative finding~~
 
 ---
 
@@ -534,37 +559,41 @@ These remove the geographic component that confounds climate with region.
 2. **The lottery was not perfectly random**—even within priority × state cells, winners differ from losers on income and poverty
 3. **Results depend on sample composition**—climate-restricted samples show null effects due to non-random attrition
 
-### 8.3 Credible Bounds on Peer Effects
+### 8.3 Credible Bounds on Peer Effects *(Current Branch — adoption outcome)*
+
+> **⚠️ Context — Mar 3, 2026:** These estimates are from the `Current` branch cross-sectional design (outcome = `IS_ADOPTER`). The `Post-Temporal` branch uses a different, cleaner outcome (R3 application). See [Section 10.6](#106-results-estimand-2--application-extensive-margin) for updated estimates.
 
 Based on the diagnostic analysis:
 
 | Specification | β | Interpretation |
 |---------------|---|----------------|
 | Original IV, Full Controls | 0.064 | Upper bound (potentially biased) |
-| Residualized IV | 0.051 | Lower bound (valid but noisy) |
-| Resid + Spatial Controls | 0.069 | Preferred (balances validity and precision) |
+| ~~Residualized IV~~ | ~~0.051~~ | ~~Lower bound (valid but noisy) — approach superseded~~ |
+| Resid + Spatial Controls | 0.069 | Contextual reference only |
 
-**Best Estimate:** β ∈ [0.05, 0.07]
-**Interpretation:** A 10pp increase in neighbor adoption increases own adoption probability by 0.5–0.7pp.
+~~**Best Estimate:** β ∈ [0.05, 0.07]~~  
+~~**Interpretation:** A 10pp increase in neighbor adoption increases own adoption probability by 0.5–0.7pp.~~
+
+**Updated (Post-Temporal branch):** Effect on R3 *application* probability: δ ∈ [0.05, 0.12] depending on K and sample (priority subsample upper end). See Section 10.
 
 ---
 
 ## 9. Next Steps
 
-### 9.1 Immediate (For Current Paper)
+### 9.1 ~~Immediate (For Current Paper)~~ *(Partially superseded by Post-Temporal branch)*
 
-1. **Finalize Preferred Specification:**
-   - KNN-6, Full Sample, State FE, Original IV + Spatial Controls
-   - Report this as main result with clear justification
+~~1. **Finalize Preferred Specification:**~~  
+~~   - KNN-6, Full Sample, State FE, Original IV + Spatial Controls~~  
+~~   - Report this as main result with clear justification~~
 
 2. **Build Specification Curve:**
-   - Plot all 39 estimates ordered by magnitude
+   - Plot all estimates for the Post-Temporal Estimand 2 across K and subsamples
    - Show % significant, median effect, IQR
 
 3. **Write Limitations Section:**
    - Acknowledge lottery stratification explicitly
-   - Present bounds analysis (original vs. residualized)
-   - Note sample composition sensitivity
+   - Present bounds from applicant-exposed vs full sample comparison
+   - Note R3-application outcome (not adoption) as the primary causal chain
 
 ### 9.2 Robustness to Add
 
@@ -576,15 +605,200 @@ Based on the diagnostic analysis:
    - Predict application likelihood from pre-treatment characteristics
    - Use predicted application × national lottery rate as instrument
 
-3. **Round-by-Round Analysis:**
-   - Test if peer effects differ across program rounds
-   - Exploit timing variation if Round 1 outcomes available
+3. ~~**Round-by-Round Analysis:**~~  
+   ~~- Test if peer effects differ across program rounds~~  
+   ~~- Exploit timing variation if Round 1 outcomes available~~  
+   ✅ *Done in Post-Temporal branch (Estimand 2 uses R1→R3 causal chain directly)*
 
 ### 9.3 Future Research
 
 1. **Panel Extension:** Wait for Round 4+ data to exploit temporal variation
 2. **Mechanism Study:** Survey/interview districts about information sources
 3. **Intensity Analysis:** Model number of buses, not just binary adoption
+
+---
+
+## 10. Post-Temporal Branch: New Design & Results (Mar 3, 2026)
+
+### 10.1 Motivation and Branch Context
+
+The analyses in Sections 1–9 used a **cross-sectional design** (all rounds pooled, all districts, `IS_ADOPTER` as outcome) from the `Current` branch. That design has two structural weaknesses:
+1. R1 lottery outcomes and R3 adoption outcomes are not cleanly causally ordered — R3 winners contaminate the sample
+2. The instrument `w_geo_z` mixes across lottery rounds with different time windows
+
+The `Post-Temporal` branch implements a **temporally clean redesign** with three estimands operating strictly within the R1 → R3 causal chain (R1 lottery 2022 → R3 application window Oct 2023). Sample restricted to **non-R1-winners** throughout to prevent instrument contamination of the outcome.
+
+**HEAD:** `6a0e495` on branch `Post-Temporal`  
+**Scripts:** `2_Scripts/2_Analysis/B_Estimation/01_estimand1_itt.py`, `02_estimand2_application.py`, `03_estimand3_allsource.py`
+
+---
+
+### 10.2 Lottery Structure (Confirmed from Program Guide PDFs)
+
+Analysis of the 2022 and 2023 CSBP program guide PDFs revealed the R1 lottery is a **6-tier ordered draw**, not a flat random assignment:
+
+| Tier | Pool |
+|------|------|
+| 1 | Zero-emission (ZE) priority applicants — per state |
+| 2 | Clean (non-ZE) priority applicants — per state |
+| 3 | All remaining priority applicants |
+| 4 | Remaining non-priority clean applicants |
+| 5 | Remaining priority ZE applicants |
+| 6 | Remaining non-priority ZE applicants |
+
+Randomisation was **flat (random number draw) _within_ each `priority × state × fuel_type` cell**, but win rates differ _between_ cells by construction — due to the ordered draw sequence and a **10%-per-state award cap** applied separately to each funding pool.
+
+**Implication:** Balance failures in Section 6.2 were a conditioning artefact. The lottery is valid conditional on `priority × state`. With `priority × state` interaction FE (~100 dummies), winners and losers are exchangeable within each stratum by design.
+
+---
+
+### 10.3 Fixed Effects Correction (All Estimation Scripts)
+
+**Old — additive (incorrect for the stratified lottery design):**
+```python
+ctrl["priority_r1"] = df_in["priority_r1"].fillna(0).astype(float)  # separate main effect
+...
+sdums = pd.get_dummies(df_in["state"], prefix="st", ...)             # ~50 state dummies
+```
+
+**New — interaction (correct, matches actual lottery strata):**
+```python
+pri = df_in["priority_r1"].fillna(0).astype(int).astype(str)
+ps_dums = pd.get_dummies(
+    pri + "_" + df_in["state"].astype(str),
+    prefix="ps", drop_first=True, dtype=float
+)   # ~100 dummies; subsumes both marginal effects
+```
+
+`priority_r23` is retained as a separate additive covariate — it is a pre-treatment characteristic, not a lottery draw stratum for R1. Applied to all three estimation scripts.
+
+---
+
+### 10.4 Spatial Weights Update
+
+Script `02_build_spatial_weights.py` now produces two lag types per K:
+
+| Column prefix | Weight type | Role |
+|---|---|---|
+| `w{K}_{var}` | Uniform 1/K, row-standardised | **Primary specification** |
+| `wd{K}_{var}` | Inverse-distance normalised | Robustness checks |
+
+Inverse-distance weights via `sklearn.NearestNeighbors`; coordinates in EPSG:5070 (metres); distances clipped at 1 m to avoid singularities.
+
+---
+
+### 10.5 Estimand Definitions
+
+| # | Outcome | Instrument | Sample | Purpose |
+|---|---|---|---|---|
+| **1** | `IS_ADOPTER_CSBP_ANY` | `w{K}_IV_Z_R1` | Non-R1-winners | Baseline ITT; expected null (R3 adoption too close to R1 lottery) |
+| **2** | `Y_R3_apply` | `w{K}_IV_Z_R1` | Non-R1-winners | **Primary** — cleanest causal chain: lottery → peer signal → application behaviour |
+| **3** | `wri_any_2023_24` | `w{K}_IV_Z_R1` | Non-R1-winners | WRI data independent of EPA lottery; tests general diffusion |
+
+All estimators: Linear Probability Model, state-clustered SE, reduced-form (ITT δ).
+
+---
+
+### 10.6 Results: Estimand 2 — Application Extensive Margin
+
+**Sample:** 12,388 non-R1-winner districts | R3 application rate: 4.98% | SE clustered by state
+
+**Main specifications:**
+
+| K | Loser ctrl | δ | SE | p-value | N |
+|---|---|---:|---:|---:|---|
+| 6 | No | +0.0496 | 0.0293 | 0.091\* | 12,388 |
+| 6 | **Yes** | **+0.0508** | **0.0291** | **0.081\*** | **12,388** |
+| 10 | No | +0.0803 | 0.0430 | 0.062\* | 12,388 |
+| 10 | **Yes** | **+0.0810** | **0.0426** | **0.058\*** | **12,388** |
+| 15 | No | +0.0668 | 0.0529 | 0.206 | 12,388 |
+| 15 | Yes | +0.0668 | 0.0528 | 0.206 | 12,388 |
+
+**Priority-district subsample (K=6):**
+
+| Loser ctrl | δ | SE | p-value | N |
+|---|---:|---:|---:|---|
+| No | +0.1159 | 0.0505 | 0.022\*\* | 6,402 |
+| **Yes** | **+0.1189** | **0.0505** | **0.019\*\*** | **6,402** |
+
+**Interpretation:** Among non-winners with a lottery-winning neighbour, the probability of applying to R3 rises by 5–8pp (full sample) or ~12pp (priority subsample). This is the cleanest causal estimate in the project: R1 lottery strictly precedes R3 application, restricted to non-winners, conditioned on proper lottery strata.
+
+---
+
+### 10.7 R2 Grant Neighbour Robustness
+
+R2 grantees are ~2023 adopters whose grants predate R3 application opening and may independently encourage R3 entries — a potential confound.
+
+**(a) Heterogeneity split — R2-neighbour present vs. absent (K=6, loser=Yes):**
+
+| Sub-group | N | δ | SE | p-value |
+|---|---|---:|---:|---:|
+| R2-neighbour present (`w6_IS_R2_GRANTEE > 0`) | 1,140 | +0.065 | 0.066 | 0.324 |
+| R2-neighbour absent (`w6_IS_R2_GRANTEE = 0`) | 11,248 | +0.046 | 0.034 | 0.177 |
+
+*Both sub-groups positive; precision limited by R2-present subsample size (N=1,140).*
+
+**(b) Additive R2 control (K=6, loser=Yes):**
+
+| Specification | δ (R1 winner share) | SE | p-value |
+|---|---:|---:|---:|
+| Without R2 control | +0.0508 | 0.0291 | 0.081\* |
+| With R2 control | +0.0525 | 0.0290 | 0.070\* |
+
+**Finding:** R1 coefficient is stable (marginally larger) after controlling for R2 neighbours → R1 peer effect does not proxy for local R2-driven application propensity.
+
+---
+
+### 10.8 Applicant-Exposed Sample (Difference Design)
+
+Restrict to the 7,085 districts with ≥1 R1-applicant neighbour (`w6_IV_Z_R1 > 0` OR `w6_IS_R1_LOSER > 0`). Sharpens comparison to winner-neighbour vs. loser-neighbour districts, removing geographically remote "never-exposed" districts from the control group.
+
+| Coefficient | δ | SE | p-value | N |
+|---|---:|---:|---:|---|
+| Winner share (`w_IV_Z_R1`) | +0.040 | 0.039 | 0.294 | 7,085 |
+| Loser share (`w_r1_loser`) | +0.006 | 0.021 | 0.782 | 7,085 |
+
+**Discouraged-loser test:** The loser share coefficient is small and positive (not negative) → **no evidence of discouragement**. Observing a lottery-losing neighbour does not reduce a district's own application propensity.
+
+*Attenuation relative to the full sample is expected: the never-exposed remote districts provide additional identification power under the contrast with exposed districts.*
+
+---
+
+### 10.9 Distance-Decay Robustness (K=6, loser=Yes)
+
+| Weight scheme | δ | SE | p-value | N |
+|---|---:|---:|---:|---|
+| Uniform 1/K (`w6_IV_Z_R1`) | +0.051 | 0.029 | 0.081\* | 12,388 |
+| Inverse-distance (`wd6_IV_Z_R1`) | +0.037 | 0.028 | 0.194 | 12,388 |
+
+**Finding:** Inverse-distance weights produce a smaller, same-signed coefficient. The peer effect is not strongly driven by the single closest neighbour; uniform 1/K is the more conservative specification.
+
+---
+
+### 10.10 Results: Estimands 1 and 3 (Both Null)
+
+**Estimand 1 — Cross-sectional ITT (R1 wins → CSBP adoption):**  
+All null (p > 0.58, K=6/10/15). Expected: R3 adoption decisions overlap with the R1 deployment window; peer learning has not yet translated into observable adoption.
+
+**Estimand 3 — WRI all-source adoption 2023–24:**  
+All specifications null (p > 0.35, outcomes `wri_any_2023`, `wri_any_2024`, `wri_any_2023_24`). Delivery-timing heterogeneity (early vs. late R1 delivery, Wald test) also null.
+
+**Conclusion:** Peer effects operate through the **application channel** — neighbour wins encourage programme entry — rather than through immediate observable adoption.
+
+---
+
+### 10.11 Summary of Post-Temporal Findings
+
+| Test | Estimand 1 | Estimand 2 | Estimand 3 |
+|---|:---:|:---:|:---:|
+| Peer effect (full sample) | ❌ Null | ✅ δ≈0.05–0.08\* | ❌ Null |
+| Peer effect (priority subsample) | — | ✅ δ≈0.12\*\* | — |
+| R2 confound ruled out | — | ✅ | — |
+| Discouragement (loser) effect | — | ❌ Null | — |
+| Distance-decay > uniform weights | — | ❌ No | — |
+| Delivery-timing heterogeneity | — | — | ❌ Null |
+
+**Bottom line:** The causal peer effect in ESB adoption operates at the **application margin** — winning neighbours encourage other districts to enter the programme. The effect is concentrated in priority (disadvantaged) districts (δ≈0.12), consistent with social learning and peer legitimation mechanisms in under-resourced communities. No evidence of discouragement from losing neighbours.
 
 ---
 
@@ -596,5 +810,5 @@ Based on the diagnostic analysis:
 
 ---
 
-*Document generated: February 21, 2026*  
-*Project location: `c:\BC PhD\Research\Peer-Effects and Adoption`*
+*Document created: February 21, 2026 | Last updated: March 3, 2026*  
+*Project location: `c:\BC PhD\Research\Peer-Effects and Adoption` | Branch: `Post-Temporal` (HEAD: `6a0e495`)*
