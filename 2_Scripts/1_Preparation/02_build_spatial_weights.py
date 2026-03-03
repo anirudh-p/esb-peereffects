@@ -9,9 +9,13 @@ Key choices documented inline.
 
 Outputs
 -------
-  1_Data/Cleaned/analysis_dataset_spatial.csv  — analysis_dataset + spatial lags
-  1_Data/Cleaned/knn_weights_k{K}.npz          — spare CSR matrix for downstream use
+  1_Data/Cleaned/analysis_dataset_spatial.csv  — analysis_dataset + uniform + inv-dist lags
+  1_Data/Cleaned/knn_weights_k{K}.npz          — sparse CSR matrix (uniform 1/K)
   3_Output/Logs/spatial_weights_audit.txt
+
+Column naming:
+  w{K}_{var}  — row-standardised uniform 1/K weights (primary specs)
+  wd{K}_{var} — inverse-distance row-normalised weights (robustness)
 """
 
 import sys
@@ -23,6 +27,7 @@ import pandas as pd
 import geopandas as gpd
 from scipy.sparse import save_npz, csr_matrix
 from libpysal.weights import KNN
+from sklearn.neighbors import NearestNeighbors
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import (
@@ -167,6 +172,39 @@ for K in K_VALUES:
     mean_lag = lag_df[wvar].mean()
     nonzero = (lag_df[wvar] > 0).sum()
     log(f"    mean w_IV_Z_R1 = {mean_lag:.5f}  |  districts with ≥1 R1 winner neighbor: {nonzero:,}")
+
+    # ── Inverse-distance spatial lags ─────────────────────────────────────
+    # Use sklearn to get the same K neighbors plus their actual distances
+    # (EPSG:5070 metres). Weights = (1/d) / sum(1/d), row-normalised.
+    # Column prefix  wd{K}_  to distinguish from uniform  w{K}_  lags.
+    nbrs = NearestNeighbors(n_neighbors=K + 1, algorithm="ball_tree").fit(coords)
+    distances, indices = nbrs.kneighbors(coords)
+    # Column 0 is the point itself (d≈0); skip it.
+    dist_K = distances[:, 1:]   # (N, K)
+    idx_K  = indices[:, 1:]     # (N, K)
+
+    # Clip distances to 1 m minimum to guard against coincident centroids
+    inv_d = 1.0 / np.maximum(dist_K, 1.0)
+    inv_d_norm = inv_d / inv_d.sum(axis=1, keepdims=True)  # row-normalise
+
+    N = len(shp_m)
+    rows_d, cols_d, vals_d = [], [], []
+    for i in range(N):
+        for j_idx, wij in zip(idx_K[i], inv_d_norm[i]):
+            rows_d.append(i)
+            cols_d.append(int(j_idx))
+            vals_d.append(wij)
+    W_d = csr_matrix((vals_d, (rows_d, cols_d)), shape=(N, N))
+
+    for var in LAG_VARS:
+        if var in df_r.columns:
+            x = pd.to_numeric(df_r[var], errors="coerce").fillna(0).values
+            lag_df[f"wd{K}_{var}"] = W_d.dot(x)
+
+    log(f"    Inverse-dist lag columns added (wd{K}_*): {sum(c.startswith(f'wd{K}_') for c in lag_df.columns)}")
+    # Sanity
+    mean_d = lag_df[f"wd{K}_IV_Z_R1"].mean()
+    log(f"    mean wd_IV_Z_R1 = {mean_d:.5f}  (cf. uniform {mean_lag:.5f})")
 
 log("\n")
 

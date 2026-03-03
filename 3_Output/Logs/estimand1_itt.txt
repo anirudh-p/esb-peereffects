@@ -4,22 +4,22 @@ ESTIMAND 1 — Cross-sectional ITT
   Full dataset rows: 19,517
   Estimation sample: 12,721
 
-  [K=6, loser=No ]  RF coef=+0.01017  SE=0.02326  p=0.6620  N=12,721  Ymean=0.0559
+  [K=6, loser=No ]  RF coef=+0.00695  SE=0.02329  p=0.7653  N=12,721  Ymean=0.0559
            2SLS failed: Singular matrix
 
-  [K=6, loser=Yes]  RF coef=+0.00993  SE=0.02399  p=0.6790  N=12,721  Ymean=0.0559
+  [K=6, loser=Yes]  RF coef=+0.00669  SE=0.02401  p=0.7804  N=12,721  Ymean=0.0559
+           2SLS coef=+0.0240  SE=0.0031  p=0.0000  FS F-stat=2552436879655488460309921792.0
+
+  [K=10, loser=No ]  RF coef=+0.00262  SE=0.03168  p=0.9342  N=12,721  Ymean=0.0559
            2SLS failed: Singular matrix
 
-  [K=10, loser=No ]  RF coef=+0.00818  SE=0.03124  p=0.7935  N=12,721  Ymean=0.0559
+  [K=10, loser=Yes]  RF coef=+0.00179  SE=0.03189  p=0.9552  N=12,721  Ymean=0.0559
            2SLS failed: Singular matrix
 
-  [K=10, loser=Yes]  RF coef=+0.00811  SE=0.03133  p=0.7958  N=12,721  Ymean=0.0559
+  [K=15, loser=No ]  RF coef=+0.01343  SE=0.03765  p=0.7214  N=12,721  Ymean=0.0559
            2SLS failed: Singular matrix
 
-  [K=15, loser=No ]  RF coef=+0.01622  SE=0.03892  p=0.6768  N=12,721  Ymean=0.0559
-           2SLS failed: Singular matrix
-
-  [K=15, loser=Yes]  RF coef=+0.02075  SE=0.03759  p=0.5810  N=12,721  Ymean=0.0559
+  [K=15, loser=Yes]  RF coef=+0.01620  SE=0.03698  p=0.6613  N=12,721  Ymean=0.0559
            2SLS failed: Singular matrix
 
 ======================================================================
@@ -28,12 +28,12 @@ SUMMARY TABLE — Estimand 1 ITT reduced forms
 
 Spec                                 N   RF coef       SE   p-val Stars
 -----------------------------------------------------------------
-  K=6, loser=No                 12,721  +0.01017  0.02326  0.6620      
-  K=6, loser=Yes                12,721  +0.00993  0.02399  0.6790      
-  K=10, loser=No                12,721  +0.00818  0.03124  0.7935      
-  K=10, loser=Yes               12,721  +0.00811  0.03133  0.7958      
-  K=15, loser=No                12,721  +0.01622  0.03892  0.6768      
-  K=15, loser=Yes               12,721  +0.02075  0.03759  0.5810      
+  K=6, loser=No                 12,721  +0.00695  0.02329  0.7653      
+  K=6, loser=Yes                12,721  +0.00669  0.02401  0.7804      
+  K=10, loser=No                12,721  +0.00262  0.03168  0.9342      
+  K=10, loser=Yes               12,721  +0.00179  0.03189  0.9552      
+  K=15, loser=No                12,721  +0.01343  0.03765  0.7214      
+  K=15, loser=Yes               12,721  +0.01620  0.03698  0.6613      
 
 Interpretation note:
   RF coef = δ = marginal effect of a 1/K increase in the share of lottery-winning

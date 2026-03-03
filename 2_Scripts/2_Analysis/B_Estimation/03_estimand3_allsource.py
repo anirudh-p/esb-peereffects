@@ -81,17 +81,20 @@ def get_controls(df_in, include_r1_loser=True, include_pre_r1=True,
     ctrl["poverty_rate"] = df_in["poverty_rate"]
     ctrl["pct_white"]    = df_in["pct_white"]
     ctrl["pm25"]         = df_in["pm25"]
-    ctrl["priority_r1"]  = df_in["priority_r1"].fillna(0).astype(float)
     ctrl["priority_r23"] = df_in["priority_r23"].fillna(0).astype(float)
-    ctrl["pct_dem_2020"] = df_in["pct_dem_2020"]
+    ctrl["pct_dem_2020"]  = df_in["pct_dem_2020"]
     if include_pre_r1:
-        # Pre-R1 ESB adopters: could be early movers with different peer networks
         ctrl["pre_r1_adopter"] = df_in["is_pre_r1_adopter"].fillna(0).astype(float)
     if include_r1_loser:
         ctrl["w_r1_loser"] = df_in[f"w{k}_IS_R1_LOSER"].fillna(0)
     if include_state_fe:
-        sdums = pd.get_dummies(df_in["state"], prefix="st", drop_first=True, dtype=float)
-        ctrl = pd.concat([ctrl, sdums], axis=1)
+        # priority_r1 × state interaction FE (R1 lottery strata)
+        pri = df_in["priority_r1"].fillna(0).astype(int).astype(str)
+        ps_dums = pd.get_dummies(
+            pri + "_" + df_in["state"].astype(str),
+            prefix="ps", drop_first=True, dtype=float
+        )
+        ctrl = pd.concat([ctrl, ps_dums], axis=1)
     return ctrl
 
 

@@ -76,14 +76,22 @@ def get_controls(df_in, include_loser=True, include_state_fe=True, k=6):
     ctrl["poverty_rate"]= df_in["poverty_rate"]
     ctrl["pct_white"]   = df_in["pct_white"]
     ctrl["pm25"]        = df_in["pm25"]
-    ctrl["priority_r1"] = df_in["priority_r1"].fillna(0).astype(float)
-    ctrl["pct_dem_2020"]= df_in["pct_dem_2020"]
+    ctrl["pct_dem_2020"] = df_in["pct_dem_2020"]
     if include_loser:
         wcol = f"w{k}_IS_LOSER_pooled"
         ctrl["w_loser"] = df_in[wcol].fillna(0)
     if include_state_fe:
-        sdums = pd.get_dummies(df_in["state"], prefix="st", drop_first=True, dtype=float)
-        ctrl = pd.concat([ctrl, sdums], axis=1)
+        # priority_r1 × state interaction FE
+        # CSBP lottery was stratified within (priority × state) cells: within each
+        # cell the draw was random, but win-rates differ between cells by construction
+        # (10% state cap + priority ordering).  These ~100 dummies subsume both
+        # marginal state FE and marginal priority FE.
+        pri = df_in["priority_r1"].fillna(0).astype(int).astype(str)
+        ps_dums = pd.get_dummies(
+            pri + "_" + df_in["state"].astype(str),
+            prefix="ps", drop_first=True, dtype=float
+        )
+        ctrl = pd.concat([ctrl, ps_dums], axis=1)
     return ctrl
 
 

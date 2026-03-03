@@ -12,20 +12,20 @@ ESTIMAND 3 — All-source ESB adoption (2023-24 window)
 ────────────────────────────────────────────────────────────
 
   Outcome: wri_any_2023_24
-    [Y=wri_any_2023_24, K=6, loser=N         ]  coef=+0.01781  SE=0.03083  p=0.5634  N=12,388  Ymean=0.0524
-    [Y=wri_any_2023_24, K=6, loser=Y         ]  coef=+0.02057  SE=0.03031  p=0.4972  N=12,388  Ymean=0.0524
-    [Y=wri_any_2023_24, K=10, loser=N        ]  coef=+0.03737  SE=0.03440  p=0.2774  N=12,388  Ymean=0.0524
-    [Y=wri_any_2023_24, K=10, loser=Y        ]  coef=+0.03916  SE=0.03359  p=0.2437  N=12,388  Ymean=0.0524
-    [Y=wri_any_2023_24, K=15, loser=N        ]  coef=+0.02962  SE=0.04561  p=0.5160  N=12,388  Ymean=0.0524
-    [Y=wri_any_2023_24, K=15, loser=Y        ]  coef=+0.02930  SE=0.04509  p=0.5158  N=12,388  Ymean=0.0524
+    [Y=wri_any_2023_24, K=6, loser=N         ]  coef=+0.01510  SE=0.03166  p=0.6334  N=12,388  Ymean=0.0524
+    [Y=wri_any_2023_24, K=6, loser=Y         ]  coef=+0.01781  SE=0.03111  p=0.5670  N=12,388  Ymean=0.0524
+    [Y=wri_any_2023_24, K=10, loser=N        ]  coef=+0.03006  SE=0.03469  p=0.3861  N=12,388  Ymean=0.0524
+    [Y=wri_any_2023_24, K=10, loser=Y        ]  coef=+0.03189  SE=0.03382  p=0.3457  N=12,388  Ymean=0.0524
+    [Y=wri_any_2023_24, K=15, loser=N        ]  coef=+0.02228  SE=0.04559  p=0.6250  N=12,388  Ymean=0.0524
+    [Y=wri_any_2023_24, K=15, loser=Y        ]  coef=+0.02196  SE=0.04510  p=0.6263  N=12,388  Ymean=0.0524
 
   Outcome: wri_any_2024
-    [Y=wri_any_2024, K=6, loser=N            ]  coef=+0.00697  SE=0.02338  p=0.7655  N=12,388  Ymean=0.0353
-    [Y=wri_any_2024, K=6, loser=Y            ]  coef=+0.00852  SE=0.02321  p=0.7136  N=12,388  Ymean=0.0353
-    [Y=wri_any_2024, K=10, loser=N           ]  coef=+0.02786  SE=0.03054  p=0.3617  N=12,388  Ymean=0.0353
-    [Y=wri_any_2024, K=10, loser=Y           ]  coef=+0.02874  SE=0.03021  p=0.3414  N=12,388  Ymean=0.0353
-    [Y=wri_any_2024, K=15, loser=N           ]  coef=+0.01254  SE=0.04102  p=0.7599  N=12,388  Ymean=0.0353
-    [Y=wri_any_2024, K=15, loser=Y           ]  coef=+0.01242  SE=0.04093  p=0.7615  N=12,388  Ymean=0.0353
+    [Y=wri_any_2024, K=6, loser=N            ]  coef=+0.00240  SE=0.02380  p=0.9196  N=12,388  Ymean=0.0353
+    [Y=wri_any_2024, K=6, loser=Y            ]  coef=+0.00382  SE=0.02364  p=0.8718  N=12,388  Ymean=0.0353
+    [Y=wri_any_2024, K=10, loser=N           ]  coef=+0.01943  SE=0.03013  p=0.5190  N=12,388  Ymean=0.0353
+    [Y=wri_any_2024, K=10, loser=Y           ]  coef=+0.02028  SE=0.02978  p=0.4959  N=12,388  Ymean=0.0353
+    [Y=wri_any_2024, K=15, loser=N           ]  coef=+0.00330  SE=0.03918  p=0.9329  N=12,388  Ymean=0.0353
+    [Y=wri_any_2024, K=15, loser=Y           ]  coef=+0.00318  SE=0.03909  p=0.9351  N=12,388  Ymean=0.0353
 
 ────────────────────────────────────────────────────────────
 3B — Estimand 4: Delivery-timing heterogeneity (K=6, loser=Yes)
@@ -35,13 +35,13 @@ ESTIMAND 3 — All-source ESB adoption (2023-24 window)
 
 
   Outcome: wri_any_2023_24
-    Early delivery neighbours: coef=+0.01191  SE=0.03827  p=0.7556
-    Late/unknown delivery    : coef=+0.03360  SE=0.04252  p=0.4295
-    Wald test (early vs late): Δ=-0.02168  χ²(1)=0.18  p=0.6724
+    Early delivery neighbours: coef=+0.01013  SE=0.03868  p=0.7935
+    Late/unknown delivery    : coef=+0.03132  SE=0.04250  p=0.4612
+    Wald test (early vs late): Δ=-0.02119  χ²(1)=0.18  p=0.6741
 
   Outcome: wri_any_2024
-    Early delivery neighbours: coef=+0.00410  SE=0.03248  p=0.8995
-    Late/unknown delivery    : coef=+0.00660  SE=0.02794  p=0.8134
-    Wald test (early vs late): Δ=-0.00249  χ²(1)=0.00  p=0.9493
+    Early delivery neighbours: coef=-0.00385  SE=0.03319  p=0.9076
+    Late/unknown delivery    : coef=+0.00658  SE=0.02785  p=0.8132
+    Wald test (early vs late): Δ=-0.01043  χ²(1)=0.07  p=0.7917
 
   Saved: C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\estimand3_allsource.csv
