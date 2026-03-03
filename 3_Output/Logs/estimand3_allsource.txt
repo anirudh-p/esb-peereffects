@@ -44,4 +44,21 @@ ESTIMAND 3 — All-source ESB adoption (2023-24 window)
     Late/unknown delivery    : coef=+0.00658  SE=0.02785  p=0.8132
     Wald test (early vs late): Δ=-0.01043  χ²(1)=0.07  p=0.7917
 
+────────────────────────────────────────────────────────────
+3C — Applicant-neighbor luck reparameterization (K=6)
+────────────────────────────────────────────────────────────
+  Restrict to A>0 where A = w6_IV_Z_R1 + w6_IS_R1_LOSER.
+  Regress outcomes on:
+    p_win_given_apply = w6_IV_Z_R1 / A  (luck among applicant neighbors)
+    app_intensity = A                  (local applicant-neighbor density)
+  Applicant-neighbor sample size: 7,085
+
+  Outcome: wri_any_2023_24
+    p_win_given_apply: coef=-0.00627  SE=0.01099  p=0.5681
+    app_intensity   : coef=+0.02911  SE=0.01894  p=0.1244
+
+  Outcome: wri_any_2024
+    p_win_given_apply: coef=-0.00215  SE=0.00911  p=0.8132
+    app_intensity   : coef=+0.01016  SE=0.02004  p=0.6121
+
   Saved: C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\estimand3_allsource.csv

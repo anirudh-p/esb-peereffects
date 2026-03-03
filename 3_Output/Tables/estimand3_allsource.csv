@@ -15,3 +15,7 @@ Delivery_split_early,wri_any_2023_24,6,True,12388,0.05239,0.010126,0.038679,0.79
 Delivery_split_late,wri_any_2023_24,6,True,12388,0.05239,0.031317,0.042499,0.4612,
 Delivery_split_early,wri_any_2024,6,True,12388,0.03528,-0.003853,0.033187,0.9076,
 Delivery_split_late,wri_any_2024,6,True,12388,0.03528,0.00658,0.027848,0.8132,
+AllSource_AppLuck_condwin,wri_any_2023_24,6,False,7085,0.05759,-0.006273,0.010989,0.5681,
+AllSource_AppLuck_intensity,wri_any_2023_24,6,False,7085,0.05759,0.02911,0.018943,0.1244,
+AllSource_AppLuck_condwin,wri_any_2024,6,False,7085,0.03797,-0.002153,0.009108,0.8132,
+AllSource_AppLuck_intensity,wri_any_2024,6,False,7085,0.03797,0.010161,0.020039,0.6121,

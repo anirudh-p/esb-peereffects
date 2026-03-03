@@ -307,6 +307,69 @@ results_rows.append({
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# Applicant-Neighbor Luck Reparameterization (K=6)
+# ══════════════════════════════════════════════════════════════════════════════
+log("\n" + "=" * 70)
+log("APPLICANT-NEIGHBOR LUCK REPARAMETERIZATION  (K=6)")
+log("=" * 70)
+log("  Define applicant-neighbor intensity A = w6_IV_Z_R1 + w6_IS_R1_LOSER.")
+log("  Restrict to A>0, then estimate with:")
+log("    p_win_given_apply = w6_IV_Z_R1 / A   (lottery luck among applicants)")
+log("    A (application-neighbor density/intensity)")
+log("  This separates random luck among applicant neighbors from pure applicant")
+log("  concentration in the local network.")
+
+d_luck = d.dropna(subset=["w6_IV_Z_R1", "w6_IS_R1_LOSER"]).copy()
+d_luck["app_intensity"] = d_luck["w6_IV_Z_R1"].fillna(0) + d_luck["w6_IS_R1_LOSER"].fillna(0)
+d_luck = d_luck[d_luck["app_intensity"] > 0].copy()
+d_luck["p_win_given_apply"] = d_luck["w6_IV_Z_R1"] / d_luck["app_intensity"]
+
+log(f"\n  Applicant-neighbor sample (A>0): N={len(d_luck):,}")
+log(f"  Mean applicant-neighbor intensity A: {d_luck['app_intensity'].mean():.4f}")
+
+ctrl_luck = get_controls(d_luck, include_r1_loser=False, include_state_fe=True, k=6)
+Y_luck = d_luck["Y_R3_apply"].astype(float)
+X_luck = sm.add_constant(
+    pd.concat([
+        d_luck["p_win_given_apply"].rename("p_win_given_apply"),
+        d_luck["app_intensity"].rename("app_intensity"),
+        ctrl_luck,
+    ], axis=1),
+    has_constant="add"
+).dropna(axis=1)
+ols_luck = sm.OLS(Y_luck, X_luck).fit(cov_type="cluster",
+                                      cov_kwds={"groups": d_luck["state"]})
+
+c_pw = ols_luck.params.get("p_win_given_apply", np.nan)
+s_pw = ols_luck.bse.get("p_win_given_apply", np.nan)
+p_pw = ols_luck.pvalues.get("p_win_given_apply", np.nan)
+st_pw = "***" if p_pw < 0.01 else "**" if p_pw < 0.05 else "*" if p_pw < 0.1 else ""
+
+c_ai = ols_luck.params.get("app_intensity", np.nan)
+s_ai = ols_luck.bse.get("app_intensity", np.nan)
+p_ai = ols_luck.pvalues.get("app_intensity", np.nan)
+st_ai = "***" if p_ai < 0.01 else "**" if p_ai < 0.05 else "*" if p_ai < 0.1 else ""
+
+log(f"\n  p_win_given_apply (luck among applicants): coef={c_pw:+.5f}  SE={s_pw:.5f}  "
+    f"p={p_pw:.4f}{st_pw}  N={int(ols_luck.nobs):,}")
+log(f"  app_intensity      (applicant density)   : coef={c_ai:+.5f}  SE={s_ai:.5f}  "
+    f"p={p_ai:.4f}{st_ai}")
+
+results_rows.append({
+    "estimand": "AppLuck_condwin", "K": 6, "loser_ctrl": False,
+    "spec": "Applicant-luck reparam (p_win_given_apply)", "n_obs": int(ols_luck.nobs),
+    "y_mean": round(Y_luck.mean(), 5), "rf_coef": round(c_pw, 6),
+    "rf_se": round(s_pw, 6), "rf_pval": round(p_pw, 4), "rf_stars": st_pw,
+})
+results_rows.append({
+    "estimand": "AppLuck_intensity", "K": 6, "loser_ctrl": False,
+    "spec": "Applicant-luck reparam (app_intensity)", "n_obs": int(ols_luck.nobs),
+    "y_mean": round(Y_luck.mean(), 5), "rf_coef": round(c_ai, 6),
+    "rf_se": round(s_ai, 6), "rf_pval": round(p_ai, 4), "rf_stars": st_ai,
+})
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # Distance-Decay Robustness  (K=6, loser=Yes)
 # ══════════════════════════════════════════════════════════════════════════════
 log("\n" + "=" * 70)

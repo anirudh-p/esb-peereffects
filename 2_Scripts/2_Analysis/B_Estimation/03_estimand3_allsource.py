@@ -228,6 +228,78 @@ else:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# Applicant-neighbor luck reparameterization (robustness)
+# ══════════════════════════════════════════════════════════════════════════════
+log("\n" + "─" * 60)
+log("3C — Applicant-neighbor luck reparameterization (K=6)")
+log("─" * 60)
+log("  Restrict to A>0 where A = w6_IV_Z_R1 + w6_IS_R1_LOSER.")
+log("  Regress outcomes on:")
+log("    p_win_given_apply = w6_IV_Z_R1 / A  (luck among applicant neighbors)")
+log("    app_intensity = A                  (local applicant-neighbor density)")
+
+d_luck = d.dropna(subset=["w6_IV_Z_R1", "w6_IS_R1_LOSER"]).copy()
+d_luck["app_intensity"] = d_luck["w6_IV_Z_R1"].fillna(0) + d_luck["w6_IS_R1_LOSER"].fillna(0)
+d_luck = d_luck[d_luck["app_intensity"] > 0].copy()
+d_luck["p_win_given_apply"] = d_luck["w6_IV_Z_R1"] / d_luck["app_intensity"]
+log(f"  Applicant-neighbor sample size: {len(d_luck):,}")
+
+for outcome in ["wri_any_2023_24", "wri_any_2024"]:
+    Y_l = d_luck[outcome].astype(float)
+    ctrl_l = get_controls(d_luck, include_r1_loser=False, include_pre_r1=True,
+                          include_state_fe=True, k=6)
+    X_l = sm.add_constant(
+        pd.concat([
+            d_luck["p_win_given_apply"].rename("p_win_given_apply"),
+            d_luck["app_intensity"].rename("app_intensity"),
+            ctrl_l,
+        ], axis=1),
+        has_constant="add"
+    ).dropna(axis=1)
+    ols_l = sm.OLS(Y_l, X_l).fit(cov_type="cluster",
+                                 cov_kwds={"groups": d_luck["state"]})
+
+    c_pw = ols_l.params.get("p_win_given_apply", np.nan)
+    s_pw = ols_l.bse.get("p_win_given_apply", np.nan)
+    p_pw = ols_l.pvalues.get("p_win_given_apply", np.nan)
+    st_pw = "***" if p_pw < 0.01 else "**" if p_pw < 0.05 else "*" if p_pw < 0.1 else ""
+
+    c_ai = ols_l.params.get("app_intensity", np.nan)
+    s_ai = ols_l.bse.get("app_intensity", np.nan)
+    p_ai = ols_l.pvalues.get("app_intensity", np.nan)
+    st_ai = "***" if p_ai < 0.01 else "**" if p_ai < 0.05 else "*" if p_ai < 0.1 else ""
+
+    log(f"\n  Outcome: {outcome}")
+    log(f"    p_win_given_apply: coef={c_pw:+.5f}  SE={s_pw:.5f}  p={p_pw:.4f}{st_pw}")
+    log(f"    app_intensity   : coef={c_ai:+.5f}  SE={s_ai:.5f}  p={p_ai:.4f}{st_ai}")
+
+    results_rows.append({
+        "estimand": "AllSource_AppLuck_condwin",
+        "outcome": outcome,
+        "K": 6,
+        "loser_ctrl": False,
+        "n_obs": int(ols_l.nobs),
+        "y_mean": round(Y_l.mean(), 5),
+        "rf_coef": round(c_pw, 6),
+        "rf_se": round(s_pw, 6),
+        "rf_pval": round(p_pw, 4),
+        "rf_stars": st_pw,
+    })
+    results_rows.append({
+        "estimand": "AllSource_AppLuck_intensity",
+        "outcome": outcome,
+        "K": 6,
+        "loser_ctrl": False,
+        "n_obs": int(ols_l.nobs),
+        "y_mean": round(Y_l.mean(), 5),
+        "rf_coef": round(c_ai, 6),
+        "rf_se": round(s_ai, 6),
+        "rf_pval": round(p_ai, 4),
+        "rf_stars": st_ai,
+    })
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # Save
 # ══════════════════════════════════════════════════════════════════════════════
 res = pd.DataFrame(results_rows)

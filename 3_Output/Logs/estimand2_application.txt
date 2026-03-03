@@ -62,6 +62,22 @@ APPLICANT-EXPOSED SAMPLE  (K=6, loser=Yes)
   Negative w_r1_loser coef would support a discouragement mechanism.
 
 ======================================================================
+APPLICANT-NEIGHBOR LUCK REPARAMETERIZATION  (K=6)
+======================================================================
+  Define applicant-neighbor intensity A = w6_IV_Z_R1 + w6_IS_R1_LOSER.
+  Restrict to A>0, then estimate with:
+    p_win_given_apply = w6_IV_Z_R1 / A   (lottery luck among applicants)
+    A (application-neighbor density/intensity)
+  This separates random luck among applicant neighbors from pure applicant
+  concentration in the local network.
+
+  Applicant-neighbor sample (A>0): N=7,085
+  Mean applicant-neighbor intensity A: 0.2445
+
+  p_win_given_apply (luck among applicants): coef=+0.00417  SE=0.00758  p=0.5817  N=7,085
+  app_intensity      (applicant density)   : coef=+0.01314  SE=0.02205  p=0.5510
+
+======================================================================
 DISTANCE-DECAY ROBUSTNESS  (K=6, loser=Yes)
 ======================================================================
   Replace uniform 1/K weights with inverse-distance normalised weights
@@ -91,6 +107,8 @@ Spec                                             N   RF coef       SE   p-val St
   R2 additive (with R2 ctrl   )             12,388  +0.05252  0.02898  0.0699     *
   Applicant-exposed sample (winner coef)     7,085  +0.04039  0.03850  0.2942      
   Applicant-exposed sample (loser coef)      7,085  +0.00583  0.02106  0.7820      
+  Applicant-luck reparam (p_win_given_apply)   7,085  +0.00417  0.00758  0.5817      
+  Applicant-luck reparam (app_intensity)     7,085  +0.01314  0.02205  0.5510      
   Distance-decay (Uniform 1/K (w6) )        12,388  +0.05075  0.02907  0.0809     *
   Distance-decay (Inv-dist  (wd6))          12,388  +0.03690  0.02839  0.1936      
 

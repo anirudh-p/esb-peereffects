@@ -3,7 +3,7 @@
 **Created:** March 2, 2026 | **Last Updated:** March 3, 2026  
 **Branched from:** `Current` (commit `6c9d823`)  
 **Previous branch:** `Current` (scripts 01–30 + full documentation)  
-**HEAD:** `fb9f68d` (Post-Temporal)
+**HEAD:** `7cc8b85` (Post-Temporal)
 
 ---
 
@@ -146,7 +146,7 @@ instrumented by `w_IV_Z_R1` (share of R1 lottery winners among K nearest neighbo
 
 **Important caveat:** R2 entries are from a competitive (non-lottery) selection process. They must not be included in the loser-density control or treated as lottery non-winners. They are a distinct administrative group and should be excluded from all lottery-based instrument construction.
 
-> ✅ **Implemented (Mar 3, 2026):** R2 grant applicants are excluded from all lottery IV construction. The column `w6_IS_R2_GRANTEE` captures R2-grantee neighbour share and is used only as a robustness control to verify the R1 peer-effect estimate is not proxying for locally elevated R2-driven adoption propensity. See [Section 7.4](#74-r2-grant-neighbour-robustness).
+> ✅ **Implemented (Mar 3, 2026):** R2 grant applicants are excluded from all lottery IV construction. The column `w6_IS_R2_GRANTEE` captures R2-grantee neighbour share and is used only as a robustness control to verify the R1 peer-effect estimate is not proxying for locally elevated R2-driven adoption propensity. See [Section 7.5](#75-robustness-results-coef--se--t--p).
 
 ---
 
@@ -190,7 +190,7 @@ This estimand is best treated as a heterogeneity/mechanism check nested within E
 
 ## What Gets Built in This Branch
 
-> **Status as of Mar 3, 2026:** All four items below are complete. Scripts are committed at HEAD `fb9f68d`. Results are in Section 7.
+> **Status as of Mar 3, 2026:** All four items below are complete. Scripts are committed at HEAD `7cc8b85`. Results are in Section 7.
 
 ~~The goal of this branch is:~~
 
@@ -200,9 +200,9 @@ This estimand is best treated as a heterogeneity/mechanism check nested within E
 
 3. ✅ ~~**Scope a feasible paper across the four estimands:**~~
    - ✅ **Estimand 1 (ITT):** Implemented in `01_estimand1_itt.py` — all null as expected (p > 0.58 across K=6/10/15). R3 adoption window too close to R1 lottery for peer signals to propagate to observable adoption.
-   - ✅ **Estimand 2 (Application margin):** Implemented in `02_estimand2_application.py`. R2 grant applicants excluded from lottery IV; R2 grantee share used only as a robustness covariate. Results: K=6 δ=+0.051 (p=0.081), priority subsample δ=+0.119 (p=0.019). See [Section 7.3](#73-estimand-2-application-extensive-margin--results).
-   - ✅ **Estimand 3 (Longer-horizon all-source):** Implemented in `03_estimand3_allsource.py`. All null (p > 0.35). Delivery-timing split also null. See [Section 7.5](#75-estimands-1-and-3--null-results).
-   - ✅ **Estimand 4 (Delivery visibility heterogeneity):** Nested within Estimand 3 as `3B` delivery-timing Wald test. Null (χ²(1) p > 0.67 for all outcomes). See [Section 7.5](#75-estimands-1-and-3--null-results).
+   - ✅ **Estimand 2 (Application margin):** Implemented in `02_estimand2_application.py`. R2 grant applicants excluded from lottery IV; R2 grantee share used only as a robustness covariate. Results: K=6 δ=+0.051 (p=0.081), priority subsample δ=+0.119 (p=0.019). See [Section 7.4](#74-main-estimates-with-coef--se--t--p).
+   - ✅ **Estimand 3 (Longer-horizon all-source):** Implemented in `03_estimand3_allsource.py`. All null (p > 0.35). Delivery-timing split also null. See [Section 7.4](#74-main-estimates-with-coef--se--t--p).
+   - ✅ **Estimand 4 (Delivery visibility heterogeneity):** Nested within Estimand 3 as `3B` delivery-timing Wald test. Null (χ²(1) p > 0.67 for all outcomes). See [Section 7.6](#76-delivery-heterogeneity-results-estimand-4).
 
 4. ✅ ~~**Work sequentially:**~~ Done — scripts run in order, all outputs committed.
 
@@ -225,9 +225,9 @@ All prior code is accessible by checking out the `Current` branch.
 
 ## Implementation and Results (Mar 3, 2026)
 
-### 7.1 Lottery Structure — Confirmed (Mar 3, 2026)
+### 7.1 Identification Setup and Lottery-Strata Correction
 
-Analysis of the 2022 and 2023 CSBP program guide PDFs confirmed the R1 lottery mechanism. Randomisation is **flat within each `priority × state × fuel_type` cell** but win rates differ between cells by construction:
+Analysis of the 2022 and 2023 CSBP program guide PDFs confirms the R1 lottery is a **6-tier ordered draw**. Randomisation is flat **within** `priority × state × fuel_type` cells; win rates differ **between** cells by design due to tier order and the 10%-per-state cap.
 
 | Tier | Pool drawn |
 |---|---|
@@ -238,135 +238,224 @@ Analysis of the 2022 and 2023 CSBP program guide PDFs confirmed the R1 lottery m
 | 5 | Remaining priority ZE applicants |
 | 6 | Remaining non-priority ZE applicants |
 
-A **10% per-state award cap** is applied separately to each funding pool, creating further between-cell variation in win rates. The balance failures documented in prior work were a **conditioning artefact**: residualising the instrument on `priority × state` cells opens a collider path. The correct fix is `priority × state` **interaction fixed effects** in the outcome equation (~100 dummies), which conditions on the exact stratum without touching the instrument.
+**Econometric implication:** additive `priority_r1 + state FE` is not sufficient. The implemented correction is `priority_r1 × state` interaction FE (about 100 dummies), so treatment/control comparisons occur within true lottery strata.
 
 ---
 
-### 7.2 Fixed Effects and Spatial Weights
+### 7.2 Variable Construction (Standalone Reference)
 
-**FE correction** — applied to all three estimation scripts:
+All variables below are built in `01_build_analysis_dataset.py` and `02_build_spatial_weights.py`.
 
-```python
-# Old (incorrect — additive main effects only)
-ctrl["priority_r1"] = df["priority_r1"].fillna(0).astype(float)
-...sdums = pd.get_dummies(df["state"], prefix="st", ...)   # ~50 dummies
+| Variable | Construction |
+|---|---|
+| `IV_Z_R1` | District won 2022 CSBP rebate lottery (`CSB_Rebates.xlsx`, non-cancelled statuses) |
+| `IV_Z_R3` | District won 2023 CSBP rebate lottery |
+| `IS_R2_GRANTEE` | District received 2023 CSBP competitive grant (`CSB_Grants.xlsx`); **never** used as lottery IV |
+| `IS_R1_LOSER` | Applied in R1 but not R1 winner (using waitlisted/rejected file; overlap with winners removed) |
+| `IS_LOSER_pooled` | Pooled loser indicator used in Estimand 1 robustness control |
+| `Y_R3_apply` | Indicator district applied in R3 (winner or waitlisted/rejected) |
+| `wri_any_2023`, `wri_any_2024`, `wri_any_2023_24` | WRI all-source award indicators from bus-level data using `award_year` (`3p. Quarter awarded`) |
+| `is_pre_r1_adopter` | Any WRI bus award before 2022 |
+| `r1_early_delivery` | R1 winner with bus delivered before 2024 |
+| `r1_late_or_unknown` | R1 winner delivered in 2024 or unknown delivery |
+| `w{K}_X` | Uniform KNN lag (row-standardised 1/K over K nearest geographic neighbours) |
+| `wd{K}_X` | Inverse-distance lag: $\sum_j \left((1/d_{ij})/\sum_m(1/d_{im})\right)X_j$ over K neighbours |
 
-# New (correct — interaction spans actual lottery strata)
-pri = df["priority_r1"].fillna(0).astype(int).astype(str)
-ps_dums = pd.get_dummies(pri + "_" + df["state"].astype(str),
-                         prefix="ps", drop_first=True, dtype=float)  # ~100 dummies
-```
-
-`priority_r23` is kept as a separate additive covariate — it is a pre-treatment characteristic for R1 lottery strata, not itself a lottery draw variable.
-
-**Spatial weights** — `02_build_spatial_weights.py` now produces two lag types:
-
-| Column prefix | Weight type | Role |
-|---|---|---|
-| `w{K}_{var}` | Uniform 1/K row-standardised | Primary specifications |
-| `wd{K}_{var}` | Inverse-distance normalised | Robustness checks |
-
-Inverse-distance weights use `sklearn.NearestNeighbors` with EPSG:5070 (metres); distances clipped at 1 m.
+Spatial KNN is based on NCES EDGE district centroids in EPSG:5070 (metres), with $K \in \{6,10,15\}$.
 
 ---
 
-### 7.3 Estimand 2 — Application Extensive Margin: Results
+### 7.3 Full Estimation Specifications
 
-**Sample:** 12,388 non-R1-winner districts | R3 application rate: 4.98% | SE clustered by state | Reduced-form (ITT δ)
+All estimations are linear probability models with state-clustered standard errors.
 
-**Main specifications:**
+**Common control block:**
+- `log_enroll = log(enrollment)`
+- `log_income = log(median_income)`
+- `poverty_rate`, `pct_white`, `pm25`, `pct_dem_2020`
+- `priority_r23` (in Estimands 2 and 3)
+- `priority_r1 × state` interaction FE
+- optional loser-share controls depending on specification
 
-| K | Loser ctrl | δ | SE | p-value |
-|---|---|---:|---:|---:|
-| 6 | No | +0.0496 | 0.0293 | 0.091\* |
-| **6** | **Yes** | **+0.0508** | **0.0291** | **0.081\*** |
-| 10 | No | +0.0803 | 0.0430 | 0.062\* |
-| **10** | **Yes** | **+0.0810** | **0.0426** | **0.058\*** |
-| 15 | Yes | +0.0668 | 0.0528 | 0.206 |
+#### Estimand 1 (ITT: R1 neighbour wins → CSBP adoption)
 
-**Priority-district subsample (K=6):**
+Sample: non-R1-winners with complete controls (`N = 12,721`).
 
-| Loser ctrl | δ | SE | p-value | N |
+$$
+Y_i^{CSBP} = \alpha + \delta_K\,wK\_IV\_Z\_R1_i + \rho_K\,wK\_IS\_LOSER\_pooled_i + \beta'X_i + \lambda_{priority\times state} + \varepsilon_i
+$$
+
+where $Y_i^{CSBP} = IS\_ADOPTER\_CSBP\_ANY$ and $\rho_K$ included only in loser-control specs.
+
+#### Estimand 2 (Primary: R1 neighbour wins → R3 application)
+
+Sample: non-R1-winners with complete controls (`N = 12,388`).
+
+$$
+Y_i^{R3\,apply} = \alpha + \delta_K\,wK\_IV\_Z\_R1_i + \rho_K\,wK\_IS\_R1\_LOSER_i + \beta'X_i + \lambda_{priority\times state} + \varepsilon_i
+$$
+
+with $Y_i^{R3\,apply}=Y\_R3\_apply$ and $\rho_K$ included only in loser-control specs.
+
+#### Applicant-neighbor luck reparameterization (new comparison design)
+
+To isolate lottery luck **among applicant neighbors** from pure applicant-neighbor concentration, define:
+
+$$
+A_i = w6\_IV\_Z\_R1_i + w6\_IS\_R1\_LOSER_i, \quad
+p_i = \frac{w6\_IV\_Z\_R1_i}{A_i}
+$$
+
+on the restricted sample $A_i>0$ (districts with at least one R1 applicant neighbor).
+
+Estimate:
+
+$$
+Y_i = \alpha + \theta\,p_i + \phi\,A_i + \beta'X_i + \lambda_{priority\times state} + \varepsilon_i
+$$
+
+Interpretation:
+- $\theta$ = effect of higher winner share **holding applicant intensity fixed** (the clean luck channel)
+- $\phi$ = effect of local applicant-neighbor density/intensity
+
+#### Estimand 3 (R1 neighbour wins → all-source adoption)
+
+Sample: non-R1-winners with complete controls (`N = 12,388`).
+
+$$
+Y_i^{allsource} = \alpha + \delta_K\,wK\_IV\_Z\_R1_i + \rho_K\,wK\_IS\_R1\_LOSER_i + \pi\,is\_pre\_r1\_adopter_i + \beta'X_i + \lambda_{priority\times state} + \varepsilon_i
+$$
+
+for outcomes $Y_i^{allsource} \in \{wri\_any\_2023\_24,\,wri\_any\_2024\}$.
+
+The same $(p_i, A_i)$ reparameterized specification is also run for all-source outcomes as a robustness comparison.
+
+#### Estimand 4 (delivery-visibility heterogeneity, nested under Estimand 3)
+
+$$
+Y_i = \alpha + \eta\,w6\_r1\_early\_delivery_i + \kappa\,w6\_r1\_late\_or\_unknown_i + \rho\,w6\_IS\_R1\_LOSER_i + \pi\,is\_pre\_r1\_adopter_i + \beta'X_i + \lambda_{priority\times state} + \varepsilon_i
+$$
+
+Wald test target: $H_0: \eta = \kappa$.
+
+---
+
+### 7.4 Main Estimates with Coef / SE / t / p
+
+#### 7.4.1 Estimand 2 — Main table (primary result)
+
+| Spec | N | Coef (δ) | SE | t | p |
+|---|---:|---:|---:|---:|---:|
+| K=6, loser=No | 12,388 | +0.0496 | 0.0293 | 1.693 | 0.0905 |
+| **K=6, loser=Yes** | **12,388** | **+0.0508** | **0.0291** | **1.746** | **0.0809** |
+| K=10, loser=No | 12,388 | +0.0802 | 0.0430 | 1.867 | 0.0619 |
+| **K=10, loser=Yes** | **12,388** | **+0.0810** | **0.0426** | **1.899** | **0.0575** |
+| K=15, loser=Yes | 12,388 | +0.0668 | 0.0528 | 1.266 | 0.2057 |
+
+Priority-district subsample (`priority_r1=1`, K=6):
+
+| Spec | N | Coef (δ) | SE | t | p |
+|---|---:|---:|---:|---:|---:|
+| loser=No | 6,402 | +0.1159 | 0.0504 | 2.298 | 0.0216 |
+| **loser=Yes** | **6,402** | **+0.1189** | **0.0505** | **2.356** | **0.0185** |
+
+#### 7.4.2 Estimand 1 — ITT (null benchmark)
+
+| Spec | N | Coef (δ) | SE | t | p |
+|---|---:|---:|---:|---:|---:|
+| K=6, loser=Yes | 12,721 | +0.0067 | 0.0240 | 0.279 | 0.7804 |
+| K=10, loser=Yes | 12,721 | +0.0018 | 0.0319 | 0.056 | 0.9552 |
+| K=15, loser=Yes | 12,721 | +0.0162 | 0.0370 | 0.438 | 0.6613 |
+
+#### 7.4.3 Estimand 3 — all-source outcomes (null)
+
+| Outcome / Spec | N | Coef (δ) | SE | t | p |
+|---|---:|---:|---:|---:|---:|
+| `wri_any_2023_24`, K=6, loser=Yes | 12,388 | +0.0178 | 0.0311 | 0.572 | 0.5670 |
+| `wri_any_2023_24`, K=10, loser=Yes | 12,388 | +0.0319 | 0.0338 | 0.943 | 0.3457 |
+| `wri_any_2024`, K=6, loser=Yes | 12,388 | +0.0038 | 0.0236 | 0.161 | 0.8718 |
+| `wri_any_2024`, K=10, loser=Yes | 12,388 | +0.0203 | 0.0298 | 0.681 | 0.4959 |
+
+---
+
+### 7.5 Robustness Results (Coef / SE / t / p)
+
+#### R2 confound checks (Estimand 2, K=6, loser=Yes)
+
+| Spec | N | Coef (δ) | SE | t | p |
+|---|---:|---:|---:|---:|---:|
+| R2-neighbour present (`w6_IS_R2_GRANTEE>0`) | 1,140 | +0.0649 | 0.0658 | 0.987 | 0.3236 |
+| R2-neighbour absent (`w6_IS_R2_GRANTEE=0`) | 11,248 | +0.0458 | 0.0339 | 1.350 | 0.1771 |
+| Baseline (no R2 covariate) | 12,388 | +0.0508 | 0.0291 | 1.746 | 0.0809 |
+| Additive R2 covariate included | 12,388 | +0.0525 | 0.0290 | 1.812 | 0.0699 |
+
+#### Applicant-exposed sample (difference-style restriction)
+
+Restricted sample: districts with `w6_IV_Z_R1 > 0` OR `w6_IS_R1_LOSER > 0` (`N=7,085`).
+
+| Coefficient | Coef | SE | t | p |
 |---|---:|---:|---:|---:|
-| No | +0.1159 | 0.0505 | 0.022\*\* | 6,402 |
-| **Yes** | **+0.1189** | **0.0505** | **0.019\*\*** | **6,402** |
+| Winner share (`w_IV_Z_R1`) | +0.0404 | 0.0385 | 1.049 | 0.2942 |
+| Loser share (`w_r1_loser`) | +0.0058 | 0.0211 | 0.277 | 0.7820 |
 
-**Interpretation:** Among non-winners, having a lottery-winning neighbour raises R3 application probability by ~5pp (full sample) or ~12pp (priority districts). This is the cleanest causal estimate: R1 lottery (Oct 2022) strictly precedes R3 application window (Oct 2023), sample restricted to non-winners, strata conditioned via interaction FE.
+#### Applicant-neighbor luck reparameterization (new)
 
----
+Estimand 2 (Outcome = `Y_R3_apply`, sample $A>0$, $N=7,085$):
 
-### 7.4 R2 Grant Neighbour Robustness
-
-R2 grantees received funds before R3 opened and may independently encourage R3 applications — a potential confound for the R1 peer-effect estimate.
-
-**(a) Heterogeneity split — R2-neighbour present vs. absent (K=6, loser=Yes):**
-
-| Sub-group | N | δ | SE | p-value |
-|---|---|---:|---:|---:|
-| R2-neighbour present | 1,140 | +0.065 | 0.066 | 0.324 |
-| R2-neighbour absent | 11,248 | +0.046 | 0.034 | 0.177 |
-
-*Both groups positive, consistent direction. Precision limited by R2-present N.*
-
-**(b) Additive R2 control (K=6, loser=Yes):**
-
-| Specification | δ (R1 winner share) | SE | p-value |
-|---|---:|---:|---:|
-| Without R2 control | +0.0508 | 0.0291 | 0.081\* |
-| With R2 control | +0.0525 | 0.0290 | 0.070\* |
-
-**Finding:** R1 coefficient is stable (marginally increases) after controlling for R2-neighbour share → R1 peer effect is not proxying for locally elevated R2-driven application propensity.
-
----
-
-### 7.5 Estimands 1 and 3 — Null Results
-
-**Estimand 1 (cross-sectional ITT — R1 wins → CSBP adoption):** All null, p > 0.58 at K=6/10/15. Expected: R3 adoption decisions overlap temporally with R1 deployment; peer signals have not yet translated into observable adoption.
-
-**Estimand 3 (WRI all-source adoption 2023–24):** All null, p > 0.35 for `wri_any_2023`, `wri_any_2024`, and `wri_any_2023_24`. Delivery-timing Wald test (early vs. late R1 delivery, Estimand 4): also null (χ²(1) p > 0.67 for all outcomes).
-
-**Conclusion:** Peer effects operate through the **application channel** — winning-neighbour exposure encourages programme entry — rather than through within-window observable adoption.
-
----
-
-### 7.6 Applicant-Exposed Sample and Discouragement Test
-
-Restrict to 7,085 districts with ≥1 R1-applicant neighbour (`w6_IV_Z_R1 > 0` OR `w6_IS_R1_LOSER > 0`). Removes geographically remote never-exposed districts from the control group; sharpens comparison to winner-neighbour vs. loser-neighbour districts.
-
-| Coefficient | δ | SE | p-value | N |
+| Coefficient | Coef | SE | t | p |
 |---|---:|---:|---:|---:|
-| Winner share (`w_IV_Z_R1`) | +0.040 | 0.039 | 0.294 | 7,085 |
-| Loser share (`w_r1_loser`) | +0.006 | 0.021 | 0.782 | 7,085 |
+| Luck among applicants (`p_win_given_apply`) | +0.0042 | 0.0076 | 0.551 | 0.5817 |
+| Applicant intensity (`A`) | +0.0131 | 0.0220 | 0.596 | 0.5510 |
 
-**Discouragement test:** Loser share coefficient is small and positive (not negative) — **no evidence of discouragement**. Observing a lottery-losing neighbour does not reduce own R3 application propensity.
+Estimand 3 (all-source outcomes, sample $A>0$, $N=7,085$):
 
----
-
-### 7.7 Distance-Decay Robustness
-
-| Weight scheme | δ | SE | p-value | N |
+| Outcome / Coefficient | Coef | SE | t | p |
 |---|---:|---:|---:|---:|
-| Uniform 1/K (`w6_IV_Z_R1`) | +0.051 | 0.029 | 0.081\* | 12,388 |
-| Inverse-distance (`wd6_IV_Z_R1`) | +0.037 | 0.028 | 0.194 | 12,388 |
+| `wri_any_2023_24`: `p_win_given_apply` | -0.0063 | 0.0110 | -0.571 | 0.5681 |
+| `wri_any_2023_24`: `A` | +0.0291 | 0.0189 | 1.537 | 0.1244 |
+| `wri_any_2024`: `p_win_given_apply` | -0.0022 | 0.0091 | -0.236 | 0.8132 |
+| `wri_any_2024`: `A` | +0.0102 | 0.0200 | 0.507 | 0.6121 |
 
-Inverse-distance weights produce a smaller, same-signed coefficient. The peer effect is not strongly concentrated on the single nearest neighbour; uniform 1/K is the more conservative primary specification.
+**Comparison implication:** once applicant-neighbor intensity is explicitly separated from winner-share luck among applicants, the luck coefficient is near zero and imprecise across both application and adoption outcomes.
 
----
+#### Distance-decay weights
 
-### 7.8 Overall Summary
-
-| Test | Estimand 1 | Estimand 2 | Estimand 3/4 |
-|---|:---:|:---:|:---:|
-| Peer effect — full sample | ❌ Null | ✅ δ≈0.05–0.08\* | ❌ Null |
-| Peer effect — priority subsample | — | ✅ δ≈0.12\*\* | — |
-| R2 confound ruled out | — | ✅ | — |
-| Discouragement (loser) effect | — | ❌ Null | — |
-| Distance-decay > uniform weights | — | ❌ No | — |
-| Delivery-timing heterogeneity | — | — | ❌ Null |
-
-**Bottom line:** The causal peer effect operates at the **application margin**. Winning neighbours encourage other districts to enter the programme. The effect is concentrated in priority (disadvantaged) districts (δ≈0.12), consistent with social learning and peer legitimation in under-resourced communities.
+| Weight scheme | N | Coef (δ) | SE | t | p |
+|---|---:|---:|---:|---:|---:|
+| Uniform 1/K (`w6_IV_Z_R1`) | 12,388 | +0.0508 | 0.0291 | 1.746 | 0.0809 |
+| Inverse-distance (`wd6_IV_Z_R1`) | 12,388 | +0.0369 | 0.0284 | 1.300 | 0.1936 |
 
 ---
 
-*Document written March 2, 2026. Updated March 3, 2026 with confirmed lottery structure, FE correction, and full estimation results.*  
-*Branch: `Post-Temporal` | HEAD: `fb9f68d`*
+### 7.6 Delivery-Heterogeneity Results (Estimand 4)
+
+| Outcome | Coef (early) | SE | p | Coef (late/unk) | SE | p |
+|---|---:|---:|---:|---:|---:|---:|
+| `wri_any_2023_24` | +0.0101 | 0.0387 | 0.7935 | +0.0313 | 0.0425 | 0.4612 |
+| `wri_any_2024` | -0.0039 | 0.0332 | 0.9076 | +0.0066 | 0.0278 | 0.8132 |
+
+Wald equality tests (from estimation log):
+- `wri_any_2023_24`: $\chi^2(1)=0.18$, $p=0.6741$
+- `wri_any_2024`: $\chi^2(1)=0.07$, $p=0.7917$
+
+No detectable early-vs-late difference.
+
+---
+
+### 7.7 Concise Empirical Takeaway
+
+| Dimension | Result |
+|---|---|
+| Primary signal | **Application margin is positive** (Estimand 2: δ ≈ 0.05–0.08, marginal significance; priority subsample δ ≈ 0.12, statistically significant) |
+| Adoption outcomes | **Null** in both CSBP-adoption ITT (Estimand 1) and all-source WRI outcomes (Estimand 3) |
+| Confound checks | R2-neighbour control does not attenuate δ materially |
+| Luck-among-applicants check | Reparameterized luck coefficient is near zero (imprecise); no clear differential winner-vs-loser signal conditional on applicant intensity |
+| Mechanism checks | No discouraged-loser effect; no delivery-timing heterogeneity |
+| Weighting robustness | Inverse-distance attenuates magnitude but keeps sign positive |
+
+**Bottom line:** Within this temporal design, the strongest evidence is for peer effects in **programme entry/application behavior** at the full-sample margin. But when conditioning tightly on applicant-neighbor exposure and decomposing into luck-share vs applicant-intensity components, the winner-share luck signal attenuates to near zero and loses precision.
+
+---
+
+*Document written March 2, 2026. Updated March 3, 2026 with organized full specifications, variable construction, and coefficient/SE/t/p reporting.*  
+*Branch: `Post-Temporal` | HEAD: `7cc8b85`*

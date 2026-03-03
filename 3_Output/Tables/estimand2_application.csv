@@ -13,5 +13,7 @@ R2_additive_without R2 ctrl,6,True,R2 additive (without R2 ctrl),12388,0.04981,0
 R2_additive_with R2 ctrl,6,True,R2 additive (with R2 ctrl   ),12388,0.04981,0.052524,0.028981,0.0699,*
 App_Exposed_winner,6,True,Applicant-exposed sample (winner coef),7085,0.05307,0.040386,0.038503,0.2942,
 App_Exposed_loser,6,True,Applicant-exposed sample (loser coef),7085,0.05307,0.005827,0.02106,0.782,
+AppLuck_condwin,6,False,Applicant-luck reparam (p_win_given_apply),7085,0.05307,0.004174,0.007578,0.5817,
+AppLuck_intensity,6,False,Applicant-luck reparam (app_intensity),7085,0.05307,0.013144,0.022046,0.551,
 DistDecay_Uniform 1/K (w6),6,True,Distance-decay (Uniform 1/K (w6) ),12388,0.04981,0.05075,0.029072,0.0809,*
 DistDecay_Inv-dist  (wd6),6,True,Distance-decay (Inv-dist  (wd6)),12388,0.04981,0.0369,0.028387,0.1936,
