@@ -48,6 +48,51 @@ def parse_award_year(series):
     return pd.to_numeric(years, errors="coerce")
 
 
+def parse_quarter_index(series):
+    """Map '2023 Q3' style strings to a sortable numeric quarter index."""
+    text = series.astype(str).str.upper()
+    years = pd.to_numeric(text.str.extract(r"(\d{4})", expand=False), errors="coerce")
+    quarters = pd.to_numeric(text.str.extract(r"Q([1-4])", expand=False), errors="coerce")
+    return years * 4 + quarters
+
+
+def classify_fuel_group(df_in, electric_col, propane_col, cng_col):
+    """
+    Collapse requested bus mix into coarse lottery strata:
+      - ZE_only: electric only
+      - clean_nonZE_only: propane/CNG only
+      - mixed: electric plus propane/CNG
+      - unknown_zero: no positive bus counts observed
+    """
+    tmp = df_in[[electric_col, propane_col, cng_col]].copy()
+    for col in tmp.columns:
+        tmp[col] = pd.to_numeric(tmp[col], errors="coerce").fillna(0)
+
+    has_e = tmp[electric_col] > 0
+    has_p = tmp[propane_col] > 0
+    has_c = tmp[cng_col] > 0
+    has_clean_nonze = has_p | has_c
+
+    out = pd.Series("unknown_zero", index=df_in.index, dtype="object")
+    out.loc[has_e & ~has_clean_nonze] = "ZE_only"
+    out.loc[~has_e & has_clean_nonze] = "clean_nonZE_only"
+    out.loc[has_e & has_clean_nonze] = "mixed"
+    return out
+
+
+def summarize_fuel_group(df_in, out_col):
+    """Reduce district-level fuel group to one row per NCES ID using the modal value."""
+    tmp = df_in[["nces_id", "fuel_group"]].dropna().copy()
+    if tmp.empty:
+        return pd.DataFrame(columns=["nces_id", out_col])
+    return (
+        tmp.groupby("nces_id")["fuel_group"]
+        .agg(lambda s: s.mode().iat[0] if not s.mode().empty else s.iloc[0])
+        .reset_index()
+        .rename(columns={"fuel_group": out_col})
+    )
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # STEP 1 — District universe from WRI district-level data
 # ══════════════════════════════════════════════════════════════════════════════
@@ -118,6 +163,12 @@ EXCL = ["WITHDRAWN", "CANCELLED", "NOT SELECTED", "INELIGIBLE", "DENIED"]
 reb = pd.read_excel(CSB_REBATES)
 reb["nces_id"] = clean_nces(reb["NCES District ID"])
 reb_active = reb[~reb["Project Status"].str.upper().isin(EXCL)].copy()
+reb_active["fuel_group"] = classify_fuel_group(
+    reb_active,
+    "Number of Electric Buses",
+    "Number of Propane Buses",
+    "Number of CNG Buses",
+)
 
 log(f"  CSB_Rebates rows          : {len(reb):,}")
 log(f"  After excluding {EXCL[:3]}... : {len(reb_active):,}")
@@ -129,6 +180,10 @@ log(reb_active["Funding Year"].value_counts().sort_index().to_string())
 r1_winners = (reb_active[reb_active["Funding Year"] == 2022]["nces_id"]
               .drop_duplicates().to_frame())
 r1_winners["IV_Z_R1"] = 1
+r1_winner_fuel = summarize_fuel_group(
+    reb_active[reb_active["Funding Year"] == 2022].copy(),
+    "r1_fuel_group_winner",
+)
 
 r3_winners = (reb_active[reb_active["Funding Year"] == 2023]["nces_id"]
               .drop_duplicates().to_frame())
@@ -137,6 +192,8 @@ r3_winners["IV_Z_R3"] = 1
 log(f"\n  Unique R1 lottery winners : {len(r1_winners):,}")
 log(f"  Unique R3 lottery winners : {len(r3_winners):,}")
 log(f"  Won both R1 and R3        : {len(set(r1_winners.nces_id) & set(r3_winners.nces_id)):,}")
+log("\n  R1 winner fuel-group mix:")
+log(reb_active.loc[reb_active["Funding Year"] == 2022, "fuel_group"].value_counts().to_string())
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -166,6 +223,12 @@ log("=" * 70)
 
 app = pd.read_excel(CSB_APPLICANTS)
 app["nces_id"] = clean_nces(app["NCES District ID"])
+app["fuel_group"] = classify_fuel_group(
+    app,
+    "Number of Electric Buses",
+    "Number of Propane Buses",
+    "Number of CNG Buses",
+)
 
 log(f"  Total rows : {len(app):,}")
 log(f"\n  Round breakdown:")
@@ -178,16 +241,22 @@ log(app["Project Status"].value_counts().to_string())
 # control would conflate competitive selection with lottery outcomes.
 app_lottery = app[~app["Round"].str.contains("R2", na=False)].copy()
 log(f"\n  After excluding R2 rows : {len(app_lottery):,}")
+log("\n  Lottery-applicant fuel-group mix:")
+log(app_lottery["fuel_group"].value_counts().to_string())
 
 # ── R1 losers: in applicant file, Round='R1', not in R1 winners ─────────────
-r1_loser_raw = (app_lottery[app_lottery["Round"].str.contains("R1", na=False)]
-                ["nces_id"].drop_duplicates())
+r1_app_rows = app_lottery[app_lottery["Round"].str.contains("R1", na=False)].copy()
+r1_loser_raw = r1_app_rows["nces_id"].drop_duplicates()
 overlap_r1 = len(set(r1_loser_raw) & set(r1_winners["nces_id"]))
 log(f"\n  R1 waitlisted/rejected (unique districts) : {len(r1_loser_raw):,}")
 log(f"  Overlap with R1 winners                   : {overlap_r1:,}  "
     f"← multi-application districts: treating as winners")
 r1_losers_clean = r1_loser_raw[~r1_loser_raw.isin(r1_winners["nces_id"])].to_frame()
 r1_losers_clean["IS_R1_LOSER"] = 1
+r1_loser_fuel = summarize_fuel_group(
+    r1_app_rows[~r1_app_rows["nces_id"].isin(r1_winners["nces_id"])].copy(),
+    "r1_fuel_group_loser",
+)
 log(f"  R1 losers after removing winner overlap    : {len(r1_losers_clean):,}")
 
 # ── R3 losers: in applicant file, Round='R3', not in R3 winners ─────────────
@@ -216,8 +285,23 @@ log("=" * 70)
 buses = pd.read_excel(WRI_BUS_EXCEL, sheet_name="2. Bus-level data")
 buses["nces_id"]    = clean_nces(buses["1c. LEA ID"])
 buses["award_year"] = parse_award_year(buses["3p. Quarter awarded"])
+buses["award_q_index"] = parse_quarter_index(buses["3p. Quarter awarded"])
+buses["delivery_year"] = parse_award_year(buses["3r. Quarter delivered"])
+buses["delivery_q_index"] = parse_quarter_index(buses["3r. Quarter delivered"])
+buses["operating_year"] = parse_award_year(buses["3s. Quarter first operating"])
+buses["operating_q_index"] = parse_quarter_index(buses["3s. Quarter first operating"])
 buses_valid = buses[buses["award_year"].between(1990, 2035)
                     & buses["nces_id"].ne("0000000")].copy()
+
+Q3_2023 = 2023 * 4 + 3
+Q4_2023 = 2023 * 4 + 4
+Q4_2024 = 2024 * 4 + 4
+
+
+def build_indicator_frame(df_in, mask, out_col):
+    out = df_in.loc[mask, ["nces_id"]].drop_duplicates().copy()
+    out[out_col] = 1
+    return out
 
 log(f"  Bus-level rows total         : {len(buses):,}")
 log(f"  Rows with valid year + NCES  : {len(buses_valid):,}")
@@ -247,37 +331,101 @@ for label, yr_min, yr_max in [("2023",    2023, 2023),
     else:
         wri_2324 = dist_in_window
 
+# Cumulative all-source stock / visibility measures used for structural checks
+wri_awarded_by_2023 = build_indicator_frame(
+    buses_valid,
+    buses_valid["award_q_index"].notna() & (buses_valid["award_q_index"] <= Q4_2023),
+    "wri_awarded_by_2023",
+)
+wri_awarded_by_2024 = build_indicator_frame(
+    buses_valid,
+    buses_valid["award_q_index"].notna() & (buses_valid["award_q_index"] <= Q4_2024),
+    "wri_awarded_by_2024",
+)
+wri_delivered_by_2023q3 = build_indicator_frame(
+    buses_valid,
+    buses_valid["delivery_q_index"].notna() & (buses_valid["delivery_q_index"] <= Q3_2023),
+    "wri_delivered_by_2023q3",
+)
+wri_operating_by_2023q3 = build_indicator_frame(
+    buses_valid,
+    buses_valid["operating_q_index"].notna() & (buses_valid["operating_q_index"] <= Q3_2023),
+    "wri_operating_by_2023q3",
+)
+wri_visible_by_2023q3 = pd.concat(
+    [
+        wri_delivered_by_2023q3[["nces_id"]],
+        wri_operating_by_2023q3[["nces_id"]],
+    ],
+    ignore_index=True,
+).drop_duplicates()
+wri_visible_by_2023q3["wri_visible_by_2023q3"] = 1
+
+log(f"\n  Districts with >=1 bus awarded by end-2023 : {len(wri_awarded_by_2023):,}")
+log(f"  Districts with >=1 bus delivered by 2023 Q3: {len(wri_delivered_by_2023q3):,}")
+log(f"  Districts with >=1 bus operating by 2023 Q3: {len(wri_operating_by_2023q3):,}")
+log(f"  Districts visibly deployed by 2023 Q3      : {len(wri_visible_by_2023q3):,}")
+
 # ── Delivery timing for R1 winners (Estimand 4) ─────────────────────────────
 log(f"\n  R1 bus delivery timing:")
 r1_buses = buses_valid[
     (buses_valid["award_year"] == 2022) &
     buses_valid["nces_id"].isin(r1_winners["nces_id"])
 ].copy()
-r1_buses["delivery_year"] = parse_award_year(r1_buses["3r. Quarter delivered"])
 log(f"    R1 buses total            : {len(r1_buses):,}")
 log(f"    Delivery date available   : {r1_buses['delivery_year'].notna().sum():,} "
     f"({100 * r1_buses['delivery_year'].notna().mean():.1f}%)")
 log(f"    Delivery year distribution:")
 log(r1_buses["delivery_year"].value_counts(dropna=False).sort_index().to_string())
+r1_delivery = (
+    r1_buses.groupby("nces_id")
+    .agg(
+        r1_first_delivery_year=("delivery_year", "min"),
+        r1_first_delivery_q_index=("delivery_q_index", "min"),
+        r1_first_operating_year=("operating_year", "min"),
+        r1_first_operating_q_index=("operating_q_index", "min"),
+    )
+    .reset_index()
+)
+r1_delivery = r1_winners[["nces_id"]].merge(r1_delivery, on="nces_id", how="left")
 
-# Early delivery = delivered before 2024 (broadly visible before next application cycle)
-r1_delivery = (r1_buses.groupby("nces_id")["delivery_year"].min()
-               .rename("r1_first_delivery_year").reset_index())
-r1_delivery["r1_early_delivery"] = (r1_delivery["r1_first_delivery_year"] < 2024).astype(int)
-r1_delivery["r1_late_or_unknown"] = (r1_delivery["r1_first_delivery_year"] >= 2024).astype(int)
-# Districts with no delivery date at all
-no_delivery = r1_winners[~r1_winners["nces_id"].isin(r1_delivery["nces_id"])]["nces_id"]
-if len(no_delivery):
-    nd_df = pd.DataFrame({"nces_id": no_delivery,
-                          "r1_first_delivery_year": np.nan,
-                          "r1_early_delivery": 0,  # unknown = late conservative assumption
-                          "r1_late_or_unknown": 1})
-    r1_delivery = pd.concat([r1_delivery, nd_df], ignore_index=True)
+# Coarse delivery split kept for backwards compatibility with older notes.
+r1_delivery["r1_early_delivery"] = (
+    r1_delivery["r1_first_delivery_year"].notna()
+    & (r1_delivery["r1_first_delivery_year"] < 2024)
+).astype(int)
+r1_delivery["r1_late_or_unknown"] = (
+    r1_delivery["r1_first_delivery_year"].isna()
+    | (r1_delivery["r1_first_delivery_year"] >= 2024)
+).astype(int)
 
-e = r1_delivery["r1_early_delivery"].sum()
-l = r1_delivery["r1_late_or_unknown"].sum()
+# Sharp delivery / operating timing used in post-poster diagnostics.
+r1_delivery["r1_pre_r3_delivery"] = (
+    r1_delivery["r1_first_delivery_q_index"].notna()
+    & (r1_delivery["r1_first_delivery_q_index"] <= Q3_2023)
+).astype(int)
+r1_delivery["r1_post_r3_delivery"] = (
+    r1_delivery["r1_first_delivery_q_index"].notna()
+    & (r1_delivery["r1_first_delivery_q_index"] > Q3_2023)
+).astype(int)
+r1_delivery["r1_delivery_unknown"] = r1_delivery["r1_first_delivery_q_index"].isna().astype(int)
+
+r1_delivery["r1_pre_r3_operating"] = (
+    r1_delivery["r1_first_operating_q_index"].notna()
+    & (r1_delivery["r1_first_operating_q_index"] <= Q3_2023)
+).astype(int)
+r1_delivery["r1_post_r3_operating"] = (
+    r1_delivery["r1_first_operating_q_index"].notna()
+    & (r1_delivery["r1_first_operating_q_index"] > Q3_2023)
+).astype(int)
+r1_delivery["r1_operating_unknown"] = r1_delivery["r1_first_operating_q_index"].isna().astype(int)
+
+e = int(r1_delivery["r1_early_delivery"].sum())
+l = int(r1_delivery["r1_late_or_unknown"].sum())
 log(f"\n    R1 districts with early delivery (<2024) : {e:,}")
 log(f"    R1 districts with late/unknown delivery  : {l:,}")
+log(f"    R1 districts delivered by 2023 Q3        : {int(r1_delivery['r1_pre_r3_delivery'].sum()):,}")
+log(f"    R1 districts operating by 2023 Q3        : {int(r1_delivery['r1_pre_r3_operating'].sum()):,}")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -324,6 +472,16 @@ log("=" * 70)
 
 d = base.copy()
 
+# R1 applicant fuel-group mapping used for post-poster lottery-strata controls.
+d = d.merge(r1_winner_fuel, on="nces_id", how="left")
+d = d.merge(r1_loser_fuel, on="nces_id", how="left")
+d["r1_fuel_group"] = (
+    d["r1_fuel_group_winner"]
+    .combine_first(d["r1_fuel_group_loser"])
+    .fillna("nonapp")
+)
+d = d.drop(columns=["r1_fuel_group_winner", "r1_fuel_group_loser"])
+
 # Lottery & applicant indicators
 for frame, col in [(r1_winners,     "IV_Z_R1"),
                    (r3_winners,     "IV_Z_R3"),
@@ -355,14 +513,52 @@ for frame, col in [(wri_2023,  "wri_any_2023"),
     d = d.merge(frame[["nces_id", col]], on="nces_id", how="left")
     d[col] = d[col].fillna(0).astype(int)
 
+for frame, col in [
+    (wri_awarded_by_2023, "wri_awarded_by_2023"),
+    (wri_awarded_by_2024, "wri_awarded_by_2024"),
+    (wri_delivered_by_2023q3, "wri_delivered_by_2023q3"),
+    (wri_operating_by_2023q3, "wri_operating_by_2023q3"),
+    (wri_visible_by_2023q3, "wri_visible_by_2023q3"),
+]:
+    d = d.merge(frame[["nces_id", col]], on="nces_id", how="left")
+    d[col] = d[col].fillna(0).astype(int)
+
 # Pre-R1 adopter flag
 d = d.merge(pre_r1[["nces_id", "is_pre_r1_adopter"]], on="nces_id", how="left")
 d["is_pre_r1_adopter"] = d["is_pre_r1_adopter"].fillna(0).astype(int)
 
+# Cumulative post-R1 WRI adoption (Fix A — Post-Meeting branch)
+# Definition: any WRI-tracked ESB awarded by end of 2024, EXCLUDING pre-R1 adopters.
+# This is the primary adoption outcome for the Post-Meeting analysis. It captures
+# peer-induced adoption via any funding channel (CSBP, HVIP, VW Settlement, state
+# grants) within the ~3-year window after R1 results were known (Oct 2022 – end 2024).
+# Pre-R1 adopters are excluded because their adoption predates the treatment.
+d["wri_post_r1_cum"] = (
+    (d["wri_awarded_by_2024"] == 1) & (d["is_pre_r1_adopter"] == 0)
+).astype(int)
+
 # R1 delivery timing
-d = d.merge(r1_delivery[["nces_id", "r1_first_delivery_year",
-                          "r1_early_delivery", "r1_late_or_unknown"]],
-            on="nces_id", how="left")
+d = d.merge(
+    r1_delivery[
+        [
+            "nces_id",
+            "r1_first_delivery_year",
+            "r1_first_delivery_q_index",
+            "r1_first_operating_year",
+            "r1_first_operating_q_index",
+            "r1_early_delivery",
+            "r1_late_or_unknown",
+            "r1_pre_r3_delivery",
+            "r1_post_r3_delivery",
+            "r1_delivery_unknown",
+            "r1_pre_r3_operating",
+            "r1_post_r3_operating",
+            "r1_operating_unknown",
+        ]
+    ],
+    on="nces_id",
+    how="left",
+)
 # Non-R1 winner districts: delivery vars not applicable (leave as NaN)
 
 # Political
@@ -394,6 +590,11 @@ for col, label in [
         ("wri_any_2023",     "WRI any adoption 2023"),
         ("wri_any_2024",     "WRI any adoption 2024"),
         ("wri_any_2023_24",  "WRI any adoption 2023-24"),
+        ("wri_post_r1_cum",  "WRI cumulative post-R1 (new primary outcome)"),
+        ("wri_awarded_by_2023", "WRI awarded by end-2023"),
+        ("wri_delivered_by_2023q3", "WRI delivered by 2023 Q3"),
+        ("wri_operating_by_2023q3", "WRI operating by 2023 Q3"),
+        ("wri_visible_by_2023q3", "WRI visible by 2023 Q3"),
         ("is_pre_r1_adopter","Pre-R1 ESB adopter"),
 ]:
     n  = d[col].sum()
@@ -444,6 +645,9 @@ for v in ["priority_r1", "priority_r23"]:
     log(f"\n  {v}:")
     vc = d[v].value_counts(dropna=False)
     log(vc.to_string())
+
+log("\n  R1 fuel-group status:")
+log(d["r1_fuel_group"].value_counts(dropna=False).to_string())
 
 # ── 8e. Control variable distributions ───────────────────────────────────────
 log("\n━━ 8e. Control variable summary statistics ━━")

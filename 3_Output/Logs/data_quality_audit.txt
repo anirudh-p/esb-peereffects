@@ -2,7 +2,7 @@
 STEP 1  —  District universe (wri_data.csv)
 ======================================================================
   Rows loaded     : 19,517
-  Unique NCES IDs : 19,516
+  Unique NCES IDs : 19,517
   Sample IDs      : ['4500690', '2800360', '0100002', '1700105', '0100006']
 
   Control availability (of 19,517 districts):
@@ -37,6 +37,12 @@ Funding Year
   Unique R3 lottery winners : 458
   Won both R1 and R3        : 24
 
+  R1 winner fuel-group mix:
+fuel_group
+ZE_only             346
+clean_nonZE_only     18
+mixed                 4
+
 ======================================================================
 STEP 3  —  R2 grant awardees (CSB_Grants.xlsx)  — EXCLUDED from IV
 ======================================================================
@@ -61,6 +67,12 @@ Waitlist    1884
 Rejected     324
 
   After excluding R2 rows : 1,884
+
+  Lottery-applicant fuel-group mix:
+fuel_group
+ZE_only             1648
+clean_nonZE_only     197
+mixed                 39
 
   R1 waitlisted/rejected (unique districts) : 1,546
   Overlap with R1 winners                   : 12  ← multi-application districts: treating as winners
@@ -103,6 +115,11 @@ award_year
   Districts with ≥1 bus awarded in 2023_24: 817
     of which first-ever adopters          : 722
 
+  Districts with >=1 bus awarded by end-2023 : 1,183
+  Districts with >=1 bus delivered by 2023 Q3: 610
+  Districts with >=1 bus operating by 2023 Q3: 599
+  Districts visibly deployed by 2023 Q3      : 610
+
   R1 bus delivery timing:
     R1 buses total            : 2,245
     Delivery date available   : 2,099 (93.5%)
@@ -114,7 +131,9 @@ delivery_year
 NaN        146
 
     R1 districts with early delivery (<2024) : 217
-    R1 districts with late/unknown delivery  : 143
+    R1 districts with late/unknown delivery  : 151
+    R1 districts delivered by 2023 Q3        : 142
+    R1 districts operating by 2023 Q3        : 136
 
 ======================================================================
 STEP 6  —  Political control (county presidential 2020)
@@ -147,6 +166,11 @@ STEP 8  —  Data quality audit
   WRI any adoption 2023                        :   355  ( 1.82%)
   WRI any adoption 2024                        :   533  ( 2.73%)
   WRI any adoption 2023-24                     :   817  ( 4.19%)
+  WRI cumulative post-R1 (new primary outcome) : 1,146  ( 5.87%)
+  WRI awarded by end-2023                      : 1,183  ( 6.06%)
+  WRI delivered by 2023 Q3                     :   610  ( 3.13%)
+  WRI operating by 2023 Q3                     :   599  ( 3.07%)
+  WRI visible by 2023 Q3                       :   610  ( 3.13%)
   Pre-R1 ESB adopter                           :   411  ( 2.11%)
 
 ━━ 8b. Control variable missing-data audit ━━
@@ -193,6 +217,13 @@ priority_r23
 1        5520
 <NA>        1
 
+  R1 fuel-group status:
+r1_fuel_group
+nonapp              17630
+ZE_only              1708
+clean_nonZE_only      143
+mixed                  36
+
 ━━ 8e. Control variable summary statistics ━━
 
   enrollment:  mean=3.53e+03  sd=1.13e+04  p10=163  p90=7.12e+03  missing=0
@@ -225,4 +256,4 @@ STEP 9  —  Save
 ======================================================================
 
   Saved: C:\BC PhD\Research\Peer-Effects and Adoption\1_Data\Cleaned\analysis_dataset.csv
-  Final dataset shape: (19517, 30)
+  Final dataset shape: (19517, 46)

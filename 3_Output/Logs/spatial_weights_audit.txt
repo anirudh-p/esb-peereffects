@@ -1,7 +1,7 @@
 ======================================================================
 1  Analysis dataset
 ======================================================================
-  Rows: 19,517  |  NCES IDs: 19,516
+  Rows: 19,517  |  NCES IDs: 19,517
 
 ======================================================================
 2  Shapefile (NCES EDGE SY2021)
@@ -23,35 +23,44 @@
 
   ── K = 6 ──
     Sparse W saved: knn_weights_k6.npz
-    Spatial lag columns created: 21
+    Spatial lag columns created: 33
     mean w_IV_Z_R1 = 0.02732  |  districts with ≥1 R1 winner neighbor: 1,960
-    Inverse-dist lag columns added (wd6_*): 21
+    Inverse-dist lag columns added (wd6_*): 33
     mean wd_IV_Z_R1 = 0.02687  (cf. uniform 0.02732)
 
   ── K = 10 ──
     Sparse W saved: knn_weights_k10.npz
-    Spatial lag columns created: 21
+    Spatial lag columns created: 33
     mean w_IV_Z_R1 = 0.02614  |  districts with ≥1 R1 winner neighbor: 2,898
-    Inverse-dist lag columns added (wd10_*): 21
+    Inverse-dist lag columns added (wd10_*): 33
     mean wd_IV_Z_R1 = 0.02617  (cf. uniform 0.02614)
 
   ── K = 15 ──
     Sparse W saved: knn_weights_k15.npz
-    Spatial lag columns created: 21
+    Spatial lag columns created: 33
     mean w_IV_Z_R1 = 0.02590  |  districts with ≥1 R1 winner neighbor: 3,979
-    Inverse-dist lag columns added (wd15_*): 21
+    Inverse-dist lag columns added (wd15_*): 33
     mean wd_IV_Z_R1 = 0.02606  (cf. uniform 0.02590)
 
 
 ======================================================================
 4  Merge and save enriched dataset
 ======================================================================
-  Final shape: (19517, 156)
-  Columns: ['nces_id', 'state', 'urbanicity', 'enrollment', 'median_income', 'poverty_rate', 'pct_white', 'pm25', 'priority_r1', 'priority_r23', 'IV_Z_R1', 'IV_Z_R3'] ...
+  Final shape: (19517, 244)
+  Columns: ['nces_id', 'state', 'urbanicity', 'enrollment', 'median_income', 'poverty_rate', 'pct_white', 'pm25', 'priority_r1', 'priority_r23', 'r1_fuel_group', 'IV_Z_R1'] ...
 
   Estimation sample (all controls + K=6 lag): 12,721 / 19,517
     R1 winners in sample : 333
     R3 winners in sample : 399
     R1 losers in sample  : 1,449
 
+  Sample-selection audit:
+                  stage  districts_n  share_of_raw_pct  r1_winner_rate_pct  r3_apply_rate_pct  wri_any_2023_24_rate_pct
+       raw_wri_universe        19517            100.00                1.87               3.84                      4.19
+      shapefile_matched        13075             66.99                2.61               5.08                      5.38
+          full_controls        12721             65.18                2.62               5.14                      5.45
+full_controls_and_shape        12721             65.18                2.62               5.14                      5.45
+      non_r1_estimation        12388             63.47                0.00               4.98                      5.24
+
   Saved: C:\BC PhD\Research\Peer-Effects and Adoption\1_Data\Cleaned\analysis_dataset_spatial.csv
+  Saved: C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\sample_selection_audit.csv

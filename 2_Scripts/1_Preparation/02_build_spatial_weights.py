@@ -31,7 +31,7 @@ from sklearn.neighbors import NearestNeighbors
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 from config import (
-    SHP_FILE, ANALYSIS_DATASET, CLEAN, LOGS_DIR, ensure_dirs,
+    SHP_FILE, ANALYSIS_DATASET, CLEAN, LOGS_DIR, TABLES_DIR, ensure_dirs,
 )
 warnings.filterwarnings("ignore")
 ensure_dirs()
@@ -117,9 +117,21 @@ LAG_VARS = [
     "wri_any_2023",   # all-source 2023 (outcome for Est. 3)
     "wri_any_2024",   # all-source 2024 (outcome for Est. 3)
     "wri_any_2023_24",# all-source 2023-24 (outcome for Est. 3)
+    "wri_post_r1_cum",         # cumulative post-R1 adoption (new primary outcome)
+    "wri_awarded_by_2023",     # cumulative award stock by end-2023
+    "wri_awarded_by_2024",     # cumulative award stock by end-2024
+    "wri_delivered_by_2023q3", # visible delivery by R3 deadline
+    "wri_operating_by_2023q3", # visible operating by R3 deadline
+    "wri_visible_by_2023q3",   # delivery or operating by R3 deadline
     "is_pre_r1_adopter",  # prior adopter (control)
     "r1_early_delivery",  # R1 early deployment (instrument for Est. 4)
     "r1_late_or_unknown", # R1 late/unknown deployment  (instrument for Est. 4)
+    "r1_pre_r3_delivery",    # sharp delivery split: visible before R3
+    "r1_post_r3_delivery",   # sharp delivery split: after R3 deadline
+    "r1_delivery_unknown",   # sharp delivery split: unknown delivery date
+    "r1_pre_r3_operating",   # sharp operating split: visible before R3
+    "r1_post_r3_operating",  # sharp operating split: after R3 deadline
+    "r1_operating_unknown",  # sharp operating split: unknown operating date
     # controls (for within-W summaries)
     "median_income", "poverty_rate", "enrollment", "pm25", "pct_white",
 ]
@@ -232,10 +244,46 @@ log(f"    R1 winners in sample : {est['IV_Z_R1'].sum():,}")
 log(f"    R3 winners in sample : {est['IV_Z_R3'].sum():,}")
 log(f"    R1 losers in sample  : {est['IS_R1_LOSER'].sum():,}")
 
+full_controls_mask = (
+    out["enrollment"].notna()
+    & out["median_income"].notna()
+    & out["poverty_rate"].notna()
+    & out["pct_white"].notna()
+    & out["pm25"].notna()
+    & out["state"].notna()
+    & out["pct_dem_2020"].notna()
+)
+matched_mask = out["w6_IV_Z_R1"].notna()
+
+sample_rows = []
+for stage_name, mask in [
+    ("raw_wri_universe", pd.Series(True, index=out.index)),
+    ("shapefile_matched", matched_mask),
+    ("full_controls", full_controls_mask),
+    ("full_controls_and_shape", full_controls_mask & matched_mask),
+    ("non_r1_estimation", (out["IV_Z_R1"] == 0) & full_controls_mask & matched_mask),
+]:
+    sub = out.loc[mask].copy()
+    sample_rows.append({
+        "stage": stage_name,
+        "districts_n": int(len(sub)),
+        "share_of_raw_pct": round(100 * len(sub) / len(out), 2),
+        "r1_winner_rate_pct": round(100 * sub["IV_Z_R1"].mean(), 2),
+        "r3_apply_rate_pct": round(100 * sub["Y_R3_apply"].mean(), 2),
+        "wri_any_2023_24_rate_pct": round(100 * sub["wri_any_2023_24"].mean(), 2),
+    })
+
+sample_audit = pd.DataFrame(sample_rows)
+log("\n  Sample-selection audit:")
+log(sample_audit.to_string(index=False))
+
 # Save
 out_path = CLEAN / "analysis_dataset_spatial.csv"
 out.to_csv(out_path, index=False)
 log(f"\n  Saved: {out_path}")
+sample_path = TABLES_DIR / "sample_selection_audit.csv"
+sample_audit.to_csv(sample_path, index=False)
+log(f"  Saved: {sample_path}")
 
 log_text = "\n".join(log_lines)
 with open(LOGS_DIR / "spatial_weights_audit.txt", "w", encoding="utf-8") as f:
