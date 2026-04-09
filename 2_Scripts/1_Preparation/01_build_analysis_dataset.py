@@ -12,7 +12,6 @@ Output
 """
 
 import sys
-import re
 import warnings
 from pathlib import Path
 
@@ -30,16 +29,24 @@ ensure_dirs()
 
 log_lines = []
 def log(msg=""):
-    print(msg)
-    log_lines.append(str(msg))
+    raw_msg = str(msg)
+    encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+    safe_msg = raw_msg.encode(encoding, errors="replace").decode(encoding, errors="replace")
+    print(safe_msg)
+    log_lines.append(raw_msg)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # HELPERS
 # ══════════════════════════════════════════════════════════════════════════════
 
 def clean_nces(series):
-    """Standardise to 7-char zero-padded string. Strips decimal artefacts."""
-    return series.astype(str).str.split(".").str[0].str.strip().str.zfill(7)
+    """Standardise to 7-char zero-padded string and preserve missing values."""
+    out = pd.Series(series, copy=False)
+    out = out.where(out.notna(), np.nan)
+    out = out.astype(str).str.split(".").str[0].str.strip()
+    out = out.str.extract(r"(\d+)", expand=False)
+    out = out.where(out.notna() & out.ne(""), np.nan)
+    return out.str.zfill(7)
 
 
 def parse_award_year(series):
@@ -130,6 +137,14 @@ keep_cols = ["nces_id", "state", "urbanicity", "enrollment",
              "median_income", "poverty_rate", "pct_white", "pm25",
              "priority_r1", "priority_r23"]
 base = df[keep_cols].copy()
+invalid_base_ids = base["nces_id"].isna().sum()
+if invalid_base_ids:
+    log(f"  Invalid or missing NCES IDs dropped from district universe: {invalid_base_ids:,}")
+base = base.dropna(subset=["nces_id"]).copy()
+dup_base_ids = int(base["nces_id"].duplicated().sum())
+if dup_base_ids:
+    log(f"  Duplicate NCES IDs in district universe: {dup_base_ids:,} rows; keeping first occurrence")
+    base = base.drop_duplicates("nces_id").copy()
 
 # WRI stores poverty_rate and pct_white as fractions (0–1) already; no rescaling.
 # (confirmed: mean pct_white ~0.82, mean poverty_rate ~0.12 makes sense)
@@ -162,6 +177,7 @@ EXCL = ["WITHDRAWN", "CANCELLED", "NOT SELECTED", "INELIGIBLE", "DENIED"]
 
 reb = pd.read_excel(CSB_REBATES)
 reb["nces_id"] = clean_nces(reb["NCES District ID"])
+reb = reb.dropna(subset=["nces_id"]).copy()
 reb_active = reb[~reb["Project Status"].str.upper().isin(EXCL)].copy()
 reb_active["fuel_group"] = classify_fuel_group(
     reb_active,
@@ -205,6 +221,7 @@ log("=" * 70)
 
 grn = pd.read_excel(CSB_GRANTS)
 grn["nces_id"] = clean_nces(grn["NCES District ID"])
+grn = grn.dropna(subset=["nces_id"]).copy()
 grn_active = grn[grn["Project Status"].str.strip() == "Funds Awarded"].copy()
 r2_grantees = grn_active["nces_id"].drop_duplicates().to_frame()
 r2_grantees["IS_R2_GRANTEE"] = 1
@@ -223,6 +240,7 @@ log("=" * 70)
 
 app = pd.read_excel(CSB_APPLICANTS)
 app["nces_id"] = clean_nces(app["NCES District ID"])
+app = app.dropna(subset=["nces_id"]).copy()
 app["fuel_group"] = classify_fuel_group(
     app,
     "Number of Electric Buses",
@@ -284,6 +302,7 @@ log("=" * 70)
 
 buses = pd.read_excel(WRI_BUS_EXCEL, sheet_name="2. Bus-level data")
 buses["nces_id"]    = clean_nces(buses["1c. LEA ID"])
+buses = buses.dropna(subset=["nces_id"]).copy()
 buses["award_year"] = parse_award_year(buses["3p. Quarter awarded"])
 buses["award_q_index"] = parse_quarter_index(buses["3p. Quarter awarded"])
 buses["delivery_year"] = parse_award_year(buses["3r. Quarter delivered"])
@@ -291,6 +310,7 @@ buses["delivery_q_index"] = parse_quarter_index(buses["3r. Quarter delivered"])
 buses["operating_year"] = parse_award_year(buses["3s. Quarter first operating"])
 buses["operating_q_index"] = parse_quarter_index(buses["3s. Quarter first operating"])
 buses_valid = buses[buses["award_year"].between(1990, 2035)
+                    & buses["nces_id"].notna()
                     & buses["nces_id"].ne("0000000")].copy()
 
 Q3_2022 = 2022 * 4 + 3   # R1 announced ~August 2022; Q3 2022 = Jul-Sep
@@ -467,8 +487,9 @@ log(f"  2020 counties with vote data : {len(county_pol):,}")
 # LEA → county crosswalk from WRI v9 sheet "5. Counties"
 xwalk = pd.read_excel(WRI_BUS_EXCEL, sheet_name="5. Counties")
 xwalk["nces_id"]    = clean_nces(xwalk["1c. LEA ID"])
+xwalk = xwalk.dropna(subset=["nces_id"]).copy()
 xwalk = xwalk.rename(columns={"10b. County FIPS Code": "county_fips"})
-xwalk["county_fips"] = pd.to_numeric(xwalk["county_fips"], errors="coerce").dropna()
+xwalk["county_fips"] = pd.to_numeric(xwalk["county_fips"], errors="coerce")
 xwalk = xwalk.dropna(subset=["county_fips"])
 xwalk["county_fips"] = xwalk["county_fips"].astype(int)
 xwalk = xwalk.merge(county_pol[["county_fips", "pct_dem_2020"]], on="county_fips", how="left")
@@ -589,6 +610,11 @@ d = d.merge(
 d = d.merge(lea_pol, on="nces_id", how="left")
 
 log(f"  Total districts in dataset : {len(d):,}")
+if d["nces_id"].isna().any():
+    raise ValueError("analysis dataset contains missing NCES IDs")
+if d["nces_id"].duplicated().any():
+    dup_n = int(d["nces_id"].duplicated().sum())
+    raise ValueError(f"analysis dataset is not one row per district; found {dup_n} duplicate NCES IDs")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
