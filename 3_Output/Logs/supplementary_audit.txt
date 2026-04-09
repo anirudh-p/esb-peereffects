@@ -46,5 +46,5 @@ D — PM2.5 and poverty quartiles
     {'Q1': 3344, 'Q2': 3226, 'Q3': 3256, 'Q4': 3247, 'Unknown': 6444}
 
   Saved: C:\BC PhD\Research\Peer-Effects and Adoption\1_Data\Cleaned\analysis_dataset_supp.csv
-  Shape: (19517, 251)
+  Shape: (19517, 252)
   New columns: Y_R2_apply, Y_any_post_r1, shares_dealer_with_r1, lat, lon, pm25_q, poverty_q

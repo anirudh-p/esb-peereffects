@@ -293,6 +293,8 @@ buses["operating_q_index"] = parse_quarter_index(buses["3s. Quarter first operat
 buses_valid = buses[buses["award_year"].between(1990, 2035)
                     & buses["nces_id"].ne("0000000")].copy()
 
+Q3_2022 = 2022 * 4 + 3   # R1 announced ~August 2022; Q3 2022 = Jul-Sep
+Q2_2022 = 2022 * 4 + 2   # Q2 2022 = Apr-Jun (last pre-announcement quarter)
 Q3_2023 = 2023 * 4 + 3
 Q4_2023 = 2023 * 4 + 4
 Q4_2024 = 2024 * 4 + 4
@@ -360,6 +362,22 @@ wri_visible_by_2023q3 = pd.concat(
     ignore_index=True,
 ).drop_duplicates()
 wri_visible_by_2023q3["wri_visible_by_2023q3"] = 1
+
+# Post-announcement 2022 adopters: FIRST WRI bus awarded in Q3 or Q4 2022.
+# R1 lottery results announced ~August 2022 (Q3 2022). Districts whose first
+# bus arrived in Q3-Q4 2022 could plausibly be responding to R1 peer signals
+# (announcement visible, even if buses not yet delivered). Districts with a
+# bus in Q1-Q2 2022 (pre-announcement) are excluded.
+_first_award_q = (buses_valid
+                  .groupby("nces_id")["award_q_index"]
+                  .min()
+                  .reset_index()
+                  .rename(columns={"award_q_index": "first_award_q"}))
+_post_ann_2022 = _first_award_q[
+    _first_award_q["first_award_q"].between(Q3_2022, Q2_2022 + 2)  # Q3-Q4 2022
+].copy()
+_post_ann_2022["wri_post_ann_2022"] = 1
+log(f"\n  Districts with first bus in Q3-Q4 2022 (post-announcement): {len(_post_ann_2022):,}")
 
 log(f"\n  Districts with >=1 bus awarded by end-2023 : {len(wri_awarded_by_2023):,}")
 log(f"  Districts with >=1 bus delivered by 2023 Q3: {len(wri_delivered_by_2023q3):,}")
@@ -519,6 +537,7 @@ for frame, col in [
     (wri_delivered_by_2023q3, "wri_delivered_by_2023q3"),
     (wri_operating_by_2023q3, "wri_operating_by_2023q3"),
     (wri_visible_by_2023q3, "wri_visible_by_2023q3"),
+    (_post_ann_2022, "wri_post_ann_2022"),
 ]:
     d = d.merge(frame[["nces_id", col]], on="nces_id", how="left")
     d[col] = d[col].fillna(0).astype(int)
@@ -528,13 +547,18 @@ d = d.merge(pre_r1[["nces_id", "is_pre_r1_adopter"]], on="nces_id", how="left")
 d["is_pre_r1_adopter"] = d["is_pre_r1_adopter"].fillna(0).astype(int)
 
 # Cumulative post-R1 WRI adoption (Fix A — Post-Meeting branch)
-# Definition: any WRI-tracked ESB awarded by end of 2024, EXCLUDING pre-R1 adopters.
-# This is the primary adoption outcome for the Post-Meeting analysis. It captures
-# peer-induced adoption via any funding channel (CSBP, HVIP, VW Settlement, state
-# grants) within the ~3-year window after R1 results were known (Oct 2022 – end 2024).
-# Pre-R1 adopters are excluded because their adoption predates the treatment.
+# Definition: any WRI-tracked ESB awarded in calendar years 2023-2024, EXCLUDING
+# pre-R1 adopters (districts with a WRI bus awarded before 2022).
+#
+# Why not include 2022? Q4 2022 is when R1 CSBP buses were awarded to the R1
+# winners themselves (~368 districts). Including Q3-Q4 2022 would put the R1
+# winners' own CSBP adoption into the peer-effect outcome variable, directly
+# confounding the IV design. Q1-Q2 2022 adoptions predate the R1 announcement
+# (~August 2022) and are likewise excluded. Using 2023-2024 gives a clean
+# post-delivery window where spillovers from observed R1 buses can operate.
+d["wri_post_ann_2022"] = d["wri_post_ann_2022"].fillna(0).astype(int)
 d["wri_post_r1_cum"] = (
-    (d["wri_awarded_by_2024"] == 1) & (d["is_pre_r1_adopter"] == 0)
+    (d["wri_any_2023_24"] == 1) & (d["is_pre_r1_adopter"] == 0)
 ).astype(int)
 
 # R1 delivery timing

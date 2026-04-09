@@ -1,7 +1,27 @@
 {
   "permissions": {
     "allow": [
-      "Bash(dir:*)"
+      "Bash(dir:*)",
+      "Bash(python3 -c \":*)",
+      "Bash(python -c \":*)",
+      "Bash(python 2_Scripts/2_Analysis/B_Estimation/04_estimand_2sls.py)",
+      "Bash(python -:*)",
+      "Bash(python -c \"import geopandas; import sklearn; print\\(''OK''\\)\")",
+      "Bash(python 2_Scripts/2_Analysis/B_Estimation/_deterrence_sharp_cutoff.py)",
+      "Bash(python 2_Scripts/Visualization/map_01_national_overview.py)",
+      "Bash(python -c \"import sys; print\\(sys.executable\\)\")",
+      "Bash(python 2_Scripts/2_Analysis/B_Estimation/02_estimand2_application.py)",
+      "Bash(.venv/Scripts/python.exe -c \"import matplotlib; import geopandas; print\\(''OK''\\)\")",
+      "Bash(.venv/Scripts/pip install matplotlib geopandas)",
+      "Bash(.venv/Scripts/python.exe -c \"import geopandas; print\\(''geopandas OK''\\)\")",
+      "Bash(.venv/Scripts/python.exe 2_Scripts/Visualization/map_01_national_overview.py)",
+      "Bash(.venv/Scripts/python.exe 2_Scripts/Visualization/map_02_peer_exposure.py)",
+      "Bash(.venv/Scripts/python.exe 2_Scripts/Visualization/map_03_california_zoom.py)",
+      "Bash(.venv/Scripts/python.exe -c \":*)",
+      "Bash(.venv/Scripts/python.exe 2_Scripts/Visualization/map_04_esb_adoption_history.py)",
+      "Bash(python \"2_Scripts/Visualization/map_02_peer_exposure.py\")",
+      "Bash(python \"2_Scripts/Visualization/map_03_california_zoom.py\")",
+      "Bash(python \"2_Scripts/Visualization/map_04_esb_adoption_history.py\")"
     ]
   }
 }

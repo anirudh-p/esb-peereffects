@@ -7,13 +7,13 @@ POST-MEETING BRANCH — Main IV Analysis
   Outcome rates (full sample):
     Y_R3_apply               :   617  (4.98%)
     wri_any_2023_24          :   649  (5.24%)
-    wri_post_r1_cum          :   681  (5.50%)
+    wri_post_r1_cum          :   563  (4.54%)
     wri_any_2024             :   437  (3.53%)
 
   Outcome rates (priority subsample):
     Y_R3_apply               :   301  (4.70%)
     wri_any_2023_24          :   279  (4.36%)
-    wri_post_r1_cum          :   320  (5.00%)
+    wri_post_r1_cum          :   264  (4.12%)
 
 ======================================================================
 SECTION 1 — Core reduced-form: wri_post_r1_cum + Y_R3_apply
@@ -21,16 +21,16 @@ Primary outcome: wri_post_r1_cum | Secondary: Y_R3_apply
 ======================================================================
 
   [CUM] Outcome = wri_post_r1_cum
-    K=6, loser=No , CUM                                   coef=+0.04908  SE=0.03601  p=0.1794     N=12,388  Ymean=0.0550
-    K=6, loser=Yes, CUM                                   coef=+0.05101  SE=0.03580  p=0.1608     N=12,388  Ymean=0.0550
-    K=10, loser=No , CUM                                  coef=+0.09749  SE=0.05621  p=0.0894*    N=12,388  Ymean=0.0550
-    K=10, loser=Yes, CUM                                  coef=+0.09836  SE=0.05581  p=0.0845*    N=12,388  Ymean=0.0550
-    K=15, loser=No , CUM                                  coef=+0.10338  SE=0.07744  p=0.1883     N=12,388  Ymean=0.0550
-    K=15, loser=Yes, CUM                                  coef=+0.10317  SE=0.07717  p=0.1876     N=12,388  Ymean=0.0550
+    K=6, loser=No , CUM                                   coef=+0.01402  SE=0.02208  p=0.5287     N=12,388  Ymean=0.0454
+    K=6, loser=Yes, CUM                                   coef=+0.01683  SE=0.02151  p=0.4380     N=12,388  Ymean=0.0454
+    K=10, loser=No , CUM                                  coef=+0.03186  SE=0.03013  p=0.2957     N=12,388  Ymean=0.0454
+    K=10, loser=Yes, CUM                                  coef=+0.03324  SE=0.02952  p=0.2659     N=12,388  Ymean=0.0454
+    K=15, loser=No , CUM                                  coef=+0.03158  SE=0.04162  p=0.4518     N=12,388  Ymean=0.0454
+    K=15, loser=Yes, CUM                                  coef=+0.03128  SE=0.04119  p=0.4515     N=12,388  Ymean=0.0454
 
   [CUM] Priority subsample, K=6
-    Priority K=6, loser=No , CUM                          coef=+0.06710  SE=0.03141  p=0.0379**   N=6,402  Ymean=0.0500
-    Priority K=6, loser=Yes, CUM                          coef=+0.06855  SE=0.03117  p=0.0328**   N=6,402  Ymean=0.0500
+    Priority K=6, loser=No , CUM                          coef=+0.03848  SE=0.02836  p=0.1814     N=6,402  Ymean=0.0412
+    Priority K=6, loser=Yes, CUM                          coef=+0.04056  SE=0.02802  p=0.1545     N=6,402  Ymean=0.0412
 
   [APP] Outcome = Y_R3_apply
     K=6, loser=No , APP                                   coef=+0.03439  SE=0.02750  p=0.2173     N=12,388  Ymean=0.0498
@@ -52,32 +52,32 @@ SECTION 2 — Outcome comparison (K=6, loser=Yes)
     Full, R3 application       [prior primary]            coef=+0.03571  SE=0.02732  p=0.1977     N=12,388  Ymean=0.0498
     Full, WRI any 2023-24       [prior null]              coef=+0.01864  SE=0.02656  p=0.4862     N=12,388  Ymean=0.0524
     Full, WRI any 2024 only     [prior null]              coef=+0.00235  SE=0.02103  p=0.9115     N=12,388  Ymean=0.0353
-    Full, WRI cum post-R1       [new primary]             coef=+0.05101  SE=0.03580  p=0.1608     N=12,388  Ymean=0.0550
+    Full, WRI cum post-R1       [new primary]             coef=+0.01683  SE=0.02151  p=0.4380     N=12,388  Ymean=0.0454
 
   Priority subsample
     Prio, R3 application       [prior primary]            coef=+0.11241  SE=0.04456  p=0.0151**   N=6,402  Ymean=0.0470
     Prio, WRI any 2023-24       [prior null]              coef=+0.03065  SE=0.02768  p=0.2738     N=6,402  Ymean=0.0436
     Prio, WRI any 2024 only     [prior null]              coef=+0.03249  SE=0.03134  p=0.3051     N=6,402  Ymean=0.0278
-    Prio, WRI cum post-R1       [new primary]             coef=+0.06855  SE=0.03117  p=0.0328**   N=6,402  Ymean=0.0500
+    Prio, WRI cum post-R1       [new primary]             coef=+0.04056  SE=0.02802  p=0.1545     N=6,402  Ymean=0.0412
 
 ======================================================================
 SECTION 3 — Urbanicity heterogeneity (K=6, loser=Yes)
 ======================================================================
 
-  [Urban]  N=697  cum_rate=19.51%  apply_rate=16.36%
-    Urban      wri_post_r1_cum                            coef=+0.04818  SE=0.29490  p=0.8709     N=697  Ymean=0.1951
+  [Urban]  N=697  cum_rate=17.07%  apply_rate=16.36%
+    Urban      wri_post_r1_cum                            coef=+0.04527  SE=0.22908  p=0.8442     N=697  Ymean=0.1707
     Urban      Y_R3_apply                                 coef=+0.01599  SE=0.24912  p=0.9491     N=697  Ymean=0.1636
 
-  [Suburban]  N=2,880  cum_rate=7.57%  apply_rate=6.53%
-    Suburban   wri_post_r1_cum                            coef=+0.04930  SE=0.07787  p=0.5300     N=2,880  Ymean=0.0757
+  [Suburban]  N=2,880  cum_rate=6.39%  apply_rate=6.53%
+    Suburban   wri_post_r1_cum                            coef=+0.00949  SE=0.06802  p=0.8897     N=2,880  Ymean=0.0639
     Suburban   Y_R3_apply                                 coef=-0.06862  SE=0.04238  p=0.1126     N=2,880  Ymean=0.0653
 
-  [Town]  N=2,252  cum_rate=4.66%  apply_rate=4.97%
-    Town       wri_post_r1_cum                            coef=+0.10121  SE=0.05836  p=0.0897*    N=2,252  Ymean=0.0466
+  [Town]  N=2,252  cum_rate=3.69%  apply_rate=4.97%
+    Town       wri_post_r1_cum                            coef=+0.06167  SE=0.06738  p=0.3649     N=2,252  Ymean=0.0369
     Town       Y_R3_apply                                 coef=+0.06949  SE=0.08495  p=0.4176     N=2,252  Ymean=0.0497
 
-  [Rural]  N=6,559  cum_rate=3.38%  apply_rate=3.09%
-    Rural      wri_post_r1_cum                            coef=+0.03696  SE=0.03252  p=0.2615     N=6,559  Ymean=0.0338
+  [Rural]  N=6,559  cum_rate=2.70%  apply_rate=3.09%
+    Rural      wri_post_r1_cum                            coef=+0.00337  SE=0.01819  p=0.8537     N=6,559  Ymean=0.0270
     Rural      Y_R3_apply                                 coef=+0.06490  SE=0.03590  p=0.0771*    N=6,559  Ymean=0.0309
 
 ======================================================================
@@ -89,10 +89,10 @@ Post-R3 deadline = delivered 2023 Q4 or later
   Full sample  N=12,388
 
     Outcome: wri_post_r1_cum
-      pre_r3 (visible) : coef=+0.01055  SE=0.03028  p=0.7290
-      post_r3 (invisible): coef=+0.07426  SE=0.06067  p=0.2271
-      unknown timing  : coef=+0.09990  SE=0.11588  p=0.3930
-      Wald (pre=post): delta=-0.06371  chi2(1)p=0.2593
+      pre_r3 (visible) : coef=-0.00809  SE=0.03265  p=0.8053
+      post_r3 (invisible): coef=+0.02222  SE=0.02993  p=0.4616
+      unknown timing  : coef=+0.09557  SE=0.10297  p=0.3581
+      Wald (pre=post): delta=-0.03031  chi2(1)p=0.4454
 
     Outcome: Y_R3_apply
       pre_r3 (visible) : coef=+0.04819  SE=0.04774  p=0.3180
@@ -103,10 +103,10 @@ Post-R3 deadline = delivered 2023 Q4 or later
   Priority subsample  N=6,402
 
     Outcome: wri_post_r1_cum
-      pre_r3 (visible) : coef=+0.09504  SE=0.04509  p=0.0404**
-      post_r3 (invisible): coef=+0.05172  SE=0.04691  p=0.2759
-      unknown timing  : coef=+0.02677  SE=0.12039  p=0.8250
-      Wald (pre=post): delta=+0.04333  chi2(1)p=0.5199
+      pre_r3 (visible) : coef=+0.03583  SE=0.04658  p=0.4456
+      post_r3 (invisible): coef=+0.04088  SE=0.04994  p=0.4172
+      unknown timing  : coef=+0.06390  SE=0.11620  p=0.5850
+      Wald (pre=post): delta=-0.00505  chi2(1)p=0.9499
 
     Outcome: Y_R3_apply
       pre_r3 (visible) : coef=+0.08261  SE=0.06813  p=0.2313
@@ -119,16 +119,16 @@ SECTION 5 — K sensitivity (wri_post_r1_cum, loser=Yes)
 ======================================================================
 
   Full sample
-    Full, K=6, loser=Yes, wri_post_r1_cum                 coef=+0.05101  SE=0.03580  p=0.1608     N=12,388  Ymean=0.0550
-    Full, K=10, loser=Yes, wri_post_r1_cum                coef=+0.09836  SE=0.05581  p=0.0845*    N=12,388  Ymean=0.0550
-    Full, K=15, loser=Yes, wri_post_r1_cum                coef=+0.10317  SE=0.07717  p=0.1876     N=12,388  Ymean=0.0550
-    Full, K=6 inv-dist, loser=Yes, wri_post_r1_cum        coef=+0.03243  SE=0.03546  p=0.3652     N=12,388  Ymean=0.0550
+    Full, K=6, loser=Yes, wri_post_r1_cum                 coef=+0.01683  SE=0.02151  p=0.4380     N=12,388  Ymean=0.0454
+    Full, K=10, loser=Yes, wri_post_r1_cum                coef=+0.03324  SE=0.02952  p=0.2659     N=12,388  Ymean=0.0454
+    Full, K=15, loser=Yes, wri_post_r1_cum                coef=+0.03128  SE=0.04119  p=0.4515     N=12,388  Ymean=0.0454
+    Full, K=6 inv-dist, loser=Yes, wri_post_r1_cum        coef=-0.00214  SE=0.02070  p=0.9182     N=12,388  Ymean=0.0454
 
   Priority subsample
-    Prio, K=6, loser=Yes, wri_post_r1_cum                 coef=+0.06855  SE=0.03117  p=0.0328**   N=6,402  Ymean=0.0500
-    Prio, K=10, loser=Yes, wri_post_r1_cum                coef=+0.11404  SE=0.05590  p=0.0470**   N=6,402  Ymean=0.0500
-    Prio, K=15, loser=Yes, wri_post_r1_cum                coef=+0.13558  SE=0.05797  p=0.0237**   N=6,402  Ymean=0.0500
-    Prio, K=6 inv-dist, loser=Yes, wri_post_r1_cum        coef=+0.06523  SE=0.03191  p=0.0466**   N=6,402  Ymean=0.0500
+    Prio, K=6, loser=Yes, wri_post_r1_cum                 coef=+0.04056  SE=0.02802  p=0.1545     N=6,402  Ymean=0.0412
+    Prio, K=10, loser=Yes, wri_post_r1_cum                coef=+0.05663  SE=0.04124  p=0.1762     N=6,402  Ymean=0.0412
+    Prio, K=15, loser=Yes, wri_post_r1_cum                coef=+0.08351  SE=0.05018  p=0.1027     N=6,402  Ymean=0.0412
+    Prio, K=6 inv-dist, loser=Yes, wri_post_r1_cum        coef=+0.03181  SE=0.02450  p=0.2004     N=6,402  Ymean=0.0412
 
 ======================================================================
 SECTION 6 — Placebo / Falsification
@@ -152,8 +152,8 @@ Restrict to districts with at least one R1 applicant neighbor
 ======================================================================
 
   Applicant-exposed N=7,085  (full E2 sample: 12,388)
-  cum_rate=6.03%  apply_rate=5.31%
-    Applicant-exposed: wri_post_r1_cum                    coef=+0.04272  SE=0.04352  p=0.3313     N=7,085  Ymean=0.0603
+  cum_rate=4.97%  apply_rate=5.31%
+    Applicant-exposed: wri_post_r1_cum                    coef=+0.00305  SE=0.03047  p=0.9206     N=7,085  Ymean=0.0497
     Applicant-exposed: Y_R3_apply                         coef=+0.01017  SE=0.03614  p=0.7796     N=7,085  Ymean=0.0531
 
 ======================================================================
@@ -162,14 +162,14 @@ SUMMARY — Main IV results
 
 Section         Label                                                         N      Coef       SE       p    
 ---------------------------------------------------------------------------------------------------------
-  S1_full         K=6, loser=No , CUM                                    12,388  +0.04908  0.03601  0.1794    
-  S1_full         K=6, loser=Yes, CUM                                    12,388  +0.05101  0.03580  0.1608    
-  S1_full         K=10, loser=No , CUM                                   12,388  +0.09749  0.05622  0.0894   *
-  S1_full         K=10, loser=Yes, CUM                                   12,388  +0.09836  0.05581  0.0845   *
-  S1_full         K=15, loser=No , CUM                                   12,388  +0.10338  0.07744  0.1883    
-  S1_full         K=15, loser=Yes, CUM                                   12,388  +0.10317  0.07717  0.1876    
-  S1_priority     Priority K=6, loser=No , CUM                            6,402  +0.06710  0.03141  0.0379  **
-  S1_priority     Priority K=6, loser=Yes, CUM                            6,402  +0.06855  0.03117  0.0328  **
+  S1_full         K=6, loser=No , CUM                                    12,388  +0.01402  0.02208  0.5287    
+  S1_full         K=6, loser=Yes, CUM                                    12,388  +0.01683  0.02151  0.4380    
+  S1_full         K=10, loser=No , CUM                                   12,388  +0.03186  0.03013  0.2957    
+  S1_full         K=10, loser=Yes, CUM                                   12,388  +0.03324  0.02952  0.2659    
+  S1_full         K=15, loser=No , CUM                                   12,388  +0.03158  0.04162  0.4518    
+  S1_full         K=15, loser=Yes, CUM                                   12,388  +0.03128  0.04119  0.4515    
+  S1_priority     Priority K=6, loser=No , CUM                            6,402  +0.03848  0.02836  0.1814    
+  S1_priority     Priority K=6, loser=Yes, CUM                            6,402  +0.04056  0.02802  0.1545    
   S1_full         K=6, loser=No , APP                                    12,388  +0.03439  0.02750  0.2173    
   S1_full         K=6, loser=Yes, APP                                    12,388  +0.03571  0.02732  0.1977    
   S1_full         K=10, loser=No , APP                                   12,388  +0.06030  0.04084  0.1465    
@@ -181,43 +181,43 @@ Section         Label                                                         N 
   S2_comparison   Full, R3 application       [prior primary]             12,388  +0.03571  0.02732  0.1977    
   S2_comparison   Full, WRI any 2023-24       [prior null]               12,388  +0.01864  0.02656  0.4862    
   S2_comparison   Full, WRI any 2024 only     [prior null]               12,388  +0.00235  0.02103  0.9115    
-  S2_comparison   Full, WRI cum post-R1       [new primary]              12,388  +0.05101  0.03580  0.1608    
+  S2_comparison   Full, WRI cum post-R1       [new primary]              12,388  +0.01683  0.02151  0.4380    
   S2_comparison   Prio, R3 application       [prior primary]              6,402  +0.11241  0.04456  0.0151  **
   S2_comparison   Prio, WRI any 2023-24       [prior null]                6,402  +0.03065  0.02768  0.2738    
   S2_comparison   Prio, WRI any 2024 only     [prior null]                6,402  +0.03249  0.03134  0.3051    
-  S2_comparison   Prio, WRI cum post-R1       [new primary]               6,402  +0.06855  0.03117  0.0328  **
-  S3_urbanicity   Urban      wri_post_r1_cum                                697  +0.04818  0.29490  0.8709    
+  S2_comparison   Prio, WRI cum post-R1       [new primary]               6,402  +0.04056  0.02802  0.1545    
+  S3_urbanicity   Urban      wri_post_r1_cum                                697  +0.04527  0.22908  0.8442    
   S3_urbanicity   Urban      Y_R3_apply                                     697  +0.01599  0.24912  0.9491    
-  S3_urbanicity   Suburban   wri_post_r1_cum                              2,880  +0.04930  0.07787  0.5300    
+  S3_urbanicity   Suburban   wri_post_r1_cum                              2,880  +0.00949  0.06802  0.8897    
   S3_urbanicity   Suburban   Y_R3_apply                                   2,880  -0.06862  0.04238  0.1126    
-  S3_urbanicity   Town       wri_post_r1_cum                              2,252  +0.10121  0.05835  0.0897   *
+  S3_urbanicity   Town       wri_post_r1_cum                              2,252  +0.06167  0.06738  0.3649    
   S3_urbanicity   Town       Y_R3_apply                                   2,252  +0.06949  0.08495  0.4176    
-  S3_urbanicity   Rural      wri_post_r1_cum                              6,559  +0.03696  0.03252  0.2615    
+  S3_urbanicity   Rural      wri_post_r1_cum                              6,559  +0.00337  0.01819  0.8537    
   S3_urbanicity   Rural      Y_R3_apply                                   6,559  +0.06490  0.03590  0.0771   *
-  S4_timing     Full sample|wri_post_r1_cum|pre_r3 (visible)             12,388  +0.01055  0.03027  0.7290    
-  S4_timing     Full sample|wri_post_r1_cum|post_r3 (invisible)          12,388  +0.07426  0.06067  0.2271    
-  S4_timing     Full sample|wri_post_r1_cum|unknown timing               12,388  +0.09990  0.11588  0.3930    
+  S4_timing     Full sample|wri_post_r1_cum|pre_r3 (visible)             12,388  -0.00809  0.03265  0.8053    
+  S4_timing     Full sample|wri_post_r1_cum|post_r3 (invisible)          12,388  +0.02222  0.02993  0.4616    
+  S4_timing     Full sample|wri_post_r1_cum|unknown timing               12,388  +0.09557  0.10297  0.3581    
   S4_timing     Full sample|Y_R3_apply|pre_r3 (visible)                  12,388  +0.04819  0.04774  0.3180    
   S4_timing     Full sample|Y_R3_apply|post_r3 (invisible)               12,388  +0.01694  0.03625  0.6425    
   S4_timing     Full sample|Y_R3_apply|unknown timing                    12,388  +0.08378  0.08124  0.3077    
-  S4_timing     Priority subsample|wri_post_r1_cum|pre_r3 (visible)       6,402  +0.09504  0.04509  0.0404  **
-  S4_timing     Priority subsample|wri_post_r1_cum|post_r3 (invisible)    6,402  +0.05171  0.04691  0.2759    
-  S4_timing     Priority subsample|wri_post_r1_cum|unknown timing         6,402  +0.02677  0.12039  0.8250    
+  S4_timing     Priority subsample|wri_post_r1_cum|pre_r3 (visible)       6,402  +0.03583  0.04658  0.4456    
+  S4_timing     Priority subsample|wri_post_r1_cum|post_r3 (invisible)    6,402  +0.04088  0.04994  0.4172    
+  S4_timing     Priority subsample|wri_post_r1_cum|unknown timing         6,402  +0.06390  0.11620  0.5850    
   S4_timing     Priority subsample|Y_R3_apply|pre_r3 (visible)            6,402  +0.08261  0.06813  0.2313    
   S4_timing     Priority subsample|Y_R3_apply|post_r3 (invisible)         6,402  +0.12003  0.05974  0.0503   *
   S4_timing     Priority subsample|Y_R3_apply|unknown timing              6,402  +0.22639  0.11799  0.0611   *
-  S5_K_sensitivity   Full, K=6, loser=Yes, wri_post_r1_cum                  12,388  +0.05101  0.03580  0.1608    
-  S5_K_sensitivity   Full, K=10, loser=Yes, wri_post_r1_cum                 12,388  +0.09836  0.05581  0.0845   *
-  S5_K_sensitivity   Full, K=15, loser=Yes, wri_post_r1_cum                 12,388  +0.10317  0.07717  0.1876    
-  S5_K_sensitivity   Full, K=6 inv-dist, loser=Yes, wri_post_r1_cum         12,388  +0.03243  0.03546  0.3652    
-  S5_K_sensitivity   Prio, K=6, loser=Yes, wri_post_r1_cum                   6,402  +0.06855  0.03117  0.0328  **
-  S5_K_sensitivity   Prio, K=10, loser=Yes, wri_post_r1_cum                  6,402  +0.11404  0.05590  0.0470  **
-  S5_K_sensitivity   Prio, K=15, loser=Yes, wri_post_r1_cum                  6,402  +0.13558  0.05797  0.0237  **
-  S5_K_sensitivity   Prio, K=6 inv-dist, loser=Yes, wri_post_r1_cum          6,402  +0.06523  0.03191  0.0466  **
+  S5_K_sensitivity   Full, K=6, loser=Yes, wri_post_r1_cum                  12,388  +0.01683  0.02151  0.4380    
+  S5_K_sensitivity   Full, K=10, loser=Yes, wri_post_r1_cum                 12,388  +0.03324  0.02952  0.2659    
+  S5_K_sensitivity   Full, K=15, loser=Yes, wri_post_r1_cum                 12,388  +0.03128  0.04119  0.4515    
+  S5_K_sensitivity   Full, K=6 inv-dist, loser=Yes, wri_post_r1_cum         12,388  -0.00214  0.02070  0.9182    
+  S5_K_sensitivity   Prio, K=6, loser=Yes, wri_post_r1_cum                   6,402  +0.04056  0.02802  0.1545    
+  S5_K_sensitivity   Prio, K=10, loser=Yes, wri_post_r1_cum                  6,402  +0.05663  0.04124  0.1762    
+  S5_K_sensitivity   Prio, K=15, loser=Yes, wri_post_r1_cum                  6,402  +0.08351  0.05018  0.1027    
+  S5_K_sensitivity   Prio, K=6 inv-dist, loser=Yes, wri_post_r1_cum          6,402  +0.03181  0.02450  0.2004    
   S6_placebo      Placebo: Z=R3_wins, Y=pre_r1_adoption                  12,388  -0.00000  0.00000  0.0002 ***
   S6_placebo      Placebo: Z=R1_wins, Y=pre_r1_adoption                  12,388  +0.00000  0.00000  0.0004 ***
   S6_placebo      Timing check: Z=R1_wins, Y=wri_any_2023 (before most deliveries)  12,388  +0.01451  0.01528  0.3472    
-  S7_appexposed   Applicant-exposed: wri_post_r1_cum                      7,085  +0.04272  0.04352  0.3313    
+  S7_appexposed   Applicant-exposed: wri_post_r1_cum                      7,085  +0.00305  0.03047  0.9206    
   S7_appexposed   Applicant-exposed: Y_R3_apply                           7,085  +0.01017  0.03614  0.7796    
 
   Saved: C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\main_iv.csv

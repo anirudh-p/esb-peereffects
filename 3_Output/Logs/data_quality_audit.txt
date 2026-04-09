@@ -115,6 +115,8 @@ award_year
   Districts with ≥1 bus awarded in 2023_24: 817
     of which first-ever adopters          : 722
 
+  Districts with first bus in Q3-Q4 2022 (post-announcement): 367
+
   Districts with >=1 bus awarded by end-2023 : 1,183
   Districts with >=1 bus delivered by 2023 Q3: 610
   Districts with >=1 bus operating by 2023 Q3: 599
@@ -166,7 +168,7 @@ STEP 8  —  Data quality audit
   WRI any adoption 2023                        :   355  ( 1.82%)
   WRI any adoption 2024                        :   533  ( 2.73%)
   WRI any adoption 2023-24                     :   817  ( 4.19%)
-  WRI cumulative post-R1 (new primary outcome) : 1,146  ( 5.87%)
+  WRI cumulative post-R1 (new primary outcome) :   722  ( 3.70%)
   WRI awarded by end-2023                      : 1,183  ( 6.06%)
   WRI delivered by 2023 Q3                     :   610  ( 3.13%)
   WRI operating by 2023 Q3                     :   599  ( 3.07%)
@@ -256,4 +258,4 @@ STEP 9  —  Save
 ======================================================================
 
   Saved: C:\BC PhD\Research\Peer-Effects and Adoption\1_Data\Cleaned\analysis_dataset.csv
-  Final dataset shape: (19517, 46)
+  Final dataset shape: (19517, 47)

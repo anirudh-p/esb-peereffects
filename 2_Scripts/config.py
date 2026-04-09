@@ -25,8 +25,9 @@ SHP_FILE = (RAW / "Spatial" / "EDGE_SCHOOLDISTRICT_TL21_SY2021"
 POL_FILE = RAW / "Political" / "dataverse_files" / "countypres_2000-2024.csv"
 
 # ── Outputs ────────────────────────────────────────────────────────────────────
-LOGS_DIR   = ROOT / "3_Output" / "Logs"
-TABLES_DIR = ROOT / "3_Output" / "Tables"
+LOGS_DIR    = ROOT / "3_Output" / "Logs"
+TABLES_DIR  = ROOT / "3_Output" / "Tables"
+FIGURES_DIR = ROOT / "3_Output" / "Figures"
 
 # Analysis-ready dataset (written by 01_build_analysis_dataset.py)
 ANALYSIS_DATASET = CLEAN / "analysis_dataset.csv"
@@ -36,5 +37,5 @@ SPATIAL_DATASET  = CLEAN / "analysis_dataset_spatial.csv"
 
 
 def ensure_dirs():
-    for d in [CLEAN, LOGS_DIR, TABLES_DIR]:
+    for d in [CLEAN, LOGS_DIR, TABLES_DIR, FIGURES_DIR]:
         d.mkdir(parents=True, exist_ok=True)

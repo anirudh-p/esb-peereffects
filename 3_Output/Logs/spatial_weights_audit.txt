@@ -46,7 +46,7 @@
 ======================================================================
 4  Merge and save enriched dataset
 ======================================================================
-  Final shape: (19517, 244)
+  Final shape: (19517, 245)
   Columns: ['nces_id', 'state', 'urbanicity', 'enrollment', 'median_income', 'poverty_rate', 'pct_white', 'pm25', 'priority_r1', 'priority_r23', 'r1_fuel_group', 'IV_Z_R1'] ...
 
   Estimation sample (all controls + K=6 lag): 12,721 / 19,517
