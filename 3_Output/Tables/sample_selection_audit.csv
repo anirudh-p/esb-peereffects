@@ -1,6 +1,0 @@
-stage,districts_n,share_of_raw_pct,r1_winner_rate_pct,r3_apply_rate_pct,wri_any_2023_24_rate_pct
-raw_wri_universe,19517,100.0,1.87,3.84,4.19
-shapefile_matched,13075,66.99,2.61,5.08,5.38
-full_controls,12721,65.18,2.62,5.14,5.45
-full_controls_and_shape,12721,65.18,2.62,5.14,5.45
-non_r1_estimation,12388,63.47,0.0,4.98,5.24
