@@ -1,9 +1,10 @@
-# Purpose of the Post-Temporal Branch
+# Project Purpose and History
 
-**Created:** March 2, 2026 | **Last Updated:** March 3, 2026  
-**Branched from:** `Current` (commit `6c9d823`)  
-**Previous branch:** `Current` (scripts 01–30 + full documentation)  
-**HEAD:** `7cc8b85` (Post-Temporal)
+**Original branch:** `Post-Temporal` (created March 2, 2026; branched from `Current`)  
+**Current branch:** `Post-Meeting` (created April 6, 2026; branched from `Post-Poster` commit `665c1e8`)  
+**Last Updated:** April 8, 2026
+
+> **Note:** Sections 1–7 below document the Post-Temporal/Post-Poster analysis pipeline. The Post-Meeting branch superseded the four-estimand structure with a single clean IV design; see `Checklist.md` for the current analysis plan, scripts, and results. Scripts `01_estimand1_itt.py` through `04_estimand_2sls.py` no longer exist on this branch.
 
 ---
 
@@ -21,6 +22,8 @@
 5. [What Gets Built in This Branch](#what-gets-built-in-this-branch)
 6. [Key Reference Files](#key-reference-files-preserved-on-current-and-main)
 7. [**Implementation and Results (Mar 3, 2026)**](#implementation-and-results-mar-3-2026)
+   - [7.8 Structural 2SLS Results](#78-structural-2sls-results-mar-4-2026)
+   - [7.9 Sharp-Cutoff Delivery Timing (Deterrence Check)](#79-sharp-cutoff-delivery-timing-deterrence-check-mar-5-2026)
 
 ---
 
@@ -199,10 +202,10 @@ This estimand is best treated as a heterogeneity/mechanism check nested within E
 2. ✅ ~~**Define clean variable construction from scratch.**~~ Done — `config.py`, `01_build_analysis_dataset.py`, `02_build_spatial_weights.py` built on `Post-Temporal` from raw data only. Spatial weights produce both uniform `w{K}_` and inverse-distance `wd{K}_` lag columns. `priority × state` interaction FE replaces the incorrect additive approach. See [Section 7.2](#72-fixed-effects-and-spatial-weights).
 
 3. ✅ ~~**Scope a feasible paper across the four estimands:**~~
-   - ✅ **Estimand 1 (ITT):** Implemented in `01_estimand1_itt.py` — all null as expected (p > 0.58 across K=6/10/15). R3 adoption window too close to R1 lottery for peer signals to propagate to observable adoption.
-   - ✅ **Estimand 2 (Application margin):** Implemented in `02_estimand2_application.py`. R2 grant applicants excluded from lottery IV; R2 grantee share used only as a robustness covariate. Results: K=6 δ=+0.051 (p=0.081), priority subsample δ=+0.119 (p=0.019). See [Section 7.4](#74-main-estimates-with-coef--se--t--p).
-   - ✅ **Estimand 3 (Longer-horizon all-source):** Implemented in `03_estimand3_allsource.py`. All null (p > 0.35). Delivery-timing split also null. See [Section 7.4](#74-main-estimates-with-coef--se--t--p).
-   - ✅ **Estimand 4 (Delivery visibility heterogeneity):** Nested within Estimand 3 as `3B` delivery-timing Wald test. Null (χ²(1) p > 0.67 for all outcomes). See [Section 7.6](#76-delivery-heterogeneity-results-estimand-4).
+   - ✅ **Estimand 1 (ITT):** All null (p > 0.58 across K=6/10/15). R3 adoption window too close to R1 lottery for peer signals to propagate to observable adoption. *(Script removed; see Post-Temporal branch.)*
+   - ✅ **Estimand 2 (Application margin):** K=6 δ=+0.051 (p=0.081), priority subsample δ=+0.119 (p=0.019). See [Section 7.4](#74-main-estimates-with-coef--se--t--p). *(Script removed; superseded by `01_main_iv.py`.)*
+   - ✅ **Estimand 3 (Longer-horizon all-source):** All null (p > 0.35). Delivery-timing split also null. See [Section 7.4](#74-main-estimates-with-coef--se--t--p). *(Script removed.)*
+   - ✅ **Estimand 4 (Delivery visibility heterogeneity):** Nested within Estimand 3 as `3B` delivery-timing Wald test. Null (χ²(1) p > 0.67 for all outcomes). *(Script removed.)*
 
 4. ✅ ~~**Work sequentially:**~~ Done — scripts run in order, all outputs committed.
 
@@ -457,5 +460,120 @@ No detectable early-vs-late difference.
 
 ---
 
-*Document written March 2, 2026. Updated March 3, 2026 with organized full specifications, variable construction, and coefficient/SE/t/p reporting.*  
-*Branch: `Post-Temporal` | HEAD: `7cc8b85`*
+### 7.8 Structural 2SLS Results (Mar 4, 2026)
+
+Script: ~~`04_estimand_2sls.py`~~ *(removed from Post-Meeting branch; see Post-Temporal/Post-Poster branch)*. Outputs: `estimand_2sls.csv`, `estimand_2sls.txt`.
+
+#### 7.8.1 Design
+
+| | Value |
+|---|---|
+| Endogenous variable (D) | `w{K}_wri_any_2023` — share of K neighbours with any WRI-tracked ESB by end of 2023 |
+| Instrument (Z) | `w{K}_IV_Z_R1` — share of K neighbours who won R1 (2022) CSBP lottery |
+| Outcomes | `Y_R3_apply` (primary), `wri_any_2023_24` (secondary) |
+| Sample | Non-R1-winners, N=12,388 (same as Estimand 2) |
+| Estimator | IV-2SLS via `linearmodels.iv.IV2SLS`, state-clustered SE |
+| Exclusion restriction (maintained) | Z affects Y only through D (neighbour deployment); informational/vendor channels before physical delivery would violate this |
+
+**Structural interpretation of β:** causal effect of a 1-unit increase in the share of K neighbours with physically deployed WRI ESBs on own R3 application probability.
+
+β_2SLS = RF / FS = (effect of lottery luck on Y) / (effect of lottery luck on D)
+
+D ≠ Z because: (a) WRI captures non-CSBP channels (~33% of ESBs); (b) not all R1 winners appear in WRI by 2023; (c) R2 grantees and state-funded buses enter D without affecting Z.
+
+#### 7.8.2 First Stage
+
+| K | FS coef | SE | FS partial F | Interpretation |
+|---|---:|---:|---:|---|
+| 6 | +0.040 | 0.015 | **7.06** | Marginally weak (below 10 threshold) |
+| 10 | +0.027 | 0.018 | **2.23** | Clearly weak |
+| 6 (priority) | +0.039 | 0.022 | **3.15** | Weak |
+
+First stage is below conventional thresholds because D (WRI deployment by 2023) is imperfectly predicted by Z (R1 lottery wins): the R1→WRI linkage is partial, delayed by delivery lags, and diluted by non-lottery WRI adoption. This is the quantitative confirmation of the timing problem identified in the design.
+
+#### 7.8.3 Main 2SLS Results
+
+| Outcome | K | N | OLS | 2SLS LATE | SE | p | AR p(β=0) | AR 95% CI |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| `Y_R3_apply` | 6 | 12,388 | −0.040 | **+1.281** | 0.928 | 0.167 | 0.087 | [−0.175, 7.025] |
+| `Y_R3_apply` | 10 | 12,388 | −0.066 | +3.041 | 2.710 | 0.262 | 0.064 | [−0.150, 20+] |
+| `wri_any_2023_24` | 6 | 12,388 | −0.042 | +0.600 | 0.852 | 0.481 | 0.490 | [−1.650, 3.750] |
+| `wri_any_2023_24` | 10 | 12,388 | −0.077 | +1.509 | 1.588 | 0.342 | 0.273 | unbounded |
+| `Y_R3_apply` (**priority**) | 6 | 6,402 | — | **+3.057** | 2.093 | 0.144 | **0.023** | **[0.425, 20+]** |
+
+#### 7.8.4 Key Takeaways from 2SLS
+
+**1. Weak first stage quantifies the timing problem.** FS F=7.06 for K=6 confirms what the delivery data already showed: R1 lottery wins translate imperfectly and with a lag into observable WRI deployment. Any structural estimate is therefore poorly identified with this observation window.
+
+**2. 2SLS LATE is large but imprecise.** β̂=+1.28 (K=6, Y_R3_apply) — interpretable as: a 10pp increase in the share of neighbours with deployed ESBs raises own R3 application probability by ~13pp. The standard error is too large to distinguish this from zero (p=0.167). The Wald CI [-0.54, 3.10] is very wide, consistent with FS F=7.
+
+**3. AR inference is the credible reference for inference under weak IV.** AR p(β=0) = 0.087 (K=6) and 0.064 (K=10) for the primary outcome — matching the reduced-form p-values by construction (AR at β₀=0 recovers the RF test). AR CI for K=6 application: [-0.18, 7.03] — crosses zero, consistent with the 5% non-rejection at the conventional level.
+
+**4. Priority subsample AR CI excludes zero.** For priority-eligible districts, AR p=0.023 and AR 95% CI lower bound is **+0.425** — we can reject β≤0 at 5% even with the weak instrument. This is the strongest identification result in the project: among priority-eligible districts, the structural effect of observable neighbour deployment on application entry is robustly positive. The upper bound being at 20+ reflects the genuine imprecision from FS F=3.15.
+
+**5. OLS naive is consistently negative (−0.04 to −0.08).** The negative OLS sign is informative: conditioning on controls, districts with more WRI-adopting neighbours are *less* likely to apply to R3. This likely reflects selection — districts in more ESB-saturated local markets have lower marginal motivation to enter — and motivates the IV. The 2SLS corrects this downward selection bias, flipping the sign and amplifying the magnitude.
+
+**6. KP F from linearmodels returned NaN** (likely a version compatibility issue). The manually computed partial F (t²) is the operational equivalent for a single excluded instrument and is the figure reported above.
+
+---
+
+---
+
+### 7.9 Sharp-Cutoff Delivery Timing (Deterrence Check, Mar 5, 2026)
+
+Script: ~~`_deterrence_sharp_cutoff.py`~~ *(removed from Post-Meeting branch)* (diagnostic, not part of main estimation pipeline).
+
+#### 7.9.1 Motivation
+
+The coarse `r1_early_delivery` variable (buses delivered before 2024) conflates buses that arrived **before** the R3 application deadline (Oct 2023, i.e., ≤ 2023 Q3) with buses that arrived **after** the deadline (2023 Q4). Only pre-deadline buses were visible to neighbouring districts when R3 application decisions were being made. This re-cut tests whether the mechanistically relevant timing split — visible vs. invisible at time of decision — produces a deterrence pattern.
+
+#### 7.9.2 Variable Construction
+
+WRI bus-level data (`3r. Quarter delivered`) provides quarter-level precision.
+
+| Category | Definition | District count (R1 winners) |
+|---|---|---:|
+| `pre_r3` | Earliest R1 bus delivered ≤ 2023 Q3 | 148 |
+| `post_r3` | Earliest R1 bus delivered ≥ 2023 Q4 (includes all 2024) | 188 |
+| `unknown` | No delivery date in WRI | 29 |
+
+Note: the coarse `r1_early_delivery` (before 2024) counted 217 districts — it combined pre_r3 (148) with the 2023 Q4 tranche (69 districts) that actually arrived after the deadline.
+
+KNN spatial lags `w6_r1_pre_r3`, `w6_r1_post_r3`, `w6_r1_del_unknown` built with the same K=6, EPSG:5070 procedure as all other lags.
+
+#### 7.9.3 Results
+
+Outcome: `Y_R3_apply` (R3 application indicator). Sample: non-R1-winners, N=12,388 (or 6,402 for priority). State-clustered SE; HC3 for California (single state).
+
+| Sample | pre_r3 coef | SE | p | post_r3 coef | SE | p | Wald (pre=post) p |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| National full | +0.045 | 0.054 | 0.408 | **−0.034** | 0.048 | 0.481 | 0.305 |
+| National priority | +0.092 | 0.054 | 0.091* | −0.012 | 0.072 | 0.865 | 0.239 |
+| California (HC3) | −0.148 | 0.233 | 0.524 | −0.097 | 0.161 | 0.547 | 0.846 |
+
+Adoption outcome comparison (`wri_any_2023_24`):
+
+| Sample | pre_r3 coef | p | post_r3 coef | p | Deterrence? |
+|---|---:|---:|---:|---:|---|
+| National full | +0.098 | 0.062* | +0.033 | 0.374 | No (post positive) |
+
+#### 7.9.4 Interpretation
+
+1. **Direction is mechanistically correct for the application channel.** Neighbours whose buses arrived before the R3 deadline (pre_r3) have a positive coefficient (+0.045 full, +0.092 priority); neighbours whose buses arrived after the deadline (post_r3) have a negative coefficient (−0.034). This matches the information-channel prediction: only visible neighbours can trigger application entry.
+
+2. **Post_r3 is negative (deterrence direction) but not statistically distinguishable from zero.** Wald p=0.305. The null of pre=post cannot be rejected. Precision is limited by thin coverage: mean spatial lag is only ~0.010–0.013 (roughly 1 in 100 neighbours has one of these indicators).
+
+3. **No deterrence of ESB adoption itself.** For the all-source adoption outcome, post_r3 is positive (+0.033), not negative. The timing-sensitive effect is specific to the application/deadline channel, consistent with the information interpretation rather than a generalised discouragement effect.
+
+4. **California is uninformative.** Near-zero spatial lag means (pre=0.005, post=0.010) and single-state HC3 SEs produce very wide confidence intervals. Not interpretable in isolation.
+
+#### 7.9.5 Poster implications
+
+- The sharp cutoff analysis provides **suggestive directional evidence** for a timing-sensitive information mechanism: the behavioural response (increased application) is concentrated among neighbours whose buses were physically visible before the decision deadline.
+- The effect is not precise enough to headline as a robust finding; best framed as a **mechanism corroboration** alongside the main reduced-form result.
+- Key contrast for the poster: coarse cutoff (before 2024) showed all-positive coefficients, suggesting no deterrence; the sharp cutoff reveals the expected sign reversal for post-deadline deliveries, indicating the coarse cut masked the mechanism-relevant split.
+
+---
+
+*Document written March 2, 2026. Updated March 3–5, 2026 with full specifications, results, 2SLS, and deterrence analysis. Updated April 8, 2026: header revised to reflect Post-Meeting branch; old estimand script references annotated as removed; see `Checklist.md` for current analysis.*
+*Original branch: `Post-Temporal` HEAD `7cc8b85` | Current branch: `Post-Meeting`*

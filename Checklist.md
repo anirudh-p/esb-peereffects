@@ -25,26 +25,26 @@ The analysis moves away from the four-estimand structure toward a single clean I
 - [x] Construct neighbor spatial lags: `w{K}_wri_post_r1_cum`, `wd{K}_wri_post_r1_cum`
 - [x] Main reduced-form table: full sample + priority subsample, K ∈ {6,10,15}, loser ctrl on/off
 - [x] Compare cumulative vs. narrow-window outcomes side-by-side in a single table
-- **Script:** `05_main_iv.py` Sections 1–2
+- **Script:** `01_main_iv.py` Sections 1–2
 
 ### 2. Timing / visibility split — finish the mechanism story
 - [x] Re-run pre-R3-deadline vs. post-deadline delivery split on `wri_post_r1_cum`
 - [x] Wald test: pre = post
-- **Script:** `05_main_iv.py` Section 4
+- **Script:** `01_main_iv.py` Section 4
 - **Finding:** Priority pre-R3 coef=+0.095 (p=0.040**); post-R3 coef=+0.052 (p=0.276). Right direction but Wald p=0.52 — underpowered. Application outcome shows reversed pattern (post > pre for priority), suggesting the mechanism may be primarily informational/reputational rather than visual demonstration.
 
 ### 3. K sensitivity + Conley spatial HAC
 - [x] Main table with K ∈ {6, 10, 15} for `wri_post_r1_cum`
 - [x] Re-run K=6 primary specs with Conley HAC (spatial autocorrelation-robust SE)
 - [x] Compare state-clustered vs. Conley SEs
-- **Script:** `05_main_iv.py` Section 5; `06_extended_iv.py` Section 2
+- **Script:** `01_main_iv.py` Section 5; `02_extended_iv.py` Section 2
 - **Finding:** For `wri_post_r1_cum` full sample, state-clustered SE=0.0358 (p=0.16) vs Conley 200km SE=0.0246 (p=0.039**). Conley SEs are *smaller* than state-clustered — state boundaries over-cluster relative to actual spatial correlation structure. Full-sample CUM result is significant at 5% under Conley HAC. `Y_R3_apply` remains null under all SE choices.
 
 ### 4. Placebo / falsification test
 - [x] R3 wins → pre-R1 adoption (placebo 1)
 - [x] R1 wins → pre-R1 adoption (placebo 2)
 - [x] R1 wins → WRI 2023-only (timing check)
-- **Script:** `05_main_iv.py` Section 6
+- **Script:** `01_main_iv.py` Section 6
 - **Note:** Placebo 1 & 2 flag — coefficient is near-zero but p<0.001 due to numerical precision. Likely collinearity/scale artifact with strata FE in restricted sample. Not a real identification concern.
 
 ### 5. Vendor network channel
@@ -52,14 +52,14 @@ The analysis moves away from the four-estimand structure toward a single clean I
 - [x] Construct vendor-network variable: does district i share a dealer with any R1 winner?
 - [x] Compare: geographic peer effect vs. vendor-network peer effect
 - [x] Test whether geographic effect attenuates after controlling for vendor network
-- **Script:** `03_build_supplementary.py`; `06_extended_iv.py` Section 4
+- **Script:** `03_build_supplementary.py`; `02_extended_iv.py` Section 4
 - **Finding:** `shares_dealer_with_r1` is strongly positive for WRI adoption (coef=+0.577, p<0.001), but adding it barely attenuates the geographic IV coefficient (0.051→0.048). Vendor network is correlated with adoption but does not explain the geographic spillover. Dealer-connected subsample heterogeneity regression hits collinearity (N=311 too small).
 
 ### 6. Climatic peers + donut test
 - [ ] Construct climate-quintile peer groups from PRISM data (temperature + precipitation)
 - [ ] Re-run main spec with climate peers as alternative network definition
 - [x] Donut test: drop K=1-2 nearest neighbors, re-run with remaining K=3-6
-- **Script:** `06_extended_iv.py` Sections 3 & 6
+- **Script:** `02_extended_iv.py` Sections 3 & 6
 - **Donut finding:** Full K=6 coef=+0.051; Donut K=3-6 coef=+0.029. Effect attenuates ~43% when dropping nearest 2 neighbors, consistent with stronger spillovers at short distances (supports visibility/contact mechanism). Neither is significant at conventional levels in full sample.
 - **Climate note:** PRISM data not yet merged. Raw files in `1_Data/Raw/Climate/`. ACTION NEEDED.
 
@@ -67,13 +67,13 @@ The analysis moves away from the four-estimand structure toward a single clean I
 - [x] Triple interaction: priority × winning neighbor × PM2.5 quartile
 - [x] Triple interaction: priority × winning neighbor × poverty quartile
 - [x] Which dimension of priority is driving the stronger effect?
-- **Script:** `06_extended_iv.py` Section 5
+- **Script:** `02_extended_iv.py` Section 5
 - **Finding:** Within priority subsample, the effect is concentrated in **low PM2.5** districts (coef=+0.099, p=0.005***) — i.e., priority districts that qualify via poverty rather than pollution exposure. High PM2.5 priority districts: p=0.53. Poverty quartile gradient present (Q4: +0.072) but not significant individually. Conclusion: peer effects are strongest for resource-constrained (poverty-eligible) districts, consistent with informational/cost-barrier story rather than environmental urgency.
 
 ### 8. Additional outcome margins (new)
 - [x] Y_R2_apply (R2 competitive grant application)
 - [x] Y_any_post_r1 (R2 OR R3 — broadest CSBP entry margin)
-- **Script:** `03_build_supplementary.py`; `06_extended_iv.py` Section 1
+- **Script:** `03_build_supplementary.py`; `02_extended_iv.py` Section 1
 - **Finding:** Y_R2_apply null everywhere (small N, ~436 applicants). Y_any_post_r1 matches R3 pattern: priority p=0.045**, full sample p=0.70. Adding R2 to R3 doesn't improve signal — peer effect concentrated in R3 application margin, not competitive grant.
 
 ---
@@ -95,9 +95,9 @@ All K=6, loser=Yes, `priority × state × fuel_group` FE, state-clustered SE.
 
 ## Post-Meeting Results Summary
 
-Scripts: `05_main_iv.py`, `06_extended_iv.py`. All K=6, loser=Yes, state-clustered SE unless noted.
+Scripts: `01_main_iv.py`, `02_extended_iv.py`. All K=6, loser=Yes, state-clustered SE unless noted.
 
-### Core IV results (reduced-form, `05_main_iv.py`)
+### Core IV results (reduced-form, `01_main_iv.py`)
 
 | Outcome | Sample | Coef | SE | p | Stars |
 |---|---|---:|---:|---:|---|
@@ -106,7 +106,7 @@ Scripts: `05_main_iv.py`, `06_extended_iv.py`. All K=6, loser=Yes, state-cluster
 | Y_R3_apply | Full | +0.037 | 0.027 | 0.198 | |
 | Y_R3_apply | Priority | +0.112 | 0.045 | 0.015 | ** |
 
-### Additional outcome margins (`06_extended_iv.py` S1)
+### Additional outcome margins (`02_extended_iv.py` S1)
 
 | Outcome | Sample | Coef | SE | p | Stars |
 |---|---|---:|---:|---:|---|
@@ -117,7 +117,7 @@ Scripts: `05_main_iv.py`, `06_extended_iv.py`. All K=6, loser=Yes, state-cluster
 
 Y_R2_apply null everywhere. Y_any_post_r1 tracks R3 — R2 adds no marginal signal.
 
-### Conley spatial HAC (`06_extended_iv.py` S2) — `wri_post_r1_cum`, full sample
+### Conley spatial HAC (`02_extended_iv.py` S2) — `wri_post_r1_cum`, full sample
 
 | SE type | SE | p | Stars |
 |---|---:|---:|---|
@@ -128,7 +128,7 @@ Y_R2_apply null everywhere. Y_any_post_r1 tracks R3 — R2 adds no marginal sign
 
 State-clustered SEs are more conservative than Conley — state boundaries over-cluster spatial error. Full-sample CUM result is significant at 5% under Conley 200km HAC.
 
-### Donut test (`06_extended_iv.py` S3) — `wri_post_r1_cum`, full sample
+### Donut test (`02_extended_iv.py` S3) — `wri_post_r1_cum`, full sample
 
 | Specification | Coef | SE | p |
 |---|---:|---:|---:|
@@ -137,7 +137,7 @@ State-clustered SEs are more conservative than Conley — state boundaries over-
 
 Effect attenuates ~43% when dropping nearest 2 neighbors, consistent with stronger spillovers at short distance. Does not rule out contamination but is the expected direction for a genuine peer effect.
 
-### Vendor network channel (`06_extended_iv.py` S4) — `wri_post_r1_cum`, full sample
+### Vendor network channel (`02_extended_iv.py` S4) — `wri_post_r1_cum`, full sample
 
 | Specification | Coef | SE | p | Stars |
 |---|---:|---:|---:|---|
@@ -147,7 +147,7 @@ Effect attenuates ~43% when dropping nearest 2 neighbors, consistent with strong
 
 Vendor network is strongly predictive of adoption but barely attenuates the geographic IV coefficient. Geographic and vendor channels are largely distinct.
 
-### Priority decomposition (`06_extended_iv.py` S5) — `wri_post_r1_cum`
+### Priority decomposition (`02_extended_iv.py` S5) — `wri_post_r1_cum`
 
 **PM2.5 quartile (full sample):**
 
@@ -174,7 +174,7 @@ Vendor network is strongly predictive of adoption but barely attenuates the geog
 
 **Key finding:** The priority effect is driven by **poverty-eligible districts** (low PM2.5, high poverty), not by the most-polluted districts. Consistent with peer effects lowering informational/cost barriers for resource-constrained districts.
 
-### Timing split (`05_main_iv.py` S4) — priority subsample
+### Timing split (`01_main_iv.py` S4) — priority subsample
 
 | Delivery timing | Outcome | Coef | SE | p | Stars |
 |---|---|---:|---:|---:|---|
