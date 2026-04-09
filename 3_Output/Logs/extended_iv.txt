@@ -1,0 +1,128 @@
+======================================================================
+POST-MEETING — Extended IV Analysis
+======================================================================
+  Full estimation sample : 12,388
+  Priority subsample     : 6,402
+
+======================================================================
+SECTION 1 — Additional outcome margins (K=6, loser=Yes)
+Instrument: w6_IV_Z_R1  |  SE: state-clustered
+======================================================================
+
+  Full sample
+    Full, R2 grant application  (competitive, pre-R3)        coef=+0.00517  SE=0.02346  p=0.8265     N=12,388  Ymean=0.0352
+    Full, Any post-R1 CSBP entry (R2 OR R3)                  coef=+0.01280  SE=0.03316  p=0.7012     N=12,388  Ymean=0.0714
+    Full, R3 rebate application [reference]                  coef=+0.03571  SE=0.02732  p=0.1977     N=12,388  Ymean=0.0498
+    Full, WRI cumulative post-R1 [reference]                 coef=+0.05101  SE=0.03580  p=0.1608     N=12,388  Ymean=0.0550
+
+  Priority subsample
+    Prio, R2 grant application  (competitive, pre-R3)        coef=+0.03836  SE=0.02982  p=0.2046     N=6,402  Ymean=0.0351
+    Prio, Any post-R1 CSBP entry (R2 OR R3)                  coef=+0.09017  SE=0.04379  p=0.0451**   N=6,402  Ymean=0.0692
+    Prio, R3 rebate application [reference]                  coef=+0.11241  SE=0.04456  p=0.0151**   N=6,402  Ymean=0.0470
+    Prio, WRI cumulative post-R1 [reference]                 coef=+0.06855  SE=0.03117  p=0.0328**   N=6,402  Ymean=0.0500
+
+======================================================================
+SECTION 2 — Conley spatial HAC (K=6, loser=Yes, primary outcomes)
+Cutoff distances: 100km, 200km, 300km
+======================================================================
+
+  Outcome = wri_post_r1_cum
+    State-clustered:  coef=+0.05101  SE=0.03580  p=0.1608  N=12,388
+    Conley 100km:       coef=+0.05101  SE=0.02664  p=0.0555*
+    Conley 200km:       coef=+0.05101  SE=0.02464  p=0.0385**
+    Conley 300km:       coef=+0.05101  SE=0.02846  p=0.0732*
+
+  Outcome = Y_R3_apply
+    State-clustered:  coef=+0.03571  SE=0.02732  p=0.1977  N=12,388
+    Conley 100km:       coef=+0.03571  SE=0.02742  p=0.1928
+    Conley 200km:       coef=+0.03571  SE=0.02800  p=0.2022
+    Conley 300km:       coef=+0.03571  SE=0.03020  p=0.2370
+
+  Outcome = Y_any_post_r1
+    State-clustered:  coef=+0.01280  SE=0.03316  p=0.7012  N=12,388
+    Conley 100km:       coef=+0.01280  SE=0.02968  p=0.6662
+    Conley 200km:       coef=+0.01280  SE=0.03358  p=0.7030
+    Conley 300km:       coef=+0.01280  SE=0.03810  p=0.7369
+
+======================================================================
+SECTION 3 — Donut test
+Compare: full K=6 vs donut (drop nearest 1-2 neighbors)
+Donut instrument built by subtracting K=1,2 lags from K=6 lags
+======================================================================
+  Loading K=6 weight matrix from C:\BC PhD\Research\Peer-Effects and Adoption\1_Data\Cleaned\knn_weights_k6.npz
+  Donut lags constructed (neighbors 3-6)
+
+  Donut sample N=12,388
+
+    wri_post_r1_cum — full K=6:    coef=+0.05101  SE=0.03580  p=0.1608
+    wri_post_r1_cum — donut K=3-6: coef=+0.02926  SE=0.02244  p=0.1987
+
+    Y_any_post_r1 — full K=6:    coef=+0.01280  SE=0.03316  p=0.7012
+    Y_any_post_r1 — donut K=3-6: coef=+0.00395  SE=0.01958  p=0.8411
+
+    Y_R3_apply — full K=6:    coef=+0.03571  SE=0.02732  p=0.1977
+    Y_R3_apply — donut K=3-6: coef=+0.01831  SE=0.01536  p=0.2392
+
+======================================================================
+SECTION 4 — Vendor network channel
+shares_dealer_with_r1: district has a bus from a dealer who also served R1 winners
+Caveat: only 31% of districts have dealer data; 0 means missing OR no shared dealer
+======================================================================
+
+  Full sample N=12,388  (shares_dealer coverage: 100%)
+  Districts sharing dealer with R1 winner: 311
+
+  Outcome: wri_post_r1_cum
+    Without vendor ctrl: coef=+0.05101  SE=0.03580  p=0.1608
+    With vendor ctrl   : coef=+0.04753  SE=0.02723  p=0.0875*  [vendor_coef=+0.57686 p=0.000]
+
+  Outcome: Y_any_post_r1
+    Without vendor ctrl: coef=+0.01280  SE=0.03316  p=0.7012
+    With vendor ctrl   : coef=+0.01125  SE=0.03511  p=0.7501  [vendor_coef=+0.25781 p=0.036]
+
+  Outcome: Y_R3_apply
+    Without vendor ctrl: coef=+0.03571  SE=0.02732  p=0.1977
+    With vendor ctrl   : coef=+0.03489  SE=0.02793  p=0.2179  [vendor_coef=+0.13566 p=0.031]
+
+  Heterogeneity: dealer-connected vs not (wri_post_r1_cum)
+    Dealer-connected: N=311  coef=+0.00000  SE=0.00000  p=0.2596
+    No shared dealer : N=12,077  coef=+0.03900  SE=0.02443  p=0.1170
+
+======================================================================
+SECTION 5 — Priority decomposition (K=6, loser=Yes, wri_post_r1_cum)
+Which dimension of priority is driving the stronger effect?
+======================================================================
+
+  5a. PM2.5 quartile heterogeneity (full sample)
+    PM2.5 Q1: N=2,935  mean_pm25=5.01  coef=+0.10359  SE=0.03483  p=0.0056***
+    PM2.5 Q2: N=3,081  mean_pm25=6.98  coef=+0.08611  SE=0.06879  p=0.2183
+    PM2.5 Q3: N=3,154  mean_pm25=8.18  coef=-0.01726  SE=0.03445  p=0.6196
+    PM2.5 Q4: N=3,218  mean_pm25=9.27  coef=+0.04670  SE=0.09323  p=0.6205
+
+  5b. Poverty quartile heterogeneity (full sample)
+    Poverty Q1: N=3,141  mean_pov=0.046  coef=+0.01979  SE=0.04891  p=0.6877
+    Poverty Q2: N=3,098  mean_pov=0.088  coef=+0.04209  SE=0.04663  p=0.3713
+    Poverty Q3: N=3,123  mean_pov=0.132  coef=+0.05949  SE=0.07241  p=0.4155
+    Poverty Q4: N=3,026  mean_pov=0.222  coef=+0.07218  SE=0.07233  p=0.3234
+
+  5c. Within priority subsample: PM2.5 high vs low
+    Priority median PM2.5: 7.36
+    High PM2.5 (above median): N=3,201  coef=+0.03633  SE=0.05672  p=0.5264
+    Low PM2.5  (below median): N=3,201  coef=+0.09886  SE=0.03326  p=0.0050***
+
+  5d. Within priority subsample: poverty high vs low
+    High poverty (above median): N=3,216  coef=+0.09735  SE=0.05784  p=0.0990*
+    Low poverty  (below median): N=3,186  coef=+0.02999  SE=0.03560  p=0.4040
+
+======================================================================
+SECTION 6 — Climatic peers
+Peer group = districts in same PRISM temperature quintile (same-climate peers)
+Within-quintile, identify districts with winning neighbors in same climate band
+======================================================================
+  Climate raw files: ['Climate and Terrain', 'climate_terrain_data_recommendations.txt']
+  PRISM columns in dataset: []
+  No PRISM columns found in dataset. Checking raw climate files...
+  Climate files present but not yet merged: ['Climate and Terrain', 'climate_terrain_data_recommendations.txt']
+  ACTION NEEDED: merge PRISM data into analysis dataset to enable Section 6
+
+  Saved: C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\extended_iv.csv

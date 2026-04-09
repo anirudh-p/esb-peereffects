@@ -1,0 +1,45 @@
+section,label,coef,se,p,stars,n,ymean
+S1_outcomes,"  Full, R2 grant application  (competitive, pre-R3)",0.005172,0.023462,0.8265,,12388,0.0352
+S1_outcomes,"  Full, Any post-R1 CSBP entry (R2 OR R3)",0.012803,0.033164,0.7012,,12388,0.0714
+S1_outcomes,"  Full, R3 rebate application [reference]",0.035705,0.027324,0.1977,,12388,0.0498
+S1_outcomes,"  Full, WRI cumulative post-R1 [reference]",0.05101,0.0358,0.1608,,12388,0.055
+S1_outcomes,"  Prio, R2 grant application  (competitive, pre-R3)",0.038357,0.02982,0.2046,,6402,0.0351
+S1_outcomes,"  Prio, Any post-R1 CSBP entry (R2 OR R3)",0.090166,0.04379,0.0451,**,6402,0.0692
+S1_outcomes,"  Prio, R3 rebate application [reference]",0.112414,0.04456,0.0151,**,6402,0.047
+S1_outcomes,"  Prio, WRI cumulative post-R1 [reference]",0.068551,0.031168,0.0328,**,6402,0.05
+S2_conley,State-clustered|wri_post_r1_cum,0.05101,0.0358,0.1608,,12388,0.055
+S2_conley,Conley_100km|wri_post_r1_cum,0.05101,0.026638,0.0555,*,12388,0.055
+S2_conley,Conley_200km|wri_post_r1_cum,0.05101,0.024644,0.0385,**,12388,0.055
+S2_conley,Conley_300km|wri_post_r1_cum,0.05101,0.028465,0.0732,*,12388,0.055
+S2_conley,State-clustered|Y_R3_apply,0.035705,0.027324,0.1977,,12388,0.0498
+S2_conley,Conley_100km|Y_R3_apply,0.035705,0.027416,0.1928,,12388,0.0498
+S2_conley,Conley_200km|Y_R3_apply,0.035705,0.027998,0.2022,,12388,0.0498
+S2_conley,Conley_300km|Y_R3_apply,0.035705,0.030196,0.237,,12388,0.0498
+S2_conley,State-clustered|Y_any_post_r1,0.012803,0.033164,0.7012,,12388,0.0714
+S2_conley,Conley_100km|Y_any_post_r1,0.012803,0.029678,0.6662,,12388,0.0714
+S2_conley,Conley_200km|Y_any_post_r1,0.012803,0.033579,0.703,,12388,0.0714
+S2_conley,Conley_300km|Y_any_post_r1,0.012803,0.038101,0.7369,,12388,0.0714
+S3_donut,K6|wri_post_r1_cum,0.05101,0.0358,0.1608,,12388,0.055
+S3_donut,Donut|wri_post_r1_cum,0.029257,0.022441,0.1987,,12388,0.055
+S3_donut,K6|Y_any_post_r1,0.012803,0.033164,0.7012,,12388,0.0714
+S3_donut,Donut|Y_any_post_r1,0.003947,0.019584,0.8411,,12388,0.0714
+S3_donut,K6|Y_R3_apply,0.035705,0.027324,0.1977,,12388,0.0498
+S3_donut,Donut|Y_R3_apply,0.018311,0.015361,0.2392,,12388,0.0498
+S4_vendor,No_vendor|wri_post_r1_cum,0.05101,0.0358,0.1608,,12388,0.055
+S4_vendor,With_vendor|wri_post_r1_cum,0.04753,0.027235,0.0875,*,12388,0.055
+S4_vendor,No_vendor|Y_any_post_r1,0.012803,0.033164,0.7012,,12388,0.0714
+S4_vendor,With_vendor|Y_any_post_r1,0.011247,0.035112,0.7501,,12388,0.0714
+S4_vendor,No_vendor|Y_R3_apply,0.035705,0.027324,0.1977,,12388,0.0498
+S4_vendor,With_vendor|Y_R3_apply,0.034887,0.027933,0.2179,,12388,0.0498
+S5_priority,PM25_Q1|wri_post_r1_cum,0.10359,0.034826,0.0056,***,2935,0.0409
+S5_priority,PM25_Q2|wri_post_r1_cum,0.086107,0.068794,0.2183,,3081,0.0652
+S5_priority,PM25_Q3|wri_post_r1_cum,-0.017262,0.034454,0.6196,,3154,0.0491
+S5_priority,PM25_Q4|wri_post_r1_cum,0.046703,0.093226,0.6205,,3218,0.0637
+S5_priority,Poverty_Q1|wri_post_r1_cum,0.019792,0.048913,0.6877,,3141,0.0443
+S5_priority,Poverty_Q2|wri_post_r1_cum,0.042094,0.04663,0.3713,,3098,0.0445
+S5_priority,Poverty_Q3|wri_post_r1_cum,0.059493,0.072413,0.4155,,3123,0.056
+S5_priority,Poverty_Q4|wri_post_r1_cum,0.072181,0.072326,0.3234,,3026,0.0757
+S5_priority,High PM2.5 (above median)|wri_post_r1_cum,0.036331,0.056719,0.5264,,3201,0.0609
+S5_priority,Low PM2.5  (below median)|wri_post_r1_cum,0.098858,0.03326,0.005,***,3201,0.0391
+S5_priority,High poverty (above median)|wri_post_r1_cum,0.097346,0.057837,0.099,*,3216,0.0709
+S5_priority,Low poverty  (below median)|wri_post_r1_cum,0.029994,0.0356,0.404,,3186,0.0289
