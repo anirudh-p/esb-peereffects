@@ -54,7 +54,7 @@ df["log_enroll"] = np.log(df["enrollment"].clip(lower=1))
 df["log_income"]  = np.log(df["median_income"].clip(lower=1))
 
 required = ["enrollment","median_income","poverty_rate","pct_white",
-            "pm25","state","pct_dem_2020","w6_IV_Z_R1"]
+            "pm25","state","pct_dem_2020","urbanicity","w6_IV_Z_R1"]
 
 d = df[df["IV_Z_R1"] == 0].dropna(subset=required).copy().reset_index(drop=True)
 d_pri = d[d["priority_r1"] == 1].copy()
@@ -70,10 +70,10 @@ log(f"  Priority subsample     : {len(d_pri):,}")
 # Helpers
 # =============================================================================
 def get_ctrl(df_in, k=6, loser=True, extra=None):
-    pri  = df_in["priority_r1"].fillna(0).astype(int).astype(str)
-    fuel = df_in["r1_fuel_group"].fillna("nonapp").astype(str)
-    ps   = pd.get_dummies(pri+"_"+df_in["state"].astype(str)+"_"+fuel,
-                          prefix="psf", drop_first=True, dtype=float)
+    pri = df_in["priority_r1"].fillna(0).astype(int).astype(str)
+    urb = df_in["urbanicity"].fillna("Unknown").astype(str)
+    ps  = pd.get_dummies(pri+"_"+df_in["state"].astype(str)+"_"+urb,
+                         prefix="psu", drop_first=True, dtype=float)
     ctrl = pd.DataFrame({
         "log_enroll"       : df_in["log_enroll"],
         "log_income"       : df_in["log_income"],

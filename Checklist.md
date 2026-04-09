@@ -98,18 +98,20 @@ All K=6, loser=Yes, `priority × state × fuel_group` FE, state-clustered SE.
 **Outcome definition:** `wri_post_r1_cum` = `wri_any_2023_24 & ~is_pre_r1_adopter` (Fix A).  
 2022 fully excluded: Q4 2022 = R1 CSBP award quarter for the R1 winners themselves; including it would contaminate the outcome. 2023-2024 window is clean post-delivery.
 
-Scripts: `01_main_iv.py`, `02_extended_iv.py`. All K=6, loser=Yes, state-clustered SE unless noted.
+Scripts: `01_main_iv.py`, `02_extended_iv.py`. All K=6, loser=Yes, state-clustered SE unless noted.  
+**FE: `priority × state × urbanicity`** (updated from `priority × state × fuel_group`).  
+Rationale: urbanicity predicts the KNN instrument within priority×state cells (Rural/Town have lower w6_IV_Z_R1 than Urban conditional on priority×state, p<0.05). Adding urbanicity to the strata directly absorbs the KNN density bias.
 
 ### Core IV results (reduced-form, `01_main_iv.py`)
 
 | Outcome | Sample | Coef | SE | p | Stars |
 |---|---|---:|---:|---:|---|
-| wri_post_r1_cum | Full | +0.017 | 0.022 | 0.438 | |
-| wri_post_r1_cum | Priority | +0.041 | 0.028 | 0.155 | |
-| Y_R3_apply | Full | +0.036 | 0.027 | 0.198 | |
-| Y_R3_apply | Priority | +0.112 | 0.045 | 0.015 | ** |
+| wri_post_r1_cum | Full | +0.011 | 0.022 | 0.635 | |
+| wri_post_r1_cum | Priority | +0.007 | 0.030 | 0.824 | |
+| Y_R3_apply | Full | +0.041 | 0.029 | 0.158 | |
+| Y_R3_apply | Priority | +0.095 | 0.047 | 0.051 | * |
 
-**Primary headline result: Y_R3_apply priority p=0.015**. WRI adoption null everywhere under clean definition.
+**Primary headline result: Y_R3_apply priority p=0.051* (marginally significant after absorbing urbanicity imbalance). Rural subsample: p=0.036**. WRI adoption null everywhere.**
 
 ### Additional outcome margins (`02_extended_iv.py` S1)
 

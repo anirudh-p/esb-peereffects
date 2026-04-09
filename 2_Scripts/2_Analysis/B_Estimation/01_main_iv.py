@@ -16,7 +16,7 @@ Design
   Primary  outcome : wri_post_r1_cum  — any WRI-tracked ESB awarded by end
                      of 2024, excluding pre-R1 adopters (cumulative post-R1)
   Secondary outcome: Y_R3_apply       — applied to R3 (retained for comparison)
-  Strata FE        : priority x state x fuel_group interaction dummies
+  Strata FE        : priority x state x urbanicity interaction dummies
   SE               : state-clustered
 
 Sections
@@ -64,7 +64,7 @@ df["log_enroll"] = np.log(df["enrollment"].clip(lower=1))
 df["log_income"]  = np.log(df["median_income"].clip(lower=1))
 
 required = ["enrollment", "median_income", "poverty_rate", "pct_white",
-            "pm25", "state", "pct_dem_2020", "w6_IV_Z_R1"]
+            "pm25", "state", "pct_dem_2020", "urbanicity", "w6_IV_Z_R1"]
 
 d = df[df["IV_Z_R1"] == 0].dropna(subset=required).copy().reset_index(drop=True)
 d_pri = d[d["priority_r1"] == 1].copy()
@@ -88,11 +88,11 @@ for col in ["Y_R3_apply", "wri_any_2023_24", "wri_post_r1_cum"]:
 # Helpers
 # =============================================================================
 def get_ctrl(df_in, k=6, loser=True, extra_cols=None):
-    pri  = df_in["priority_r1"].fillna(0).astype(int).astype(str)
-    fuel = df_in["r1_fuel_group"].fillna("nonapp").astype(str)
-    ps   = pd.get_dummies(
-        pri + "_" + df_in["state"].astype(str) + "_" + fuel,
-        prefix="psf", drop_first=True, dtype=float
+    pri = df_in["priority_r1"].fillna(0).astype(int).astype(str)
+    urb = df_in["urbanicity"].fillna("Unknown").astype(str)
+    ps  = pd.get_dummies(
+        pri + "_" + df_in["state"].astype(str) + "_" + urb,
+        prefix="psu", drop_first=True, dtype=float
     )
     ctrl = pd.DataFrame({
         "log_enroll"       : df_in["log_enroll"],

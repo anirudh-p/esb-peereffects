@@ -1,58 +1,58 @@
 section,label,coef,se,p,stars,n,ymean
-S1_full,"  K=6, loser=No , CUM",0.014016,0.022084,0.5287,,12388,0.0454
-S1_full,"  K=6, loser=Yes, CUM",0.016827,0.021511,0.438,,12388,0.0454
-S1_full,"  K=10, loser=No , CUM",0.031863,0.030128,0.2957,,12388,0.0454
-S1_full,"  K=10, loser=Yes, CUM",0.033241,0.029524,0.2659,,12388,0.0454
-S1_full,"  K=15, loser=No , CUM",0.031579,0.041622,0.4518,,12388,0.0454
-S1_full,"  K=15, loser=Yes, CUM",0.031276,0.041193,0.4515,,12388,0.0454
-S1_priority,"  Priority K=6, loser=No , CUM",0.038481,0.028363,0.1814,,6402,0.0412
-S1_priority,"  Priority K=6, loser=Yes, CUM",0.040557,0.028023,0.1545,,6402,0.0412
-S1_full,"  K=6, loser=No , APP",0.034386,0.027499,0.2173,,12388,0.0498
-S1_full,"  K=6, loser=Yes, APP",0.035705,0.027324,0.1977,,12388,0.0498
-S1_full,"  K=10, loser=No , APP",0.060297,0.04084,0.1465,,12388,0.0498
-S1_full,"  K=10, loser=Yes, APP",0.060991,0.040561,0.1394,,12388,0.0498
-S1_full,"  K=15, loser=No , APP",0.034367,0.048901,0.4856,,12388,0.0498
-S1_full,"  K=15, loser=Yes, APP",0.0343,0.04878,0.4854,,12388,0.0498
-S1_priority,"  Priority K=6, loser=No , APP",0.109358,0.044494,0.0177,**,6402,0.047
-S1_priority,"  Priority K=6, loser=Yes, APP",0.112414,0.04456,0.0151,**,6402,0.047
-S2_comparison,"  Full, R3 application       [prior primary]",0.035705,0.027324,0.1977,,12388,0.0498
-S2_comparison,"  Full, WRI any 2023-24       [prior null]",0.01864,0.026558,0.4862,,12388,0.0524
-S2_comparison,"  Full, WRI any 2024 only     [prior null]",0.002352,0.021032,0.9115,,12388,0.0353
-S2_comparison,"  Full, WRI cum post-R1       [new primary]",0.016827,0.021511,0.438,,12388,0.0454
-S2_comparison,"  Prio, R3 application       [prior primary]",0.112414,0.04456,0.0151,**,6402,0.047
-S2_comparison,"  Prio, WRI any 2023-24       [prior null]",0.030651,0.027678,0.2738,,6402,0.0436
-S2_comparison,"  Prio, WRI any 2024 only     [prior null]",0.032491,0.031336,0.3051,,6402,0.0278
-S2_comparison,"  Prio, WRI cum post-R1       [new primary]",0.040557,0.028023,0.1545,,6402,0.0412
-S3_urbanicity,  Urban      wri_post_r1_cum,0.045268,0.22908,0.8442,,697,0.1707
-S3_urbanicity,  Urban      Y_R3_apply,0.015986,0.249115,0.9491,,697,0.1636
-S3_urbanicity,  Suburban   wri_post_r1_cum,0.00949,0.068017,0.8897,,2880,0.0639
-S3_urbanicity,  Suburban   Y_R3_apply,-0.068621,0.042381,0.1126,,2880,0.0653
-S3_urbanicity,  Town       wri_post_r1_cum,0.061673,0.067382,0.3649,,2252,0.0369
-S3_urbanicity,  Town       Y_R3_apply,0.06949,0.084947,0.4176,,2252,0.0497
-S3_urbanicity,  Rural      wri_post_r1_cum,0.003374,0.018195,0.8537,,6559,0.027
-S3_urbanicity,  Rural      Y_R3_apply,0.064898,0.035902,0.0771,*,6559,0.0309
-S4_timing,Full sample|wri_post_r1_cum|pre_r3 (visible),-0.008093,0.032649,0.8053,,12388,0.0454
-S4_timing,Full sample|wri_post_r1_cum|post_r3 (invisible),0.02222,0.029934,0.4616,,12388,0.0454
-S4_timing,Full sample|wri_post_r1_cum|unknown timing,0.095572,0.102971,0.3581,,12388,0.0454
-S4_timing,Full sample|Y_R3_apply|pre_r3 (visible),0.048188,0.047744,0.318,,12388,0.0498
-S4_timing,Full sample|Y_R3_apply|post_r3 (invisible),0.016939,0.036252,0.6425,,12388,0.0498
-S4_timing,Full sample|Y_R3_apply|unknown timing,0.083783,0.081242,0.3077,,12388,0.0498
-S4_timing,Priority subsample|wri_post_r1_cum|pre_r3 (visible),0.03583,0.046581,0.4456,,6402,0.0412
-S4_timing,Priority subsample|wri_post_r1_cum|post_r3 (invisible),0.040875,0.049936,0.4172,,6402,0.0412
-S4_timing,Priority subsample|wri_post_r1_cum|unknown timing,0.063902,0.116195,0.585,,6402,0.0412
-S4_timing,Priority subsample|Y_R3_apply|pre_r3 (visible),0.082614,0.068128,0.2313,,6402,0.047
-S4_timing,Priority subsample|Y_R3_apply|post_r3 (invisible),0.120032,0.059737,0.0503,*,6402,0.047
-S4_timing,Priority subsample|Y_R3_apply|unknown timing,0.226389,0.117985,0.0611,*,6402,0.047
-S5_K_sensitivity,"  Full, K=6, loser=Yes, wri_post_r1_cum",0.016827,0.021511,0.438,,12388,0.0454
-S5_K_sensitivity,"  Full, K=10, loser=Yes, wri_post_r1_cum",0.033241,0.029524,0.2659,,12388,0.0454
-S5_K_sensitivity,"  Full, K=15, loser=Yes, wri_post_r1_cum",0.031276,0.041193,0.4515,,12388,0.0454
-S5_K_sensitivity,"  Full, K=6 inv-dist, loser=Yes, wri_post_r1_cum",-0.002137,0.020699,0.9182,,12388,0.0454
-S5_K_sensitivity,"  Prio, K=6, loser=Yes, wri_post_r1_cum",0.040557,0.028023,0.1545,,6402,0.0412
-S5_K_sensitivity,"  Prio, K=10, loser=Yes, wri_post_r1_cum",0.056632,0.04124,0.1762,,6402,0.0412
-S5_K_sensitivity,"  Prio, K=15, loser=Yes, wri_post_r1_cum",0.083509,0.050182,0.1027,,6402,0.0412
-S5_K_sensitivity,"  Prio, K=6 inv-dist, loser=Yes, wri_post_r1_cum",0.031809,0.024496,0.2004,,6402,0.0412
-S6_placebo,"  Placebo: Z=R3_wins, Y=pre_r1_adoption",-0.0,0.0,0.0002,***,12388,0.0284
-S6_placebo,"  Placebo: Z=R1_wins, Y=pre_r1_adoption",0.0,0.0,0.0004,***,12388,0.0284
-S6_placebo,"  Timing check: Z=R1_wins, Y=wri_any_2023 (before most deliveries)",0.014508,0.015279,0.3472,,12388,0.0217
-S7_appexposed,  Applicant-exposed: wri_post_r1_cum,0.003055,0.030469,0.9206,,7085,0.0497
-S7_appexposed,  Applicant-exposed: Y_R3_apply,0.010173,0.036137,0.7796,,7085,0.0531
+S1_full,"  K=6, loser=No , CUM",0.007805,0.022931,0.7351,,12388,0.0454
+S1_full,"  K=6, loser=Yes, CUM",0.010661,0.022325,0.6352,,12388,0.0454
+S1_full,"  K=10, loser=No , CUM",0.031468,0.030954,0.3145,,12388,0.0454
+S1_full,"  K=10, loser=Yes, CUM",0.033145,0.030477,0.2824,,12388,0.0454
+S1_full,"  K=15, loser=No , CUM",0.022711,0.040695,0.5794,,12388,0.0454
+S1_full,"  K=15, loser=Yes, CUM",0.022527,0.040173,0.5776,,12388,0.0454
+S1_priority,"  Priority K=6, loser=No , CUM",0.004317,0.030037,0.8863,,6402,0.0412
+S1_priority,"  Priority K=6, loser=Yes, CUM",0.006631,0.029708,0.8243,,6402,0.0412
+S1_full,"  K=6, loser=No , APP",0.04003,0.029206,0.177,,12388,0.0498
+S1_full,"  K=6, loser=Yes, APP",0.041144,0.028691,0.1582,,12388,0.0498
+S1_full,"  K=10, loser=No , APP",0.083286,0.042929,0.0584,*,12388,0.0498
+S1_full,"  K=10, loser=Yes, APP",0.083852,0.042553,0.0547,*,12388,0.0498
+S1_full,"  K=15, loser=No , APP",0.067741,0.052377,0.2022,,12388,0.0498
+S1_full,"  K=15, loser=Yes, APP",0.06771,0.052249,0.2013,,12388,0.0498
+S1_priority,"  Priority K=6, loser=No , APP",0.091952,0.04747,0.0588,*,6402,0.047
+S1_priority,"  Priority K=6, loser=Yes, APP",0.095132,0.047411,0.0506,*,6402,0.047
+S2_comparison,"  Full, R3 application       [prior primary]",0.041144,0.028691,0.1582,,12388,0.0498
+S2_comparison,"  Full, WRI any 2023-24       [prior null]",0.012147,0.030048,0.6879,,12388,0.0524
+S2_comparison,"  Full, WRI any 2024 only     [prior null]",-0.007644,0.022242,0.7326,,12388,0.0353
+S2_comparison,"  Full, WRI cum post-R1       [new primary]",0.010661,0.022325,0.6352,,12388,0.0454
+S2_comparison,"  Prio, R3 application       [prior primary]",0.095132,0.047411,0.0506,*,6402,0.047
+S2_comparison,"  Prio, WRI any 2023-24       [prior null]",-0.006718,0.03077,0.8281,,6402,0.0436
+S2_comparison,"  Prio, WRI any 2024 only     [prior null]",-0.001072,0.029077,0.9707,,6402,0.0278
+S2_comparison,"  Prio, WRI cum post-R1       [new primary]",0.006631,0.029708,0.8243,,6402,0.0412
+S3_urbanicity,  Urban      wri_post_r1_cum,0.051669,0.236873,0.8283,,697,0.1707
+S3_urbanicity,  Urban      Y_R3_apply,0.1433,0.20852,0.4953,,697,0.1636
+S3_urbanicity,  Suburban   wri_post_r1_cum,0.0439,0.076338,0.5682,,2880,0.0639
+S3_urbanicity,  Suburban   Y_R3_apply,-0.063975,0.04587,0.1701,,2880,0.0653
+S3_urbanicity,  Town       wri_post_r1_cum,0.033398,0.059813,0.5794,,2252,0.0369
+S3_urbanicity,  Town       Y_R3_apply,0.03535,0.085083,0.6798,,2252,0.0497
+S3_urbanicity,  Rural      wri_post_r1_cum,0.001242,0.018768,0.9475,,6559,0.027
+S3_urbanicity,  Rural      Y_R3_apply,0.083626,0.038811,0.0363,**,6559,0.0309
+S4_timing,Full sample|wri_post_r1_cum|pre_r3 (visible),-0.01955,0.034561,0.5743,,12388,0.0454
+S4_timing,Full sample|wri_post_r1_cum|post_r3 (invisible),0.025878,0.034713,0.4597,,12388,0.0454
+S4_timing,Full sample|wri_post_r1_cum|unknown timing,0.060247,0.112245,0.594,,12388,0.0454
+S4_timing,Full sample|Y_R3_apply|pre_r3 (visible),0.048986,0.053703,0.3663,,12388,0.0498
+S4_timing,Full sample|Y_R3_apply|post_r3 (invisible),0.03141,0.039418,0.4295,,12388,0.0498
+S4_timing,Full sample|Y_R3_apply|unknown timing,0.060251,0.086105,0.4875,,12388,0.0498
+S4_timing,Priority subsample|wri_post_r1_cum|pre_r3 (visible),0.023303,0.0475,0.626,,6402,0.0412
+S4_timing,Priority subsample|wri_post_r1_cum|post_r3 (invisible),-0.009021,0.056811,0.8745,,6402,0.0412
+S4_timing,Priority subsample|wri_post_r1_cum|unknown timing,0.00973,0.105223,0.9267,,6402,0.0412
+S4_timing,Priority subsample|Y_R3_apply|pre_r3 (visible),0.076538,0.076011,0.3191,,6402,0.047
+S4_timing,Priority subsample|Y_R3_apply|post_r3 (invisible),0.101194,0.063132,0.1157,,6402,0.047
+S4_timing,Priority subsample|Y_R3_apply|unknown timing,0.159061,0.108291,0.1485,,6402,0.047
+S5_K_sensitivity,"  Full, K=6, loser=Yes, wri_post_r1_cum",0.010661,0.022325,0.6352,,12388,0.0454
+S5_K_sensitivity,"  Full, K=10, loser=Yes, wri_post_r1_cum",0.033145,0.030477,0.2824,,12388,0.0454
+S5_K_sensitivity,"  Full, K=15, loser=Yes, wri_post_r1_cum",0.022527,0.040173,0.5776,,12388,0.0454
+S5_K_sensitivity,"  Full, K=6 inv-dist, loser=Yes, wri_post_r1_cum",-0.009996,0.022282,0.6558,,12388,0.0454
+S5_K_sensitivity,"  Prio, K=6, loser=Yes, wri_post_r1_cum",0.006631,0.029708,0.8243,,6402,0.0412
+S5_K_sensitivity,"  Prio, K=10, loser=Yes, wri_post_r1_cum",0.015019,0.04395,0.7341,,6402,0.0412
+S5_K_sensitivity,"  Prio, K=15, loser=Yes, wri_post_r1_cum",0.017757,0.057017,0.7568,,6402,0.0412
+S5_K_sensitivity,"  Prio, K=6 inv-dist, loser=Yes, wri_post_r1_cum",-0.001289,0.026351,0.9612,,6402,0.0412
+S6_placebo,"  Placebo: Z=R3_wins, Y=pre_r1_adoption",-0.0,0.0,0.0004,***,12388,0.0284
+S6_placebo,"  Placebo: Z=R1_wins, Y=pre_r1_adoption",-0.0,0.0,0.0002,***,12388,0.0284
+S6_placebo,"  Timing check: Z=R1_wins, Y=wri_any_2023 (before most deliveries)",0.016062,0.018646,0.3934,,12388,0.0217
+S7_appexposed,  Applicant-exposed: wri_post_r1_cum,0.009982,0.028166,0.7246,,7085,0.0497
+S7_appexposed,  Applicant-exposed: Y_R3_apply,0.02527,0.038809,0.5181,,7085,0.0531
