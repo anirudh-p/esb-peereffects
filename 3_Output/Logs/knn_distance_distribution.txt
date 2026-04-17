@@ -1,0 +1,27 @@
+KNN Distance Distribution (Miles)
+================================
+
+K = 4 Neighbors:
+  Median distance to a neighbor: 10.48 miles
+  Mean distance to a neighbor: 13.14 miles
+  90th pctile distance: 22.61 miles
+
+K = 6 Neighbors:
+  Median distance to a neighbor: 11.88 miles
+  Mean distance to a neighbor: 14.93 miles
+  90th pctile distance: 25.57 miles
+
+K = 8 Neighbors:
+  Median distance to a neighbor: 13.18 miles
+  Mean distance to a neighbor: 16.54 miles
+  90th pctile distance: 28.43 miles
+
+K = 10 Neighbors:
+  Median distance to a neighbor: 14.43 miles
+  Mean distance to a neighbor: 18.04 miles
+  90th pctile distance: 31.22 miles
+
+K = 15 Neighbors:
+  Median distance to a neighbor: 17.17 miles
+  Mean distance to a neighbor: 21.37 miles
+  90th pctile distance: 37.44 miles

@@ -1,0 +1,3 @@
+Saved adoption descriptive outputs:
+  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\Preliminaries\adoption_summary_overview.csv
+  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\Preliminaries\adoption_group_summary.csv

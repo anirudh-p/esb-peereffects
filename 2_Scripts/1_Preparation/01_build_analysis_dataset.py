@@ -179,6 +179,18 @@ reb = pd.read_excel(CSB_REBATES)
 reb["nces_id"] = clean_nces(reb["NCES District ID"])
 reb = reb.dropna(subset=["nces_id"]).copy()
 reb_active = reb[~reb["Project Status"].str.upper().isin(EXCL)].copy()
+
+def is_third_party(row):
+    d = str(row.get("School District Name", "")).lower().replace(",", "").replace(".", "")
+    a = str(row.get("Applicant Organization Name", "")).lower().replace(",", "").replace(".", "")
+    d_words = set(d.split())
+    a_words = set(a.split())
+    if not d_words.intersection(a_words):
+        return 1
+    return 0
+
+reb_active["is_third_party_applicant"] = reb_active.apply(is_third_party, axis=1)
+
 reb_active["fuel_group"] = classify_fuel_group(
     reb_active,
     "Number of Electric Buses",
@@ -188,21 +200,24 @@ reb_active["fuel_group"] = classify_fuel_group(
 
 log(f"  CSB_Rebates rows          : {len(reb):,}")
 log(f"  After excluding {EXCL[:3]}... : {len(reb_active):,}")
+log(f"  Third-party applicants    : {reb_active['is_third_party_applicant'].sum():,} ({100 * reb_active['is_third_party_applicant'].mean():.1f}%)")
 log(f"\n  Funding Year distribution :")
 log(reb_active["Project Status"].value_counts().to_string())
 log()
 log(reb_active["Funding Year"].value_counts().sort_index().to_string())
 
-r1_winners = (reb_active[reb_active["Funding Year"] == 2022]["nces_id"]
-              .drop_duplicates().to_frame())
+r1_winners = (reb_active[reb_active["Funding Year"] == 2022]
+              .groupby("nces_id", as_index=False)
+              .agg(is_r1_third_party=("is_third_party_applicant", "max")))
 r1_winners["IV_Z_R1"] = 1
 r1_winner_fuel = summarize_fuel_group(
     reb_active[reb_active["Funding Year"] == 2022].copy(),
     "r1_fuel_group_winner",
 )
 
-r3_winners = (reb_active[reb_active["Funding Year"] == 2023]["nces_id"]
-              .drop_duplicates().to_frame())
+r3_winners = (reb_active[reb_active["Funding Year"] == 2023]
+              .groupby("nces_id", as_index=False)
+              .agg(is_r3_third_party=("is_third_party_applicant", "max")))
 r3_winners["IV_Z_R3"] = 1
 
 log(f"\n  Unique R1 lottery winners : {len(r1_winners):,}")
@@ -258,18 +273,21 @@ log(app["Project Status"].value_counts().to_string())
 # R2 is competitive (no lottery). Including R2 as "losers" in the loser-density
 # control would conflate competitive selection with lottery outcomes.
 app_lottery = app[~app["Round"].str.contains("R2", na=False)].copy()
+app_lottery["is_third_party_applicant"] = app_lottery.apply(is_third_party, axis=1)
+
 log(f"\n  After excluding R2 rows : {len(app_lottery):,}")
+log(f"  Third-party applicants  : {app_lottery['is_third_party_applicant'].sum():,} ({100 * app_lottery['is_third_party_applicant'].mean():.1f}%)")
 log("\n  Lottery-applicant fuel-group mix:")
 log(app_lottery["fuel_group"].value_counts().to_string())
 
 # ── R1 losers: in applicant file, Round='R1', not in R1 winners ─────────────
 r1_app_rows = app_lottery[app_lottery["Round"].str.contains("R1", na=False)].copy()
-r1_loser_raw = r1_app_rows["nces_id"].drop_duplicates()
-overlap_r1 = len(set(r1_loser_raw) & set(r1_winners["nces_id"]))
+r1_loser_raw = r1_app_rows.groupby("nces_id", as_index=False).agg(is_r1_loser_third_party=("is_third_party_applicant", "max"))
+overlap_r1 = len(set(r1_loser_raw["nces_id"]) & set(r1_winners["nces_id"]))
 log(f"\n  R1 waitlisted/rejected (unique districts) : {len(r1_loser_raw):,}")
 log(f"  Overlap with R1 winners                   : {overlap_r1:,}  "
     f"← multi-application districts: treating as winners")
-r1_losers_clean = r1_loser_raw[~r1_loser_raw.isin(r1_winners["nces_id"])].to_frame()
+r1_losers_clean = r1_loser_raw[~r1_loser_raw["nces_id"].isin(r1_winners["nces_id"])].copy()
 r1_losers_clean["IS_R1_LOSER"] = 1
 r1_loser_fuel = summarize_fuel_group(
     r1_app_rows[~r1_app_rows["nces_id"].isin(r1_winners["nces_id"])].copy(),
@@ -279,12 +297,12 @@ log(f"  R1 losers after removing winner overlap    : {len(r1_losers_clean):,}")
 
 # ── R3 losers: in applicant file, Round='R3', not in R3 winners ─────────────
 r3_loser_raw = (app_lottery[app_lottery["Round"].str.contains("R3", na=False)]
-                ["nces_id"].drop_duplicates())
-overlap_r3 = len(set(r3_loser_raw) & set(r3_winners["nces_id"]))
+                .groupby("nces_id", as_index=False).agg(is_r3_loser_third_party=("is_third_party_applicant", "max")))
+overlap_r3 = len(set(r3_loser_raw["nces_id"]) & set(r3_winners["nces_id"]))
 log(f"\n  R3 waitlisted/rejected (unique districts) : {len(r3_loser_raw):,}")
 log(f"  Overlap with R3 winners                   : {overlap_r3:,}  "
     f"← multi-application districts: treating as winners")
-r3_losers_clean = r3_loser_raw[~r3_loser_raw.isin(r3_winners["nces_id"])].to_frame()
+r3_losers_clean = r3_loser_raw[~r3_loser_raw["nces_id"].isin(r3_winners["nces_id"])].copy()
 r3_losers_clean["IS_R3_LOSER"] = 1
 log(f"  R3 losers after removing winner overlap    : {len(r3_losers_clean):,}")
 
@@ -312,6 +330,15 @@ buses["operating_q_index"] = parse_quarter_index(buses["3s. Quarter first operat
 buses_valid = buses[buses["award_year"].between(1990, 2035)
                     & buses["nces_id"].notna()
                     & buses["nces_id"].ne("0000000")].copy()
+
+# Add extraction of OEM and Dealer strings
+buses_sorted = buses_valid.sort_values(["award_year", "award_q_index"])
+first_oem = (buses_sorted.dropna(subset=["3t. Bus OEM"])
+             .groupby("nces_id", as_index=False)["3t. Bus OEM"].first()
+             .rename(columns={"3t. Bus OEM": "wri_first_oem"}))
+first_dealer = (buses_sorted.dropna(subset=["3x. Dealer"])
+                .groupby("nces_id", as_index=False)["3x. Dealer"].first()
+                .rename(columns={"3x. Dealer": "wri_first_dealer"}))
 
 Q3_2022 = 2022 * 4 + 3   # R1 announced ~August 2022; Q3 2022 = Jul-Sep
 Q2_2022 = 2022 * 4 + 2   # Q2 2022 = Apr-Jun (last pre-announcement quarter)
@@ -532,6 +559,10 @@ for frame, col in [(r1_winners,     "IV_Z_R1"),
 for col in ["IV_Z_R1", "IV_Z_R3", "IS_R2_GRANTEE", "IS_R1_LOSER", "IS_R3_LOSER"]:
     d[col] = d[col].fillna(0).astype(int)
 
+for tp_col in ["is_r1_third_party", "is_r3_third_party", "is_r1_loser_third_party", "is_r3_loser_third_party"]:
+    if tp_col in d.columns:
+        d[tp_col] = d[tp_col].fillna(0).astype(int)
+
 # Derived lottery variables
 d["IV_Z"]       = ((d["IV_Z_R1"] == 1) | (d["IV_Z_R3"] == 1)).astype(int)  # pooled
 d["IS_ADOPTER"] = d["IV_Z"]                                                  # CSBP lottery only
@@ -567,10 +598,35 @@ for frame, col in [
 d = d.merge(pre_r1[["nces_id", "is_pre_r1_adopter"]], on="nces_id", how="left")
 d["is_pre_r1_adopter"] = d["is_pre_r1_adopter"].fillna(0).astype(int)
 
+# Merge in OEM and Dealer
+d = d.merge(first_oem, on="nces_id", how="left")
+d = d.merge(first_dealer, on="nces_id", how="left")
+
 # Cumulative post-R1 WRI adoption (Fix A — Post-Meeting branch)
 # Definition: any WRI-tracked ESB awarded in calendar years 2023-2024, EXCLUDING
 # pre-R1 adopters (districts with a WRI bus awarded before 2022).
-#
+# Ensure we capture exact year of first award for panel construction
+_first_award_year = (buses_valid
+                     .groupby("nces_id")["award_year"]
+                     .min()
+                     .reset_index()
+                     .rename(columns={"award_year": "year_first_awarded"}))
+d = d.merge(_first_award_year, on="nces_id", how="left")
+
+_first_operating_year = (buses_valid
+                         .groupby("nces_id")["operating_year"]
+                         .min()
+                         .reset_index()
+                         .rename(columns={"operating_year": "year_first_operating"}))
+d = d.merge(_first_operating_year, on="nces_id", how="left")
+
+_first_delivered_year = (buses_valid
+                         .groupby("nces_id")["delivery_year"]
+                         .min()
+                         .reset_index()
+                         .rename(columns={"delivery_year": "year_first_delivered"}))
+d = d.merge(_first_delivered_year, on="nces_id", how="left")
+
 # Why not include 2022? Q4 2022 is when R1 CSBP buses were awarded to the R1
 # winners themselves (~368 districts). Including Q3-Q4 2022 would put the R1
 # winners' own CSBP adoption into the peer-effect outcome variable, directly

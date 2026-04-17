@@ -1,0 +1,6 @@
+Saved descriptive outputs:
+  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\Preliminaries\descriptive_sample_overview.csv
+  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\Preliminaries\descriptive_control_summary.csv
+  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\Preliminaries\descriptive_group_summary.csv
+  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\Preliminaries\descriptive_state_summary.csv
+  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\Preliminaries\descriptive_urbanicity_summary.csv

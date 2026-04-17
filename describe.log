@@ -1,0 +1,129 @@
+
+  ___  ____  ____  ____  ____ (R)
+ /__    /   ____/   /   ____/
+___/   /   /___/   /   /___/   16.1   Copyright 1985-2019 StataCorp LLC
+  Statistics/Data analysis            StataCorp
+                                      4905 Lakeway Drive
+     MP - Parallel Edition            College Station, Texas 77845 USA
+                                      800-STATA-PC        https://www.stata.com
+                                      979-696-4600        stata@stata.com
+                                      979-696-4601 (fax)
+
+Stata license: 8-user 16-core network perpetual
+Serial number: 501606325528
+  Licensed to: USI
+               Università della Svizzera italiana
+
+Notes:
+      1. Stata is running in batch mode.
+      2. Unicode is supported; see help unicode_advice.
+      3. More than 2 billion observations are allowed; see help obs_advice.
+      4. Maximum number of variables is set to 5,000; see help set_maxvar.
+
+. do 2_Scripts\describe.do 
+
+. use "1_Data\Cleaned\analysis_panel_dataset_spatial.dta", clear 
+
+.  d
+
+Contains data from 1_Data\Cleaned\analysis_panel_dataset_spatial.dta
+  obs:       136,465                          
+ vars:            89                          16 Apr 2026 13:40
+-------------------------------------------------------------------------------
+              storage   display    value
+variable name   type    format     label      variable label
+-------------------------------------------------------------------------------
+nces_id         str7    %7s                   
+state           str20   %20s                  
+urbanicity      str8    %8s                   
+enrollment      double  %10.0g                
+median_income   double  %10.0g                
+poverty_rate    double  %10.0g                
+pct_white       double  %10.0g                
+pm25            double  %10.0g                
+priority_r1     long    %12.0g                
+priority_r23    long    %12.0g                
+r1_fuel_group   str16   %16s                  
+is_r1_third_p~y long    %12.0g                
+IV_Z_R1         long    %12.0g                
+is_r3_third_p~y long    %12.0g                
+IV_Z_R3         long    %12.0g                
+IS_R2_GRANTEE   long    %12.0g                
+is_r1_loser_t~y long    %12.0g                
+IS_R1_LOSER     long    %12.0g                
+is_r3_loser_t~y long    %12.0g                
+IS_R3_LOSER     long    %12.0g                
+IV_Z            long    %12.0g                
+IS_ADOPTER      long    %12.0g                
+IS_ADOPTER_CS~Y long    %12.0g                
+IS_LOSER_R1_o~y long    %12.0g                
+IS_LOSER_R3_o~y long    %12.0g                
+IS_LOSER_pooled long    %12.0g                
+Y_R3_apply      long    %12.0g                
+wri_any_2023    long    %12.0g                
+wri_any_2024    long    %12.0g                
+wri_any_2023_24 long    %12.0g                
+wri_awarde~2023 long    %12.0g                
+wri_awarde~2024 long    %12.0g                
+wri_delivered~3 long    %12.0g                
+wri_operating~3 long    %12.0g                
+wri_visible_b~3 long    %12.0g                
+wri_post_a~2022 long    %12.0g                
+is_pre_r1_ado~r long    %12.0g                
+wri_first_oem   str19   %19s                  
+wri_first_dea~r str36   %36s                  
+year_first_aw~d double  %10.0g                
+year_first_op~g double  %10.0g                
+year_first_de~d double  %10.0g                
+wri_post_r1_cum long    %12.0g                
+r1_first_deli~r double  %10.0g                
+r1_first_deli~x double  %10.0g                
+r1_first_oper~r double  %10.0g                
+r1_first_oper~x double  %10.0g                
+r1_early_deli~y double  %10.0g                
+r1_late_or_un~n double  %10.0g                
+r1_pre_r3_del~y double  %10.0g                
+r1_post_r3_de~y double  %10.0g                
+r1_delivery_u~n double  %10.0g                
+r1_pre_r3_ope~g double  %10.0g                
+r1_post_r3_op~g double  %10.0g                
+r1_operating_~n double  %10.0g                
+pct_dem_2020    double  %10.0g                
+is_r1_winner    long    %12.0g                
+year            long    %12.0g                
+Y_first_adopted long    %12.0g                
+Y_first_opera~g long    %12.0g                
+Y_first_deliv~d long    %12.0g                
+hazard_keep_a~d long    %12.0g                
+hazard_keep_o~g long    %12.0g                
+hazard_keep_d~d long    %12.0g                
+exclude_own_r~r long    %12.0g                
+w4_P_t_minus_1  double  %10.0g                
+w4_P_operatin~1 double  %10.0g                
+w4_Z_t_minus_1  double  %10.0g                
+w6_P_t_minus_1  double  %10.0g                
+w6_P_operatin~1 double  %10.0g                
+w6_Z_t_minus_1  double  %10.0g                
+w8_P_t_minus_1  double  %10.0g                
+w8_P_operatin~1 double  %10.0g                
+w8_Z_t_minus_1  double  %10.0g                
+w10_P_t_minus_1 double  %10.0g                
+w10_P_operati~1 double  %10.0g                
+w10_Z_t_minus_1 double  %10.0g                
+w15_P_t_minus_1 double  %10.0g                
+w15_P_operati~1 double  %10.0g                
+w15_Z_t_minus_1 double  %10.0g                
+r15_P_t_minus_1 double  %10.0g                
+r15_P_operati~1 double  %10.0g                
+r15_Z_t_minus_1 double  %10.0g                
+r30_P_t_minus_1 double  %10.0g                
+r30_P_operati~1 double  %10.0g                
+r30_Z_t_minus_1 double  %10.0g                
+r60_P_t_minus_1 double  %10.0g                
+r60_P_operati~1 double  %10.0g                
+r60_Z_t_minus_1 double  %10.0g                
+-------------------------------------------------------------------------------
+Sorted by: 
+
+. 
+end of do-file

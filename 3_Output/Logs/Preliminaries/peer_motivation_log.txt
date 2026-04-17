@@ -1,0 +1,5 @@
+Matched districts with geometry: 13,075 / 19,495
+Saved peer-motivation outputs:
+  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\Preliminaries\peer_motivation_clustering_summary.csv
+  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\Preliminaries\peer_motivation_exposure_bins.csv
+  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\Preliminaries\peer_motivation_regressions.csv

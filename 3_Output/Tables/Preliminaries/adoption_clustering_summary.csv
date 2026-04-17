@@ -1,0 +1,2 @@
+districts_with_geometry,adoption_rate,k_neighbors,mean_neighbor_adoption_share,own_neighbor_correlation,morans_i,morans_i_null_mean,morans_i_two_sided_pvalue,mean_adopted_neighbors,mean_neighbor_share_if_adopter,mean_neighbor_share_if_non_adopter,neighbor_share_gap
+13075,0.10439770554493308,6,0.10393881453154874,0.250180235411858,0.13016269241717576,-0.00027888316994283867,0.002,0.6236328871892926,0.2205128205128205,0.09035012809564474,0.13016269241717576

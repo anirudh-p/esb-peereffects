@@ -1,0 +1,4 @@
+Matched districts with geometry: 13,075 / 19,495
+Saved adoption clustering outputs:
+  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\Preliminaries\adoption_clustering_summary.csv
+  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\Preliminaries\adoption_neighbor_gradient.csv

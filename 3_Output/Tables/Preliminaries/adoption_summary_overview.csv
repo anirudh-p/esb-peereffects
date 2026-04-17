@@ -1,0 +1,9 @@
+metric,value
+districts_total,19495.0
+districts_with_any_esb,1536.0
+share_with_any_esb,0.07878943318799692
+districts_without_esb,17959.0
+districts_with_geometry,13075.0
+geometry_coverage_rate,0.6706847909720441
+adopters_with_geometry,1365.0
+adopter_geometry_coverage_rate,0.888671875

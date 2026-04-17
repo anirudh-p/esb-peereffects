@@ -1,0 +1,20 @@
+Radius Network Sizes
+=====================
+
+Radius 15 miles:
+  Mean neighbors: 11.30
+  Median neighbors: 5.00
+  Min/Max: 0 / 141
+  Isolates (0 neighbors): 1870
+
+Radius 30 miles:
+  Mean neighbors: 37.76
+  Median neighbors: 20.00
+  Min/Max: 0 / 308
+  Isolates (0 neighbors): 192
+
+Radius 60 miles:
+  Mean neighbors: 118.87
+  Median neighbors: 77.00
+  Min/Max: 0 / 636
+  Isolates (0 neighbors): 35

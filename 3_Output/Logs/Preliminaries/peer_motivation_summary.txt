@@ -1,0 +1,17 @@
+## Y_R3_apply
+nobs=12388
+r_squared=0.0553
+peer_r1_winner_share: coef=0.025113, se=0.035274, pvalue=0.476501
+peer_r1_loser_share: coef=0.030530, se=0.016031, pvalue=0.056846
+
+## wri_any_2023_24
+nobs=12388
+r_squared=0.0677
+peer_r1_winner_share: coef=0.059416, se=0.034874, pvalue=0.088434
+peer_r1_loser_share: coef=0.010477, se=0.016408, pvalue=0.523124
+
+## wri_post_r1_cum
+nobs=12388
+r_squared=0.0488
+peer_r1_winner_share: coef=0.033151, se=0.032912, pvalue=0.313810
+peer_r1_loser_share: coef=0.000357, se=0.015513, pvalue=0.981627

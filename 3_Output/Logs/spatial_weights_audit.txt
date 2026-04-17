@@ -1,0 +1,80 @@
+======================================================================
+1  Analysis dataset
+======================================================================
+  Rows: 19,495  |  NCES IDs: 19,495
+
+======================================================================
+2  Shapefile (NCES EDGE SY2021)
+======================================================================
+  Shapefile rows: 13,280
+  CRS: EPSG:4269
+  ID column candidates: ['GEOID']
+  Using ID column: 'GEOID'
+  Unique NCES IDs in shapefile: 13,280
+  Sample: ['1200180', '1200240', '1200330', '1200390', '1200420']
+
+  Matched districts (shapefile ∩ analysis dataset): 13,075
+  Districts in analysis dataset with no shapefile entry: 6,420
+
+======================================================================
+3  KNN weight matrices & spatial lags
+======================================================================
+  Districts entering W construction: 13,075
+
+  ── K = 4 ──
+    Sparse W saved: knn_weights_k4.npz
+    Spatial lag columns created: 35
+    mean w_IV_Z_R1 = 0.02499  |  districts with ≥1 R1 winner neighbor: 1,222
+    Inverse-dist lag columns added (wd4_*): 35
+    mean wd_IV_Z_R1 = 0.02475  (cf. uniform 0.02499)
+
+  ── K = 6 ──
+    Sparse W saved: knn_weights_k6.npz
+    Spatial lag columns created: 35
+    mean w_IV_Z_R1 = 0.02509  |  districts with ≥1 R1 winner neighbor: 1,743
+    Inverse-dist lag columns added (wd6_*): 35
+    mean wd_IV_Z_R1 = 0.02480  (cf. uniform 0.02509)
+
+  ── K = 8 ──
+    Sparse W saved: knn_weights_k8.npz
+    Spatial lag columns created: 35
+    mean w_IV_Z_R1 = 0.02524  |  districts with ≥1 R1 winner neighbor: 2,262
+    Inverse-dist lag columns added (wd8_*): 35
+    mean wd_IV_Z_R1 = 0.02494  (cf. uniform 0.02524)
+
+  ── K = 10 ──
+    Sparse W saved: knn_weights_k10.npz
+    Spatial lag columns created: 35
+    mean w_IV_Z_R1 = 0.02529  |  districts with ≥1 R1 winner neighbor: 2,726
+    Inverse-dist lag columns added (wd10_*): 35
+    mean wd_IV_Z_R1 = 0.02500  (cf. uniform 0.02529)
+
+  ── K = 15 ──
+    Sparse W saved: knn_weights_k15.npz
+    Spatial lag columns created: 35
+    mean w_IV_Z_R1 = 0.02521  |  districts with ≥1 R1 winner neighbor: 3,769
+    Inverse-dist lag columns added (wd15_*): 35
+    mean wd_IV_Z_R1 = 0.02495  (cf. uniform 0.02521)
+
+
+======================================================================
+4  Merge and save enriched dataset
+======================================================================
+  Final shape: (19495, 406)
+  Columns: ['nces_id', 'state', 'urbanicity', 'enrollment', 'median_income', 'poverty_rate', 'pct_white', 'pm25', 'priority_r1', 'priority_r23', 'r1_fuel_group', 'is_r1_third_party'] ...
+
+  Estimation sample (all controls + K=6 lag): 12,721 / 19,495
+    R1 winners in sample : 333
+    R3 winners in sample : 399
+    R1 losers in sample  : 1,449
+
+  Sample-selection audit:
+                  stage  districts_n  share_of_raw_pct  r1_winner_rate_pct  r3_apply_rate_pct  wri_any_2023_24_rate_pct
+       raw_wri_universe        19495            100.00                1.87               3.85                      4.16
+      shapefile_matched        13075             67.07                2.61               5.08                      5.38
+          full_controls        12721             65.25                2.62               5.14                      5.45
+full_controls_and_shape        12721             65.25                2.62               5.14                      5.45
+      non_r1_estimation        12388             63.54                0.00               4.98                      5.24
+
+  Saved: c:\BC PhD\Research\Peer-Effects and Adoption\1_Data\Cleaned\analysis_dataset_spatial.csv
+  Saved: c:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Tables\sample_selection_audit.csv

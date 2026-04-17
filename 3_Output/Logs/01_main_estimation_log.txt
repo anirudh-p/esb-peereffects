@@ -1,0 +1,382 @@
+-------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Logs\01_main
+> _estimation_log.txt
+  log type:  text
+ opened on:  16 Apr 2026, 14:57:48
+
+. 
+. // 1. Data Import
+. // ==========================================================================
+> ====
+. disp "Loading Data..."
+Loading Data...
+
+. use "1_Data\Cleaned\analysis_panel_dataset_spatial.dta", clear
+
+. 
+. // Destring IDs if necessary, generate numeric panel ID
+. destring nces_id, replace force
+nces_id: all characters numeric; replaced as long
+
+. egen panel_id = group(nces_id)
+
+. xtset panel_id year
+       panel variable:  panel_id (strongly balanced)
+        time variable:  year, 2018 to 2024
+                delta:  1 unit
+
+. 
+. // 2. Variable Construction & Cleaning
+. // ==========================================================================
+> ====
+. // We need to enforce the hazard survival model.
+. // Districts drop out of the "at-risk" estimating sample in the years followi
+> ng their first award.
+. 
+. // First, make sure our dependent variables exist and are 0/1 indicator forma
+> t
+. // (They should be generated in prep scripts, but we handle structural genera
+> tion here if needed)
+. // hazard_keep_awarded == 1 keeps observations up to and including the year o
+> f first award.
+. 
+. // Generate year dummies for xtivreg2
+. quietly tab year, gen(y_dum)
+
+. local year_dummies "y_dum2 y_dum3 y_dum4 y_dum5 y_dum6 y_dum7"
+
+. 
+. // 3. Main IV Estimation (Awarded)
+. // ==========================================================================
+> ====
+. disp "Running Main IV Specification (DV: Y_first_adopted)..."
+Running Main IV Specification (DV: Y_first_adopted)...
+
+. 
+. // Restrict sample based on hazard condition and removing own winners
+. preserve
+
+. keep if hazard_keep_awarded == 1
+(3,137 observations deleted)
+
+. keep if IV_Z_R1 == 0 // Exclude focal districts that actually won the exogeno
+> us shock
+(1,848 observations deleted)
+
+. 
+. // First Stage (for F-stat and diagnostics)
+. xtreg w6_P_t_minus_1 w6_Z_t_minus_1 i.year, fe vce(cluster panel_id)
+
+Fixed-effects (within) regression               Number of obs     =     86,960
+Group variable: panel_id                        Number of groups  =     12,694
+
+R-sq:                                           Obs per group:
+     within  = 0.3807                                         min =          1
+     between = 0.0593                                         avg =        6.9
+     overall = 0.2163                                         max =          7
+
+                                                F(7,12693)        =    1824.26
+corr(u_i, Xb)  = -0.0080                        Prob > F          =     0.0000
+
+                          (Std. Err. adjusted for 12,694 clusters in panel_id)
+------------------------------------------------------------------------------
+             |               Robust
+w6_P_t_min~1 |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+w6_Z_t_min~1 |   .8973697    .010459    85.80   0.000     .8768685    .9178709
+             |
+        year |
+       2019  |    .003772   .0002583    14.60   0.000     .0032657    .0042783
+       2020  |     .01021   .0004464    22.87   0.000      .009335     .011085
+       2021  |   .0154367    .000567    27.22   0.000     .0143252    .0165481
+       2022  |   .0208049   .0006642    31.32   0.000      .019503    .0221068
+       2023  |   .0309881   .0008729    35.50   0.000     .0292771    .0326992
+       2024  |   .0445501   .0010275    43.36   0.000      .042536    .0465643
+             |
+       _cons |   .0016039   .0004644     3.45   0.001     .0006936    .0025143
+-------------+----------------------------------------------------------------
+     sigma_u |    .059926
+     sigma_e |   .0488668
+         rho |  .60061402   (fraction of variance due to u_i)
+------------------------------------------------------------------------------
+
+. est store first_stage
+
+. 
+. // Reduced Form (ITT)
+. xtreg Y_first_adopted w6_Z_t_minus_1 i.year, fe vce(cluster panel_id)
+
+Fixed-effects (within) regression               Number of obs     =     86,960
+Group variable: panel_id                        Number of groups  =     12,694
+
+R-sq:                                           Obs per group:
+     within  = 0.0181                                         min =          1
+     between = 0.7665                                         avg =        6.9
+     overall = 0.0048                                         max =          7
+
+                                                F(7,12693)        =     137.83
+corr(u_i, Xb)  = -0.0935                        Prob > F          =     0.0000
+
+                          (Std. Err. adjusted for 12,694 clusters in panel_id)
+------------------------------------------------------------------------------
+             |               Robust
+Y_first_ad~d |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+w6_Z_t_min~1 |    .037174   .0173532     2.14   0.032     .0031592    .0711888
+             |
+        year |
+       2019  |   .0073593   .0007604     9.68   0.000     .0058689    .0088498
+       2020  |   .0098978   .0007983    12.40   0.000      .008333    .0114625
+       2021  |   .0127314   .0008691    14.65   0.000     .0110278    .0144349
+       2022  |   .0205838   .0011303    18.21   0.000     .0183683    .0227993
+       2023  |   .0250887   .0013157    19.07   0.000     .0225097    .0276678
+       2024  |   .0396362   .0016129    24.57   0.000     .0364746    .0427978
+             |
+       _cons |  -.0049525   .0005927    -8.36   0.000    -.0061142   -.0037908
+-------------+----------------------------------------------------------------
+     sigma_u |  .09399978
+     sigma_e |  .09900317
+         rho |  .47409353   (fraction of variance due to u_i)
+------------------------------------------------------------------------------
+
+. est store reduced_form
+
+. 
+. // 2SLS IV (Using xtivreg2 for exact sample consistency and K-P stats as a fa
+> llback)
+. xtivreg2 Y_first_adopted (w6_P_t_minus_1 = w6_Z_t_minus_1) `year_dummies', fe
+>  cluster(panel_id)
+Warning - singleton groups detected.  57 observation(s) not used.
+
+FIXED EFFECTS ESTIMATION
+------------------------
+Number of groups =     12637                    Obs per group: min =         2
+                                                               avg =       6.9
+                                                               max =         7
+
+IV (2SLS) estimation
+--------------------
+
+Estimates efficient for homoskedasticity only
+Statistics robust to heteroskedasticity and clustering on panel_id
+
+Number of clusters (panel_id) =  12637                Number of obs =    86903
+                                                      F(  7, 12636) =   138.54
+                                                      Prob > F      =   0.0000
+Total (centered) SS     =   741.302381                Centered R2   =   0.0200
+Total (uncentered) SS   =   741.302381                Uncentered R2 =   0.0200
+Residual SS             =   726.485714                Root MSE      =   .09891
+
+------------------------------------------------------------------------------
+             |               Robust
+Y_first_ad~d |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+w6_P_t_min~1 |   .0414255   .0193082     2.15   0.032      .003582    .0792689
+      y_dum2 |   .0072031   .0007631     9.44   0.000     .0057074    .0086988
+      y_dum3 |   .0094748   .0008208    11.54   0.000     .0078661    .0110836
+      y_dum4 |   .0120919    .000917    13.19   0.000     .0102947    .0138891
+      y_dum5 |   .0197219   .0011963    16.49   0.000     .0173772    .0220667
+      y_dum6 |    .023805   .0016079    14.80   0.000     .0206536    .0269565
+      y_dum7 |   .0377907   .0019471    19.41   0.000     .0339744    .0416069
+------------------------------------------------------------------------------
+Underidentification test (Kleibergen-Paap rk LM statistic):            860.391
+                                                   Chi-sq(1) P-val =    0.0000
+------------------------------------------------------------------------------
+Weak identification test (Cragg-Donald Wald F statistic):              2.6e+04
+                         (Kleibergen-Paap rk Wald F statistic):       7361.550
+Stock-Yogo weak ID test critical values: 10% maximal IV size             16.38
+                                         15% maximal IV size              8.96
+                                         20% maximal IV size              6.66
+                                         25% maximal IV size              5.53
+Source: Stock-Yogo (2005).  Reproduced by permission.
+NB: Critical values are for Cragg-Donald F statistic and i.i.d. errors.
+------------------------------------------------------------------------------
+Hansen J statistic (overidentification test of all instruments):         0.000
+                                                 (equation exactly identified)
+------------------------------------------------------------------------------
+Instrumented:         w6_P_t_minus_1
+Included instruments: y_dum2 y_dum3 y_dum4 y_dum5 y_dum6 y_dum7
+Excluded instruments: w6_Z_t_minus_1
+------------------------------------------------------------------------------
+
+. est store second_stage_awarded
+
+. 
+. restore
+
+. 
+. // 4. Mechanism Estimation (Operating/Physical Salience)
+. // ==========================================================================
+> ====
+. disp "Running Mechanism IV Specification (DV: Y_first_adopted on Endogenous P
+> eer Operating)..."
+Running Mechanism IV Specification (DV: Y_first_adopted on Endogenous Peer Oper
+> ating)...
+
+. 
+. preserve
+
+. keep if hazard_keep_awarded == 1
+(3,137 observations deleted)
+
+. keep if IV_Z_R1 == 0 
+(1,848 observations deleted)
+
+. 
+. // 2SLS IV - Mechanism (Physical Salience)
+. xtivreg2 Y_first_adopted (w6_P_operating_t_minus_1 = w6_Z_t_minus_1) `year_du
+> mmies', fe cluster(panel_id)
+Warning - singleton groups detected.  57 observation(s) not used.
+
+FIXED EFFECTS ESTIMATION
+------------------------
+Number of groups =     12637                    Obs per group: min =         2
+                                                               avg =       6.9
+                                                               max =         7
+
+IV (2SLS) estimation
+--------------------
+
+Estimates efficient for homoskedasticity only
+Statistics robust to heteroskedasticity and clustering on panel_id
+
+Number of clusters (panel_id) =  12637                Number of obs =    86903
+                                                      F(  7, 12636) =   138.43
+                                                      Prob > F      =   0.0000
+Total (centered) SS     =   741.302381                Centered R2   =   0.0209
+Total (uncentered) SS   =   741.302381                Uncentered R2 =   0.0209
+Residual SS             =  725.8011444                Root MSE      =   .09886
+
+------------------------------------------------------------------------------
+             |               Robust
+Y_first_ad~d |      Coef.   Std. Err.      z    P>|z|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+w6_P_opera~1 |   .1231654   .0574809     2.14   0.032      .010505    .2358258
+      y_dum2 |   .0072895   .0007606     9.58   0.000     .0057987    .0087803
+      y_dum3 |   .0096599    .000805    12.00   0.000     .0080821    .0112378
+      y_dum4 |   .0120069   .0009324    12.88   0.000     .0101795    .0138343
+      y_dum5 |   .0192288   .0012904    14.90   0.000     .0166997     .021758
+      y_dum6 |   .0240406     .00154    15.61   0.000     .0210223    .0270589
+      y_dum7 |   .0355957   .0026739    13.31   0.000      .030355    .0408364
+------------------------------------------------------------------------------
+Underidentification test (Kleibergen-Paap rk LM statistic):            426.387
+                                                   Chi-sq(1) P-val =    0.0000
+------------------------------------------------------------------------------
+Weak identification test (Cragg-Donald Wald F statistic):             4496.027
+                         (Kleibergen-Paap rk Wald F statistic):        774.124
+Stock-Yogo weak ID test critical values: 10% maximal IV size             16.38
+                                         15% maximal IV size              8.96
+                                         20% maximal IV size              6.66
+                                         25% maximal IV size              5.53
+Source: Stock-Yogo (2005).  Reproduced by permission.
+NB: Critical values are for Cragg-Donald F statistic and i.i.d. errors.
+------------------------------------------------------------------------------
+Hansen J statistic (overidentification test of all instruments):         0.000
+                                                 (equation exactly identified)
+------------------------------------------------------------------------------
+Instrumented:         w6_P_operating_t_minus_1
+Included instruments: y_dum2 y_dum3 y_dum4 y_dum5 y_dum6 y_dum7
+Excluded instruments: w6_Z_t_minus_1
+------------------------------------------------------------------------------
+
+. est store second_stage_operating
+
+. 
+. restore
+
+. 
+. // 5. Exclusion Restrictions (Third Party Decomposition)
+. // ==========================================================================
+> ====
+. disp "Decomposing Spillovers: Effect of Neighbors on Self-Filed vs Third-Part
+> y-Filed Applications"
+Decomposing Spillovers: Effect of Neighbors on Self-Filed vs Third-Party-Filed 
+> Applications
+
+. 
+. // Load cross-section because R3 application is a static outcome.
+. import delimited "1_Data\Cleaned\analysis_dataset_spatial.csv", clear
+(406 vars, 19,495 obs)
+
+. destring nces_id, replace force
+nces_id already numeric; no replace
+
+. 
+. // Generate Decomposition DVs
+. gen Y_R3_apply_self = (y_r3_apply == 1 & is_r3_third_party == 0)
+
+. gen Y_R3_apply_third = (y_r3_apply == 1 & is_r3_third_party == 1)
+
+. 
+. // RF: Z's effect on Focal Self-filed Application
+. areg Y_R3_apply_self w6_iv_z_r1, absorb(state) vce(cluster state)
+
+Linear regression, absorbing indicators         Number of obs     =     13,075
+Absorbed variable: state                        No. of categories =         54
+                                                F(   1,     53)   =       0.38
+                                                Prob > F          =     0.5409
+                                                R-squared         =     0.0194
+                                                Adj R-squared     =     0.0153
+                                                Root MSE          =     0.1602
+
+                                 (Std. Err. adjusted for 54 clusters in state)
+------------------------------------------------------------------------------
+             |               Robust
+Y_R3_apply~f |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+  w6_iv_z_r1 |   .0160165    .026025     0.62   0.541    -.0361831     .068216
+       _cons |   .0263669   .0006529    40.39   0.000     .0250574    .0276763
+------------------------------------------------------------------------------
+
+. est store rf_self_filed
+
+. 
+. // RF: Z's effect on Focal Third-Party Application
+. areg Y_R3_apply_third w6_iv_z_r1, absorb(state) vce(cluster state)
+
+Linear regression, absorbing indicators         Number of obs     =     13,075
+Absorbed variable: state                        No. of categories =         54
+                                                F(   1,     53)   =       0.01
+                                                Prob > F          =     0.9096
+                                                R-squared         =     0.0143
+                                                Adj R-squared     =     0.0102
+                                                Root MSE          =     0.1523
+
+                                 (Std. Err. adjusted for 54 clusters in state)
+------------------------------------------------------------------------------
+             |               Robust
+Y_R3_apply~d |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+  w6_iv_z_r1 |   .0024387   .0213777     0.11   0.910    -.0404397     .045317
+       _cons |   .0239541   .0005363    44.67   0.000     .0228785    .0250298
+------------------------------------------------------------------------------
+
+. est store rf_third_party
+
+. 
+. // 6. Output Standardization
+. // ==========================================================================
+> ====
+. esttab first_stage reduced_form second_stage_awarded second_stage_operating r
+> f_self_filed rf_third_party ///
+>     using "3_Output\Tables\main_iv_results.rtf", replace ///
+>     title("Table: Peer Effects on School Bus Adoption (IV Estimates and Robus
+> tness)") ///
+>     mtitle("First Stage" "Reduced Form" "2SLS (Award)" "2SLS (Oper)" "RF: Sel
+> f-File" "RF: 3rd-Party") ///
+>     b(4) se(4) star(* 0.10 ** 0.05 *** 0.01) ///
+>     scalars("widstat F-Stat (K-P)" "N Observations") ///
+>     drop(_cons) ///
+>     addnotes("Cluster-robust SEs in parentheses." "Panel models include Distr
+> ict & Year FEs; Cross-sec models use State FEs.")
+(output written to 3_Output\Tables\main_iv_results.rtf)
+
+. 
+. log close
+      name:  <unnamed>
+       log:  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Logs\01_main
+> _estimation_log.txt
+  log type:  text
+ closed on:  16 Apr 2026, 14:58:10
+-------------------------------------------------------------------------------

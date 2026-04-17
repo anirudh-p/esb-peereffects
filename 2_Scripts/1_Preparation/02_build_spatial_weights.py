@@ -43,7 +43,8 @@ def log(msg=""):
 
 
 # ── Configuration ────────────────────────────────────────────────────────────
-K_VALUES = [6, 10, 15]   # run multiple K for robustness; k=6 is the main spec
+K_VALUES = [4, 6, 8, 10, 15]   # run multiple K for robustness; k=6 is the main spec
+RADIUS_MILES = [15, 30, 60]  # multiple radius definitions in miles
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -79,8 +80,9 @@ log(f"  Using ID column: '{id_col}'")
 log(f"  Unique NCES IDs in shapefile: {shp['nces_id'].nunique():,}")
 log(f"  Sample: {shp['nces_id'].head(5).tolist()}")
 
-# Project to Albers Equal Area (EPSG:5070) for accurate KNN centroids in the CONUS
-# This projection uses metres, so KNN distances are in metres.
+# Pre-calculate centroids slightly faster and then project
+print("Reducing memory by extracting centroids before full projection...")
+shp.geometry = shp.geometry.centroid
 shp_proj = shp.to_crs("EPSG:5070")
 shp_proj["cx"] = shp_proj.geometry.centroid.x
 shp_proj["cy"] = shp_proj.geometry.centroid.y
@@ -93,10 +95,7 @@ unmatched_in_df = len(set(df["nces_id"]) - set(shp_m["nces_id"]))
 log(f"  Districts in analysis dataset with no shapefile entry: {unmatched_in_df:,}")
 
 shp_m = shp_m.reset_index(drop=True)
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# 3  Build KNN weight matrices and compute spatial lags
+shp_m[['nces_id']].to_csv(CLEAN / "spatial_nces_order.csv", index=False)
 # ══════════════════════════════════════════════════════════════════════════════
 log("\n" + "=" * 70)
 log("3  KNN weight matrices & spatial lags")
@@ -110,6 +109,9 @@ LAG_VARS = [
     "IS_R2_GRANTEE",  # R2 grant awardee
     "IS_R1_LOSER",    # R1 lottery loser (application density control)
     "IS_R3_LOSER",    # R3 lottery loser
+
+    "priority_r1",    # CRITICAL: Peer priority status
+    "priority_r23",
     "IS_LOSER_pooled",# pooled lottery loser
     "IS_ADOPTER",     # own CSBP lottery adoption (outcome for Est. 1)
     "IS_ADOPTER_CSBP_ANY",  # CSBP incl R2
@@ -137,7 +139,7 @@ LAG_VARS = [
 ]
 
 # Align: match df to shp_m index
-df_r = df.merge(shp_m[["nces_id"]], on="nces_id", how="inner").reset_index(drop=True)
+df_r = shp_m[["nces_id"]].merge(df, on="nces_id", how="left").reset_index(drop=True)
 log(f"  Districts entering W construction: {len(df_r):,}")
 
 coords = shp_m[["cx", "cy"]].values   # shape (N, 2)

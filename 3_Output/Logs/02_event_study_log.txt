@@ -1,0 +1,170 @@
+-------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Logs\02_even
+> t_study_log.txt
+  log type:  text
+ opened on:  14 Apr 2026, 16:57:35
+
+. 
+. // 1. Data Import
+. // ==========================================================================
+> ====
+. disp "Loading Data..."
+Loading Data...
+
+. use "1_Data\Cleaned\analysis_panel_dataset_spatial.dta", clear
+
+. 
+. destring nces_id, replace force
+nces_id: all characters numeric; replaced as long
+
+. egen panel_id = group(nces_id)
+
+. xtset panel_id year
+       panel variable:  panel_id (strongly balanced)
+        time variable:  year, 2018 to 2024
+                delta:  1 unit
+
+. 
+. // 2. Sample Restrictions
+. // ==========================================================================
+> ====
+. disp "Applying sample restrictions..."
+Applying sample restrictions...
+
+. 
+. // Keep until district's first award
+. keep if hazard_keep_awarded == 1
+(3,137 observations deleted)
+
+. 
+. // Exclude focal districts that won R1 themselves to isolate peer effects
+. keep if IV_Z_R1 == 0
+(1,848 observations deleted)
+
+. 
+. // 3. Generate Event Study Interactions
+. // ==========================================================================
+> ====
+. disp "Generating event study interactions..."
+Generating event study interactions...
+
+. 
+. // Create year dummies manually or use i.year notation in regression.
+. // For the treatment, we interact the time-invariant instrument (which takes 
+> its post-2022 value)
+. // with year dummies. 
+. // Note: w6_Z_t_minus_1 in the dataset is ALREADY 0 before 2023 and fractiona
+> l after.
+. // To run a standard event study, we need the *static* cross-sectional treatm
+> ent intensity for each district.
+. // We proxy this by taking the max instrument exposure for each district over
+>  the panel.
+. 
+. bysort panel_id: egen treatment_intensity = max(w6_Z_t_minus_1)
+(44,520 missing values generated)
+
+. 
+. // Create interactions (excluding 2022 as the base year)
+. gen treat_X_2018 = treatment_intensity * (year == 2018)
+(44,520 missing values generated)
+
+. gen treat_X_2019 = treatment_intensity * (year == 2019)
+(44,520 missing values generated)
+
+. gen treat_X_2020 = treatment_intensity * (year == 2020)
+(44,520 missing values generated)
+
+. gen treat_X_2021 = treatment_intensity * (year == 2021)
+(44,520 missing values generated)
+
+. // 2022 IS OMITTED BASE YEAR
+. gen treat_X_2023 = treatment_intensity * (year == 2023)
+(44,520 missing values generated)
+
+. gen treat_X_2024 = treatment_intensity * (year == 2024)
+(44,520 missing values generated)
+
+. 
+. // 4. Fixed Effects Estimation
+. // ==========================================================================
+> ====
+. disp "Running Event Study with Fixed Effects..."
+Running Event Study with Fixed Effects...
+
+. 
+. // Run xtreg with district fixed effects and clustered SEs
+. xtreg Y_first_adopted ///
+>     treat_X_2018 treat_X_2019 treat_X_2020 treat_X_2021 ///
+>     treat_X_2023 treat_X_2024 ///
+>     i.year enrollment pm25, ///
+>     fe vce(cluster panel_id)
+note: enrollment omitted because of collinearity
+note: pm25 omitted because of collinearity
+
+Fixed-effects (within) regression               Number of obs     =     86,409
+Group variable: panel_id                        Number of groups  =     12,615
+
+R-sq:                                           Obs per group:
+     within  = 0.0189                                         min =          1
+     between = 0.1955                                         avg =        6.8
+     overall = 0.0040                                         max =          7
+
+                                                F(9,12614)        =          .
+corr(u_i, Xb)  = -0.1231                        Prob > F          =          .
+
+                          (Std. Err. adjusted for 12,615 clusters in panel_id)
+------------------------------------------------------------------------------
+             |               Robust
+Y_first_ad~d |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
+-------------+----------------------------------------------------------------
+treat_X_2018 |   .1130908   .0064312    17.58   0.000     .1004847     .125697
+treat_X_2019 |   .0725818   .0063056    11.51   0.000     .0602218    .0849418
+treat_X_2020 |   .0585745   .0063227     9.26   0.000      .046181     .070968
+treat_X_2021 |   .0429284   .0064376     6.67   0.000     .0303097    .0555472
+treat_X_2023 |   .0592423   .0176013     3.37   0.001     .0247411    .0937436
+treat_X_2024 |   .1302526   .0293747     4.43   0.000     .0726738    .1878315
+             |
+        year |
+       2019  |   .0083615   .0008635     9.68   0.000      .006669    .0100541
+       2020  |   .0112528   .0009073    12.40   0.000     .0094744    .0130312
+       2021  |   .0144823   .0009884    14.65   0.000      .012545    .0164197
+       2022  |   .0233433    .001283    18.19   0.000     .0208285    .0258581
+       2023  |   .0274254   .0013477    20.35   0.000     .0247837    .0300671
+       2024  |   .0403361   .0017023    23.70   0.000     .0369994    .0436728
+             |
+  enrollment |          0  (omitted)
+        pm25 |          0  (omitted)
+       _cons |  -.0076744   .0007023   -10.93   0.000    -.0090511   -.0062978
+-------------+----------------------------------------------------------------
+     sigma_u |  .09467392
+     sigma_e |  .09922928
+         rho |  .47652004   (fraction of variance due to u_i)
+------------------------------------------------------------------------------
+
+. 
+. est store event_study
+
+. 
+. // Output to RTF
+. esttab event_study using "3_Output\Tables\event_study_results.rtf", replace /
+> //
+>     title("Event Study: Dynamic Peer Effects of R1 Winners on Focal Adoption"
+> ) ///
+>     b(4) se(4) star(* 0.10 ** 0.05 *** 0.01) ///
+>     drop(_cons *year enrollment pm25) ///
+>     order(treat_X_2018 treat_X_2019 treat_X_2020 treat_X_2021 treat_X_2023 tr
+> eat_X_2024) ///
+>     addnotes("Omitted Base Year is 2022. Models include district and year fix
+> ed effects.")
+(note: file 3_Output\Tables\event_study_results.rtf not found)
+(output written to 3_Output\Tables\event_study_results.rtf)
+
+. 
+. log close
+      name:  <unnamed>
+       log:  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Logs\02_even
+> t_study_log.txt
+  log type:  text
+ closed on:  14 Apr 2026, 16:57:50
+-------------------------------------------------------------------------------

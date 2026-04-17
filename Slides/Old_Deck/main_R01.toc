@@ -1,0 +1,5 @@
+\beamer@sectionintoc {1}{Motivation \& Setting}{3}{0}{1}
+\beamer@sectionintoc {2}{Identification Strategy: The "How"}{8}{0}{2}
+\beamer@sectionintoc {3}{Results}{13}{0}{3}
+\beamer@sectionintoc {4}{Discussion \& Next Steps}{15}{0}{4}
+\beamer@sectionintoc {5}{Appendix}{18}{1}{5}
