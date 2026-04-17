@@ -259,5 +259,5 @@ Urban        731
 STEP 9  —  Save
 ======================================================================
 
-  Saved: c:\BC PhD\Research\Peer-Effects and Adoption\1_Data\Cleaned\analysis_dataset.csv
+  Saved: C:\BC PhD\Research\Peer-Effects and Adoption\1_Data\Cleaned\analysis_dataset.csv
   Final dataset shape: (19495, 56)

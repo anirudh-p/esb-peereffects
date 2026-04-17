@@ -3,7 +3,7 @@
        log:  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Logs\02_even
 > t_study_log.txt
   log type:  text
- opened on:  14 Apr 2026, 16:57:35
+ opened on:  17 Apr 2026, 15:38:09
 
 . 
 . // 1. Data Import
@@ -157,7 +157,6 @@ treat_X_2024 |   .1302526   .0293747     4.43   0.000     .0726738    .1878315
 > eat_X_2024) ///
 >     addnotes("Omitted Base Year is 2022. Models include district and year fix
 > ed effects.")
-(note: file 3_Output\Tables\event_study_results.rtf not found)
 (output written to 3_Output\Tables\event_study_results.rtf)
 
 . 
@@ -166,5 +165,5 @@ treat_X_2024 |   .1302526   .0293747     4.43   0.000     .0726738    .1878315
        log:  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Logs\02_even
 > t_study_log.txt
   log type:  text
- closed on:  14 Apr 2026, 16:57:50
+ closed on:  17 Apr 2026, 15:38:13
 -------------------------------------------------------------------------------

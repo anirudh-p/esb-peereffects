@@ -74,7 +74,7 @@ C:\BC PhD\Research\Peer-Effects and Adoption
        log:  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Logs\01_main
 > _estimation_log.txt
   log type:  text
- opened on:  16 Apr 2026, 14:57:48
+ opened on:  17 Apr 2026, 15:37:55
 
 . 
 . // 1. Data Import
@@ -449,44 +449,9 @@ Y_R3_apply~d |      Coef.   Std. Err.      t    P>|t|     [95% Conf. Interval]
        log:  C:\BC PhD\Research\Peer-Effects and Adoption\3_Output\Logs\01_main
 > _estimation_log.txt
   log type:  text
- closed on:  16 Apr 2026, 14:58:10
+ closed on:  17 Apr 2026, 15:38:14
 -------------------------------------------------------------------------------
 
 . exit
 
 end of do-file
-file C:\BC PhD\Research\Peer-Effects and
-    Adoption\3_Output\Logs\01_main_estimation_log2.txt cannot be modified or
-    erased; likely cause is read-only directory or file
-r(608);
-
-end of do-file
-r(608);
-file C:\BC PhD\Research\Peer-Effects and
-    Adoption\3_Output\Logs\01_main_estimation_log2.txt cannot be modified or
-    erased; likely cause is read-only directory or file
-r(608);
-
-end of do-file
-r(608);
-file C:\BC PhD\Research\Peer-Effects and
-    Adoption\3_Output\Logs\01_main_estimation_log2.txt cannot be modified or
-    erased; likely cause is read-only directory or file
-r(608);
-
-end of do-file
-r(608);
-file C:\BC PhD\Research\Peer-Effects and
-    Adoption\3_Output\Logs\01_main_estimation_log2.txt cannot be modified or
-    erased; likely cause is read-only directory or file
-r(608);
-
-end of do-file
-r(608);
-file C:\BC PhD\Research\Peer-Effects and
-    Adoption\3_Output\Logs\01_main_estimation_log2.txt cannot be modified or
-    erased; likely cause is read-only directory or file
-r(608);
-
-end of do-file
-r(608);
