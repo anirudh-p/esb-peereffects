@@ -163,3 +163,22 @@ Spec A uses the first-award hazard as the outcome and the number of six EDGE-nea
 - No-isolated-K6 robustness: 0.0128, SE 0.0016.
 
 Interpretation: this is a strong spatial fact, not causal identification. The coefficient remains positive after district fixed effects and after state-by-year shocks, but the variation is still endogenous to local time-varying demand, vendor targeting, charger/infrastructure constraints, and policy diffusion. This table should motivate the design-IV specs rather than serve as the main claim.
+
+## 2026-04-28 Build Note: Spec B Raw IV
+
+Implemented `2_Scripts/3_Estimation/02_specB_hazard_panel_raw_iv.do`, which writes `02_specB_hazard_panel_raw_iv.tex/.csv`. The script estimates:
+
+1. first stage: lagged K6 neighbor awards on lagged K6 raw neighbor R1 rebate wins;
+2. reduced form: first-award hazard on lagged K6 raw neighbor R1 rebate wins;
+3. raw 2SLS: first-award hazard on lagged K6 neighbor awards, instrumented by lagged K6 raw neighbor R1 rebate wins.
+
+All columns include district fixed effects, year fixed effects, own R1/R3 rebate-win timing controls, and district-clustered standard errors. The 2SLS columns are computed through Frisch-Waugh-Lovell residualization to avoid `xtivreg` memory/state issues while preserving the same linear IV estimand.
+
+Result: the raw R1 neighbor-win instrument has a very strong first stage, but the reduced form is small and not statistically distinguishable from zero. Main sample estimates:
+
+- First stage: 0.8995, SE 0.0114, first-stage F = 6,270.
+- Reduced form: 0.0018, SE 0.0026.
+- Raw 2SLS: 0.0020, SE 0.0026.
+- No-isolated-K6 raw 2SLS: 0.0021, SE 0.0027, first-stage F = 6,154.
+
+Interpretation: Spec B does not reproduce the positive descriptive OLS pattern once peer awards are isolated with raw R1 neighbor-win variation. This is useful: it suggests the Spec A spatial fact is likely driven by endogenous local adoption clustering, broad common shocks, or non-random vendor/policy targeting rather than a simple raw lottery-win channel. The next decisive object is Spec C, using the design-BH/recentered exposure and expected-exposure controls.

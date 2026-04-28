@@ -5,9 +5,9 @@ Stata estimation spine for the Brown pitch.
 ## Included Scripts
 
 - `00_globals.do`: shared paths, output folders, and estimation settings.
-- `00_run_all.do`: runs the currently implemented table sequence: sample selection and Spec A. Later specs are intentionally left out until implemented.
+- `00_run_all.do`: runs the currently implemented table sequence: sample selection, Spec A, and Spec B. Later specs are intentionally left out until implemented.
 - `01_specA_hazard_panel_ols.do`: descriptive first-award hazard-panel OLS using lagged K6 neighbor-award exposure; establishes the spatial fact but is not causal.
-- `02_specB_hazard_panel_raw_iv.do`: raw hazard-panel IV bridge specification.
+- `02_specB_hazard_panel_raw_iv.do`: raw hazard-panel IV bridge specification using neighbor R1 rebate wins as an instrument for lagged neighbor awards.
 - `03_specC_hazard_panel_design_bh_iv.do`: main design-based Borusyak-Hull-style IV specification.
 - `04_specD_hazard_panel_design_bh_cf_iv.do`: design-based IV with controls/fixed effects/channel restrictions.
 - `05_event_study_timing.do`: timing and pre-trend evidence around neighbor exposure.
