@@ -77,3 +77,16 @@ Implemented `01_build_analysis_dataset.py` as the first preparation step. The sc
 5. keeps the base universe as the full source crosswalk rather than only `wri_data.csv`, preserving 21 CSBP/applicant-source IDs absent from the WRI district CSV.
 
 Current diagnostic counts: 19,516 unique NCES IDs in the crosswalk/base; 368 R1 rebate winners; 458 R3 rebate winners; 234 CSB grant awardees; 1,902 R1 lottery applicants; 755 R3 lottery applicants; 271 2023 survey responses; 255 2024 survey responses.
+
+## 2026-04-28 Build Note: Hazard Panel
+
+Implemented `02_build_panel_dataset.py` as the second preparation step. The script now:
+
+1. consumes `analysis_district_base.csv`;
+2. expands the source crosswalk universe to an annual 2018-2024 district-year panel;
+3. constructs first-event outcomes for WRI award, delivery, operation, lottery application, rebate win, and grant award;
+4. constructs at-risk indicators for each first-event outcome;
+5. adds timing variables around R1/R3, own-winner post flags, own-winner exclusion flags, and basic sample-coverage flags;
+6. intentionally leaves spatial/design-based neighbor exposure variables for the next preparation step.
+
+Current diagnostic counts: 136,612 district-years; 19,516 districts; 1,492 first-award events in-panel; 2,308 first lottery-application events; 802 first rebate-win events; 234 grant-award events; 37,130 district-year rows in the 2022-2023 lottery application risk window.
