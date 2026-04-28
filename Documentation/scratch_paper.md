@@ -143,3 +143,23 @@ The preparation layer now adds distance/isolation flags for both K6 graphs:
 Baseline recommendation: estimate the main tables on `main_estimation_sample == 1`, use EDGE-only K6 exposure as the cleanest geographic peer graph, and report robustness using hybrid K6, all-U.S. geography, and the no-isolated-K6 sample. The point fallback layer should be kept for diagnostics and robustness, but the main causal interpretation should not rely on non-geographic or non-district focal units.
 
 Current flag audit after adding these fields: the WRI point-fallback universe has 4,225 charters, 547 regular public districts, 442 specialized public districts, 1,184 agency-like entities, and 22 non-LEA entities. The EDGE universe is overwhelmingly regular public districts: 12,986 of 13,083 districts. The recommended main sample has 12,683 districts and 88,781 district-years, with 1,303 first-award events. Dropping districts whose sixth EDGE neighbor is more than 50 miles away leaves 12,433 districts and 87,031 district-years, with 1,276 first-award events.
+
+## 2026-04-28 Build Note: Sample Selection and Spec A
+
+Implemented the first Stata outputs:
+
+1. `2_Scripts/2_Preliminaries/01_descriptive_statistics.do` writes `00_sample_selection.tex/.csv`.
+2. `2_Scripts/3_Estimation/01_specA_hazard_panel_ols.do` writes `01_specA_hazard_panel_ols.tex/.csv`.
+3. `2_Scripts/3_Estimation/00_run_all.do` now runs only the implemented sequence: sample selection and Spec A.
+
+The main first-award hazard risk set has 85,972 district-years, 12,642 districts, and 1,303 first-award events. The no-isolated K6 risk-set robustness has 84,285 district-years, 12,392 districts, and 1,276 first-award events.
+
+Spec A uses the first-award hazard as the outcome and the number of six EDGE-nearest neighboring districts with first awards by `t-1` as the peer-exposure regressor. The coefficient is positive across all descriptive OLS variants:
+
+- State FE plus controls: 0.0046, SE 0.0017.
+- District FE plus year FE: 0.0162, SE 0.0020.
+- District FE plus year FE plus own rebate-win timing controls: 0.0128, SE 0.0016.
+- District FE plus state-year FE plus own rebate-win timing controls: 0.0055, SE 0.0017.
+- No-isolated-K6 robustness: 0.0128, SE 0.0016.
+
+Interpretation: this is a strong spatial fact, not causal identification. The coefficient remains positive after district fixed effects and after state-by-year shocks, but the variation is still endogenous to local time-varying demand, vendor targeting, charger/infrastructure constraints, and policy diffusion. This table should motivate the design-IV specs rather than serve as the main claim.
