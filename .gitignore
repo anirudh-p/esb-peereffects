@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.conda/
+
+# Stata
+*.log
+*.smcl
+*.tmp
+
+# Generated data and outputs
+1_Data/Cleaned/*
+!1_Data/Cleaned/README.md
+3_Output/Audit/*
+!3_Output/Audit/README.md
+3_Output/Figures/*
+!3_Output/Figures/README.md
+3_Output/Logs/*
+!3_Output/Logs/README.md
+3_Output/Tables/*
+!3_Output/Tables/README.md
+
+# LaTeX build artifacts
+Documentation/Slides/*.aux
+Documentation/Slides/*.bbl
+Documentation/Slides/*.bcf
+Documentation/Slides/*.blg
+Documentation/Slides/*.fdb_latexmk
+Documentation/Slides/*.fls
+Documentation/Slides/*.log
+Documentation/Slides/*.nav
+Documentation/Slides/*.out
+Documentation/Slides/*.run.xml
+Documentation/Slides/*.snm
+Documentation/Slides/*.synctex.gz
+Documentation/Slides/*.toc

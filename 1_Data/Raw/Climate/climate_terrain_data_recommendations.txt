@@ -1,0 +1,312 @@
+================================================================================
+CLIMATE/TERRAIN SIMILARITY NETWORK: DATA RECOMMENDATIONS
+================================================================================
+
+OBJECTIVE: Construct climate/terrain-based neighbor weights that capture
+           districts with similar environmental conditions but different
+           geographic locations (valid exclusion restriction for IV).
+
+================================================================================
+RECOMMENDED DATASETS
+================================================================================
+
+1. PRISM CLIMATE DATA (Oregon State University)
+────────────────────────────────────────────────────────────────
+   URL: https://prism.oregonstate.edu/
+   Resolution: 4km grid (800m available for some variables)
+   Variables:
+     - Temperature: Annual mean, min, max (°C)
+     - Precipitation: Annual total, monthly patterns (mm)
+     - Growing degree days, frost-free days
+   Time Range: 1895-present, monthly/annual
+   Format: Raster (GeoTIFF), easy to aggregate to districts
+   Cost: FREE
+   
+   Relevance: Core climate variables for ESB operations (battery
+              performance affected by temperature extremes, heating/
+              cooling energy costs, route planning in precipitation)
+
+2. USGS NATIONAL ELEVATION DATASET (NED)
+────────────────────────────────────────────────────────────────
+   URL: https://www.usgs.gov/3d-elevation-program
+   Resolution: 10m, 30m, or 1-arc-second
+   Variables:
+     - Elevation (meters above sea level)
+     - Derived: Slope, aspect, terrain ruggedness index
+   Format: Raster (GeoTIFF) via EarthExplorer
+   Cost: FREE
+   
+   Relevance: Terrain affects ESB range (hills drain batteries),
+              route efficiency, winter driving conditions
+   Processing: Use zonal statistics to get mean elevation, slope,
+               terrain roughness per district
+
+3. NOAA CLIMATE NORMALS (1991-2020)
+────────────────────────────────────────────────────────────────
+   URL: https://www.ncei.noaa.gov/products/land-based-station/us-climate-normals
+   Resolution: Station-based (~7,000 stations nationwide)
+   Variables:
+     - Temperature extremes: Days below 0°F, above 90°F
+     - Heating/cooling degree days
+     - Snowfall, snow depth, freezing rain days
+     - Wind speed, humidity
+   Format: CSV files per station
+   Cost: FREE
+   
+   Relevance: Extreme cold reduces EV range 30-50%, heating costs
+              increase operational expenses, snow/ice affects routes
+   Processing: Interpolate station data to district centroids using
+               inverse distance weighting or kriging
+
+4. GRIDMET METEOROLOGICAL DATA (University of Idaho)
+────────────────────────────────────────────────────────────────
+   URL: https://www.climatologylab.org/gridmet.html
+   Resolution: 4km grid
+   Variables:
+     - Daily temp (min/max), precipitation, humidity
+     - Wind speed and direction
+     - Reference evapotranspiration
+   Time Range: 1979-present (daily)
+   Format: NetCDF, accessible via Google Earth Engine
+   Cost: FREE
+   
+   Relevance: Higher resolution than PRISM, includes wind (affects
+              EV efficiency) and daily variability
+
+5. EPA ECOREGIONS (Level III or IV)
+────────────────────────────────────────────────────────────────
+   URL: https://www.epa.gov/eco-research/ecoregions
+   Resolution: Polygon boundaries (84 Level III, 967 Level IV)
+   Variables:
+     - Ecological region classification (climate + terrain + vegetation)
+     - Captures climate zones: Desert, Mountain, Humid Continental, etc.
+   Format: Shapefile
+   Cost: FREE
+   
+   Relevance: Pre-classified regions with similar climate/terrain
+              characteristics, easy to assign districts to ecoregions
+   Usage: Create similarity weights based on ecoregion membership
+          (1 if same ecoregion, 0 otherwise, or distance in
+          classification space)
+
+6. USDA PLANT HARDINESS ZONES
+────────────────────────────────────────────────────────────────
+   URL: https://planthardiness.ars.usda.gov/
+   Resolution: Polygon zones (13 zones, half-zone increments)
+   Variables:
+     - Average annual extreme minimum temperature
+   Format: Shapefile, web service
+   Cost: FREE
+   
+   Relevance: Simple temperature-based zonation, captures cold
+              climate impacts on battery performance
+
+7. KOPPEN-GEIGER CLIMATE CLASSIFICATION
+────────────────────────────────────────────────────────────────
+   URL: http://koeppen-geiger.vu-wien.ac.at/
+   Resolution: 1km grid (global)
+   Variables:
+     - 30 climate types (Tropical, Arid, Temperate, Continental, Polar)
+   Format: GeoTIFF
+   Cost: FREE
+   
+   Relevance: Globally standardized climate classification, captures
+              precipitation and temperature regimes relevant to ESB ops
+
+================================================================================
+IMPLEMENTATION STRATEGIES
+================================================================================
+
+OPTION 1: Ecoregion-Based Similarity
+────────────────────────────────────────────────────────────────
+  - Assign each district to EPA Level III or IV ecoregion
+  - Create binary weights: w_ij = 1 if same ecoregion, 0 otherwise
+  - Exclude geographic neighbors from climate network (donut approach)
+  - Pros: Simple, defensible categorization, captures climate zones
+  - Cons: Discrete rather than continuous similarity
+
+OPTION 2: Climate Distance in Multi-Dimensional Space
+────────────────────────────────────────────────────────────────
+  - Extract PRISM climate variables for each district:
+      * Annual mean temp, temp range (max - min)
+      * Annual precipitation
+      * Heating degree days, cooling degree days
+      * Days below 0°F (battery stress)
+  - Standardize variables (z-scores)
+  - Calculate Euclidean distance in climate space
+  - Define climate neighbors as K-nearest in climate space OR
+    inverse distance weights: w_ij = 1 / (1 + climate_distance_ij)
+  - Apply geographic exclusion: Set w_ij = 0 if geog_distance < 100km
+  - Pros: Continuous similarity, multiple dimensions
+  - Cons: Requires standardization choices, more complex
+
+OPTION 3: Terrain Similarity (Complementary Network)
+────────────────────────────────────────────────────────────────
+  - Calculate terrain metrics from USGS NED:
+      * Mean elevation
+      * Mean slope (degrees)
+      * Terrain ruggedness index (TRI)
+  - Define similarity as small differences in terrain:
+      w_ij = exp(-|elevation_i - elevation_j| / scale_param)
+  - Exclude geographic neighbors
+  - Pros: Captures topographic challenges for ESBs (range, routes)
+  - Cons: Terrain may correlate with climate
+
+OPTION 4: Combined Climate + Terrain Index
+────────────────────────────────────────────────────────────────
+  - Principal Component Analysis (PCA) on:
+      * Temperature variables (mean, extremes, degree days)
+      * Precipitation
+      * Elevation, slope
+  - Use first 2-3 PCs to capture environmental similarity
+  - Define neighbors as K-nearest in PC space
+  - Exclude geographic neighbors
+  - Pros: Data-driven, reduces multicollinearity
+  - Cons: Less interpretable than raw variables
+
+================================================================================
+RECOMMENDED APPROACH FOR YOUR ANALYSIS
+================================================================================
+
+PRIMARY RECOMMENDATION: Climate Distance + Ecoregion Hybrid
+────────────────────────────────────────────────────────────────
+
+Step 1: Download PRISM Climate Data
+  - Annual normals (1991-2020) for:
+      * Mean temperature
+      * Temperature range (max - min)
+      * Annual precipitation
+  - Extract raster values to district centroids or boundaries
+
+Step 2: Download NOAA Climate Normals
+  - Days below 0°F (critical for EV battery performance)
+  - Heating degree days (operational costs)
+  - Interpolate station data to districts
+
+Step 3: Download USGS Elevation Data
+  - Calculate mean elevation and slope per district
+  - Use as secondary similarity metric
+
+Step 4: Construct Climate Similarity Matrix
+  - Standardize all climate/terrain variables
+  - Calculate Euclidean distance in 5-6D space
+  - Define climate neighbors as K=15 nearest in climate space
+  - CRITICAL: Exclude districts within 200km geographic radius
+    (ensures climate neighbors are NOT geographic neighbors)
+
+Step 5: Validation
+  - Verify climate neighbors span multiple states
+  - Check correlation: geographic W vs climate W should be near-zero
+  - Test first-stage: climate peers should predict adoption through
+    environmental similarity, not spatial spillovers
+
+================================================================================
+PYTHON IMPLEMENTATION SKETCH
+================================================================================
+
+```python
+import rasterio
+from rasterstats import zonal_stats
+from sklearn.preprocessing import StandardScaler
+from scipy.spatial.distance import pdist, squareform
+
+# Extract PRISM climate data to districts
+climate_vars = ['mean_temp', 'temp_range', 'precip', 'days_below_0', 'elevation']
+climate_df = pd.DataFrame({'nces_id': district_ids})
+
+for var in climate_vars:
+    raster = rasterio.open(f'prism_{var}.tif')
+    stats = zonal_stats(district_polygons, raster.read(1), 
+                        affine=raster.transform, stats='mean')
+    climate_df[var] = [s['mean'] for s in stats]
+
+# Standardize
+scaler = StandardScaler()
+climate_scaled = scaler.fit_transform(climate_df[climate_vars])
+
+# Calculate pairwise climate distances
+climate_dist = squareform(pdist(climate_scaled, metric='euclidean'))
+
+# Geographic distance matrix (from previous code)
+geographic_dist = ...  # Already calculated
+
+# Create climate similarity weights
+# Find K=15 nearest in CLIMATE space, excluding geo neighbors < 200km
+k_climate = 15
+geo_exclusion_km = 200
+
+w_climate = np.zeros_like(climate_dist)
+for i in range(len(climate_dist)):
+    # Mask out geographic neighbors
+    climate_dist_masked = climate_dist[i].copy()
+    climate_dist_masked[geographic_dist[i] < geo_exclusion_km*1000] = np.inf
+    
+    # Find K nearest in climate space (excluding geo neighbors)
+    nearest_k_idx = np.argpartition(climate_dist_masked, k_climate)[:k_climate]
+    w_climate[i, nearest_k_idx] = 1 / k_climate  # Row-standardized
+```
+
+================================================================================
+EXPECTED RESULTS
+================================================================================
+
+If climate/terrain network is valid instrument:
+  - First-stage F-stat should remain strong (>10)
+  - Coefficient on w_climate * peer_adoption should be positive
+    (districts in similar climates learn from each other's experiences)
+  - Overidentification test: Hansen J-stat should not reject
+    (both w_climate and IV_Z are valid instruments)
+  - Geographic peer effect (w_geo) should remain significant,
+    indicating both spatial and climate channels matter
+
+Interpretation:
+  'Districts with similar cold climates learn about ESB battery
+   performance in winter conditions, regardless of geographic proximity.'
+
+Economic Mechanism:
+  - Cold climate districts face same operational challenges
+    (battery degradation, heating costs, reduced range)
+  - Early adopters provide information about real-world performance
+  - Information flows through professional networks, conferences,
+    industry reports (not local spillovers)
+  - Climate similarity creates "natural experiments" for peer learning
+
+================================================================================
+ALTERNATIVE: SNOWFALL-BASED NETWORK (SIMPLER)
+================================================================================
+
+If time/resources limited, consider simpler approach:
+
+  1. Download NOAA snowfall normals (annual average)
+  2. Group districts into quintiles (0-20%, 20-40%, etc.)
+  3. Create within-quintile weights: w_ij = 1 if same snowfall quintile
+  4. Exclude geographic neighbors < 200km
+  5. Interpretation: "Districts with similar winter conditions"
+
+Advantages:
+  - Single variable, easy to explain
+  - Highly relevant to EV operations (snow = reduced range, delays)
+  - Clear exclusion restriction (snowfall ≠ geographic proximity)
+
+================================================================================
+DATA DOWNLOAD LINKS (QUICK START)
+================================================================================
+
+PRISM Annual Normals:
+https://prism.oregonstate.edu/normals/
+
+NOAA Climate Normals (2020):
+https://www.ncei.noaa.gov/data/normals-annualseasonal/2006-2020/access/
+
+USGS 3DEP Elevation:
+https://apps.nationalmap.gov/downloader/
+
+EPA Ecoregions Shapefile:
+https://gaftp.epa.gov/EPADataCommons/ORD/Ecoregions/
+
+Köppen-Geiger Climate GIS:
+http://koeppen-geiger.vu-wien.ac.at/present.htm
+
+================================================================================
+END OF RECOMMENDATIONS
+================================================================================

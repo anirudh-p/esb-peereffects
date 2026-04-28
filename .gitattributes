@@ -1,0 +1,18 @@
+*.md text eol=lf
+*.py text eol=lf
+*.do text eol=lf
+*.bat text eol=crlf
+*.tex text eol=lf
+*.csv text eol=lf
+*.txt text eol=lf
+*.dta binary
+*.xlsx binary
+*.xls binary
+*.pdf binary
+*.zip binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.tif binary
+1_Data/Raw/Spatial/EDGE_SCHOOLDISTRICT_TL21_SY2021.zip filter=lfs diff=lfs merge=lfs -text
+1_Data/Raw/Spatial/EDGE_SCHOOLDISTRICT_TL21_SY2021/schooldistrict_sy2021_tl21.shp filter=lfs diff=lfs merge=lfs -text
