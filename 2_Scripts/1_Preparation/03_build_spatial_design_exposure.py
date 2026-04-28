@@ -45,6 +45,20 @@ CSBP_APPLICANTS_XLSX = RAW_DIR / "WRI" / "CSBP Applicants waitlisted and rejecte
 K_VALUES = [4, 6, 8, 10]
 PRIMARY_K = 6
 METERS_PER_MILE = 1609.344
+NON_CONTIGUOUS_STATES = {"AK", "HI", "AS", "GU", "MP", "PR", "VI"}
+REGULAR_PUBLIC_TYPES = {
+    "Regular public school district that is not a component of a supervisory union",
+    "Regular public school district that is a component of a supervisory union",
+}
+CHARTER_TYPES = {"Independent charter district"}
+SPECIALIZED_PUBLIC_TYPES = {"Specialized public school district"}
+AGENCY_LIKE_TYPES = {
+    "Service agency",
+    "Supervisory union",
+    "Other local education agency",
+    "State operated agency",
+    "Federal operated agency",
+}
 
 STATIC_EXPOSURE_VARS = [
     "r1_rebate_winner",
@@ -228,6 +242,39 @@ def build_geometry_coverage(base: pd.DataFrame, edge: pd.DataFrame) -> pd.DataFr
     geo["spatial_latitude"] = geo["edge_latitude"].combine_first(geo["latitude"])
     geo["spatial_longitude"] = geo["edge_longitude"].combine_first(geo["longitude"])
     geo["interesting_for_spatial_drop"] = geo[INTERESTING_FLAGS].fillna(0).sum(axis=1).gt(0).astype(int)
+    geo = add_sample_flags(geo)
+    return geo
+
+
+def add_sample_flags(geo: pd.DataFrame) -> pd.DataFrame:
+    lea_type = geo["lea_type_name"].fillna("").astype("string").str.strip()
+    state = geo["state"].fillna("").astype("string").str.upper().str.strip()
+
+    regular_public = lea_type.isin(REGULAR_PUBLIC_TYPES)
+    charter = lea_type.isin(CHARTER_TYPES)
+    specialized_public = lea_type.isin(SPECIALIZED_PUBLIC_TYPES)
+    agency_like = lea_type.isin(AGENCY_LIKE_TYPES)
+    nonlea = lea_type.str.startswith("Non-LEA", na=False)
+    contiguous = state.ne("") & ~state.isin(NON_CONTIGUOUS_STATES)
+
+    geo["focal_regular_public"] = regular_public.astype(int)
+    geo["focal_charter"] = charter.astype(int)
+    geo["focal_specialized_public"] = specialized_public.astype(int)
+    geo["focal_public_district_like"] = (regular_public | charter).astype(int)
+    geo["focal_agency_like"] = agency_like.astype(int)
+    geo["focal_nonlea"] = nonlea.astype(int)
+    geo["contiguous_us"] = contiguous.astype(int)
+    geo["focal_unit_class"] = np.select(
+        [regular_public, charter, specialized_public, agency_like, nonlea],
+        ["regular_public", "charter", "specialized_public", "agency_like", "nonlea"],
+        default="missing_or_other",
+    )
+    geo["main_estimation_sample"] = (
+        regular_public
+        & geo["spatial_eligible_edge"].eq(1)
+        & geo["has_core_controls"].eq(1)
+        & contiguous
+    ).astype(int)
     return geo
 
 
@@ -304,7 +351,10 @@ def build_dynamic_exposures(
 def write_dta(df: pd.DataFrame, path: Path) -> None:
     core_cols = [
         "nces_id",
+        "district_name",
         "state",
+        "lea_type_name",
+        "focal_unit_class",
         "geometry_source",
         "district_panel_id",
         "year",
@@ -337,6 +387,23 @@ def write_dta(df: pd.DataFrame, path: Path) -> None:
         "spatial_eligible_edge",
         "spatial_eligible_hybrid",
         "interesting_for_spatial_drop",
+        "focal_regular_public",
+        "focal_charter",
+        "focal_specialized_public",
+        "focal_public_district_like",
+        "focal_agency_like",
+        "focal_nonlea",
+        "contiguous_us",
+        "main_estimation_sample",
+        "hybrid_w6_nearest_mi",
+        "hybrid_w6_max_mi",
+        "hybrid_isolated_near50",
+        "hybrid_isolated_k6_50",
+        "edge_w6_nearest_mi",
+        "edge_w6_max_mi",
+        "edge_isolated_near50",
+        "edge_isolated_k6_50",
+        "main_noisol_edge_k6_50",
         "has_core_controls",
         "has_core_controls_geo",
         "has_state",
@@ -375,7 +442,10 @@ def write_dta(df: pd.DataFrame, path: Path) -> None:
         for col in df.columns
         if (col.startswith("w6_") or col.startswith("edge_w6_")) and not col.endswith("_s")
     ]
-    keep_cols = [col for col in core_cols + exposure_cols if col in df.columns and len(col) <= 32]
+    keep_cols = []
+    for col in core_cols + exposure_cols:
+        if col in df.columns and len(col) <= 32 and col not in keep_cols:
+            keep_cols.append(col)
     dta = df[keep_cols].copy()
     for col in dta.select_dtypes(include=["object", "string"]).columns:
         dta[col] = dta[col].astype("string").fillna("").str.slice(0, 80)
@@ -433,6 +503,35 @@ def summarize_geometry(geo: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, p
     return summary, type_summary, interesting_unmatched[keep]
 
 
+def summarize_sample_flags(geo: pd.DataFrame) -> pd.DataFrame:
+    return (
+        geo.groupby(["geometry_source", "focal_unit_class"], dropna=False)
+        .agg(
+            districts=("nces_id", "size"),
+            interesting=("interesting_for_spatial_drop", "sum"),
+            r1_lottery_applicants=("r1_lottery_applicant", "sum"),
+            r3_lottery_applicants=("r3_lottery_applicant", "sum"),
+            rebate_winners=("any_rebate_winner", "sum"),
+            grant_awardees=("csb_grant_awardee", "sum"),
+            wri_committed_esb=("wri_has_committed_esbs", "sum"),
+            has_core_controls=("has_core_controls", "sum"),
+            main_estimation_sample=("main_estimation_sample", "sum"),
+        )
+        .reset_index()
+        .sort_values(["geometry_source", "districts"], ascending=[True, False])
+    )
+
+
+def build_distance_flags(ordered: pd.DataFrame, neighbor_distances: np.ndarray, prefix: str) -> pd.DataFrame:
+    distances_mi = neighbor_distances / METERS_PER_MILE
+    out = ordered[["nces_id"]].copy()
+    out[f"{prefix}_w{PRIMARY_K}_nearest_mi"] = distances_mi[:, 0]
+    out[f"{prefix}_w{PRIMARY_K}_max_mi"] = distances_mi[:, -1]
+    out[f"{prefix}_isolated_near50"] = out[f"{prefix}_w{PRIMARY_K}_nearest_mi"].gt(50).astype(int)
+    out[f"{prefix}_isolated_k{PRIMARY_K}_50"] = out[f"{prefix}_w{PRIMARY_K}_max_mi"].gt(50).astype(int)
+    return out
+
+
 def write_neighbor_audit(
     ordered: pd.DataFrame,
     neighbor_indices: np.ndarray,
@@ -484,6 +583,7 @@ def main() -> None:
     geometry_summary.to_csv(AUDIT_DIR / "spatial_geometry_source_summary.csv", index=False)
     unmatched_type_summary.to_csv(AUDIT_DIR / "spatial_unmatched_lea_type_summary.csv", index=False)
     interesting_unmatched.to_csv(AUDIT_DIR / "spatial_unmatched_interesting_leas.csv", index=False)
+    summarize_sample_flags(geo).to_csv(AUDIT_DIR / "spatial_unit_flag_summary.csv", index=False)
     design_rates.to_csv(AUDIT_DIR / "r1_design_bh_priority_rates.csv", index=False)
 
     geo_keep = [
@@ -491,9 +591,18 @@ def main() -> None:
         "district_name",
         "state",
         "lea_type_name",
+        "focal_unit_class",
         "geometry_source",
         "spatial_eligible_edge",
         "spatial_eligible_hybrid",
+        "focal_regular_public",
+        "focal_charter",
+        "focal_specialized_public",
+        "focal_public_district_like",
+        "focal_agency_like",
+        "focal_nonlea",
+        "contiguous_us",
+        "main_estimation_sample",
         "spatial_latitude",
         "spatial_longitude",
         "edge_name",
@@ -516,6 +625,7 @@ def main() -> None:
     W_by_k: dict[int, csr_matrix] = {}
     primary_neighbors = None
     primary_distances = None
+    hybrid_distance_flags = pd.DataFrame({"nces_id": hybrid["nces_id"]})
     for k in K_VALUES:
         W, neighbors, distances = build_knn_matrix(coords, k)
         W_by_k[k] = W
@@ -534,6 +644,7 @@ def main() -> None:
             primary_distances = distances
     if primary_neighbors is not None and primary_distances is not None:
         write_neighbor_audit(hybrid, primary_neighbors, primary_distances, AUDIT_DIR / "spatial_knn_neighbors_hybrid_k6.csv")
+        hybrid_distance_flags = build_distance_flags(hybrid, primary_distances, "hybrid")
 
     years = sorted(panel["year"].unique())
     dynamic = build_dynamic_exposures(hybrid, W_by_k, years, "w")
@@ -556,6 +667,7 @@ def main() -> None:
     )
     edge_dynamic = build_dynamic_exposures(edge_only, {PRIMARY_K: W_edge}, years, "edge_w")
     write_neighbor_audit(edge_only, edge_neighbors, edge_distances, AUDIT_DIR / "spatial_knn_neighbors_edge_k6.csv")
+    edge_distance_flags = build_distance_flags(edge_only, edge_distances, "edge")
 
     panel_out = panel.merge(
         geo[geo_keep],
@@ -567,6 +679,11 @@ def main() -> None:
     panel_out = panel_out.merge(dynamic, on=["nces_id", "year"], how="left")
     panel_out = panel_out.merge(edge_exposure, on="nces_id", how="left")
     panel_out = panel_out.merge(edge_dynamic, on=["nces_id", "year"], how="left")
+    panel_out = panel_out.merge(hybrid_distance_flags, on="nces_id", how="left")
+    panel_out = panel_out.merge(edge_distance_flags, on="nces_id", how="left")
+    panel_out["main_noisol_edge_k6_50"] = (
+        panel_out["main_estimation_sample"].eq(1) & panel_out["edge_isolated_k6_50"].fillna(1).eq(0)
+    ).astype(int)
 
     if "w6_r1win_n" in panel_out.columns:
         panel_out["w6_r1win_tm1_chk"] = panel_out["w6_r1win_n"] * panel_out["year"].ge(2023).astype(int)
@@ -582,6 +699,8 @@ def main() -> None:
         ("no_geometry_rows", panel_out["spatial_eligible_hybrid"].ne(1)),
         ("hybrid_with_core_controls", panel_out["spatial_eligible_hybrid"].eq(1) & panel_out["has_core_controls_geo"].eq(1) if "has_core_controls_geo" in panel_out.columns else panel_out["spatial_eligible_hybrid"].eq(1) & panel_out["has_core_controls"].eq(1)),
         ("edge_with_core_controls", panel_out["spatial_eligible_edge"].eq(1) & panel_out["has_core_controls_geo"].eq(1) if "has_core_controls_geo" in panel_out.columns else panel_out["spatial_eligible_edge"].eq(1) & panel_out["has_core_controls"].eq(1)),
+        ("main_regular_edge_controls_contig", panel_out["main_estimation_sample"].eq(1)),
+        ("main_drop_edge_k6_gt50mi", panel_out["main_noisol_edge_k6_50"].eq(1)),
     ]:
         sub = panel_out.loc[mask]
         panel_stage_rows.append(

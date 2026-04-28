@@ -107,3 +107,39 @@ This directly addresses the earlier sample-drop problem. Current geometry covera
 Interpretation: EDGE-only drops many LEAs that are not conventional geographic districts, especially charter districts, service agencies, supervisory unions, and non-LEA/private fleet entities. The hybrid graph preserves almost all substantively interesting rows for descriptive and lower-control specifications. However, once core WRI controls are required, the hybrid and EDGE samples are currently identical: 12,721 districts and 89,047 district-years. The fallback LEAs mostly lack the WRI control block, so retaining them requires either lighter controls, separate missing-control handling, or a deliberate non-geographic/point-location interpretation.
 
 The first design-BH exposure is priority-cell based: among R1 2022 district applicants, non-priority selection probability is 2/620 = 0.0032 and priority selection probability is 366/1,282 = 0.2855. The script constructs `pi_r1_bh_priority`, `z_r1_recenter_bh`, and KNN exposure variables such as `w6_r1expbh_tm1_n` and `w6_r1rcbh_tm1_n`.
+
+## Appendix A: Spatial-Peers Construction
+
+### Unit Classes and Focal Sample
+
+The spatial peer object should be conservative about the focal decision-maker. The cleanest focal unit is a regular public school district: it is a geographically meaningful district, appears in the EDGE school-district boundary file, and has a plausible district-level procurement/adoption decision. Independent charter districts are also plausibly school districts, but they are institutionally different enough that they should be a sensitivity or extension rather than the baseline. Specialized public districts, service agencies, supervisory unions, state/federal agencies, other LEAs, and non-LEA/private entities are not clean focal peer units for the main causal estimand.
+
+The preparation layer now carries explicit flags:
+
+- `focal_regular_public`: regular public district, including component and non-component districts.
+- `focal_charter`: independent charter district.
+- `focal_specialized_public`: specialized public school district.
+- `focal_public_district_like`: regular public or independent charter district.
+- `focal_agency_like`: service agency, supervisory union, other local education agency, state operated agency, or federal operated agency.
+- `focal_nonlea`: non-LEA entity.
+- `focal_unit_class`: compact string class for auditing.
+- `contiguous_us`: lower-48 plus DC sample flag, excluding AK, HI, AS, GU, MP, PR, and VI.
+- `main_estimation_sample`: regular public, EDGE geometry, full core controls, and contiguous U.S.
+
+This distinction matters because the WRI point fallback adds many entities that are not district-like focal units. Of the 6,420 point-fallback entities, the largest district-like group is independent charter districts, followed by a much smaller set of regular public districts. Service agencies, supervisory unions, state/federal agencies, private fleets, private schools, nonprofits, and municipalities should not anchor the main peer-effect interpretation. They may still be useful for descriptive coverage or mechanism checks about vendor/supply-side activity.
+
+### Isolation and KNN Interpretation
+
+The KNN graph always assigns neighbors. For geographically remote districts, this can create artificial peer exposure over very long distances. The current diagnostics show that the severe isolation cases are concentrated in Alaska, Hawaii, Puerto Rico, American Samoa, other territories, and a few large western districts. This is a graph-design issue, not a missing-data issue.
+
+The preparation layer now adds distance/isolation flags for both K6 graphs:
+
+- `hybrid_w6_nearest_mi` and `hybrid_w6_max_mi`.
+- `hybrid_isolated_near50` and `hybrid_isolated_k6_50`.
+- `edge_w6_nearest_mi` and `edge_w6_max_mi`.
+- `edge_isolated_near50` and `edge_isolated_k6_50`.
+- `main_noisol_edge_k6_50`: main sample after dropping districts whose sixth EDGE neighbor is more than 50 miles away.
+
+Baseline recommendation: estimate the main tables on `main_estimation_sample == 1`, use EDGE-only K6 exposure as the cleanest geographic peer graph, and report robustness using hybrid K6, all-U.S. geography, and the no-isolated-K6 sample. The point fallback layer should be kept for diagnostics and robustness, but the main causal interpretation should not rely on non-geographic or non-district focal units.
+
+Current flag audit after adding these fields: the WRI point-fallback universe has 4,225 charters, 547 regular public districts, 442 specialized public districts, 1,184 agency-like entities, and 22 non-LEA entities. The EDGE universe is overwhelmingly regular public districts: 12,986 of 13,083 districts. The recommended main sample has 12,683 districts and 88,781 district-years, with 1,303 first-award events. Dropping districts whose sixth EDGE neighbor is more than 50 miles away leaves 12,433 districts and 87,031 district-years, with 1,276 first-award events.
