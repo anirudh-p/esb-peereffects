@@ -90,3 +90,20 @@ Implemented `02_build_panel_dataset.py` as the second preparation step. The scri
 6. intentionally leaves spatial/design-based neighbor exposure variables for the next preparation step.
 
 Current diagnostic counts: 136,612 district-years; 19,516 districts; 1,492 first-award events in-panel; 2,308 first lottery-application events; 802 first rebate-win events; 234 grant-award events; 37,130 district-year rows in the 2022-2023 lottery application risk window.
+
+## 2026-04-28 Build Note: Spatial and Design Exposure
+
+Implemented `03_build_spatial_design_exposure.py` as the spatial/design layer. The script builds two coordinate universes:
+
+1. EDGE-only: districts matched to the NCES EDGE school-district shapefile.
+2. Hybrid: EDGE internal points where available, with WRI latitude/longitude as fallback for unmatched LEAs.
+
+This directly addresses the earlier sample-drop problem. Current geometry coverage:
+
+- EDGE shapefile: 13,083 districts; 1,815 R1 lottery applicants; 665 R3 applicants; 726 rebate winners; 207 grant awardees; 1,366 WRI committed ESB districts.
+- WRI point fallback: 6,420 districts; 79 R1 applicants; 86 R3 applicants; 70 rebate winners; 27 grant awardees; 172 WRI committed ESB districts.
+- No geometry: 13 districts; 8 R1 applicants; 4 R3 applicants; 6 rebate winners; 0 first-award events in the current WRI timing panel.
+
+Interpretation: EDGE-only drops many LEAs that are not conventional geographic districts, especially charter districts, service agencies, supervisory unions, and non-LEA/private fleet entities. The hybrid graph preserves almost all substantively interesting rows for descriptive and lower-control specifications. However, once core WRI controls are required, the hybrid and EDGE samples are currently identical: 12,721 districts and 89,047 district-years. The fallback LEAs mostly lack the WRI control block, so retaining them requires either lighter controls, separate missing-control handling, or a deliberate non-geographic/point-location interpretation.
+
+The first design-BH exposure is priority-cell based: among R1 2022 district applicants, non-priority selection probability is 2/620 = 0.0032 and priority selection probability is 366/1,282 = 0.2855. The script constructs `pi_r1_bh_priority`, `z_r1_recenter_bh`, and KNN exposure variables such as `w6_r1expbh_tm1_n` and `w6_r1rcbh_tm1_n`.
