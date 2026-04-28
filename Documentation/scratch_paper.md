@@ -65,3 +65,15 @@ Working conclusion: the data probably cannot fully separate vendors choosing dis
 ### Immediate Build Order
 
 Start with the analysis dataset, not estimation. The first concrete task is a raw-data inventory and district identifier crosswalk that can support all four specs. Then build the hazard panel with outcomes, risk sets, spatial exposure, lottery exposure, and design-based/recentered exposure.
+
+## 2026-04-28 Build Note: District Base
+
+Implemented `01_build_analysis_dataset.py` as the first preparation step. The script now:
+
+1. inventories raw files and raw tables;
+2. standardizes NCES district IDs across WRI district data, WRI bus-level data, CSBP rebates, CSBP grants, CSBP waitlisted/rejected applicants, and 2023/2024 survey files;
+3. writes a long source-record file and a one-row-per-NCES identifier crosswalk;
+4. builds `analysis_district_base.csv` and `.dta` with WRI controls, CSBP applicant/winner flags, survey coverage flags, first ESB timing, first OEM/dealer/charger fields, and county-averaged 2020 Democratic vote share;
+5. keeps the base universe as the full source crosswalk rather than only `wri_data.csv`, preserving 21 CSBP/applicant-source IDs absent from the WRI district CSV.
+
+Current diagnostic counts: 19,516 unique NCES IDs in the crosswalk/base; 368 R1 rebate winners; 458 R3 rebate winners; 234 CSB grant awardees; 1,902 R1 lottery applicants; 755 R3 lottery applicants; 271 2023 survey responses; 255 2024 survey responses.
