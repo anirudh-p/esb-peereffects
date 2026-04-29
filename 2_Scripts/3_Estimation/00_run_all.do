@@ -5,6 +5,8 @@ do "2_Scripts/3_Estimation/01_specA_hazard_panel_ols.do"
 do "2_Scripts/3_Estimation/02_specB_hazard_panel_raw_iv.do"
 do "2_Scripts/3_Estimation/03_specC_hazard_panel_design_bh_iv.do"
 do "2_Scripts/3_Estimation/04_specD_hazard_panel_design_bh_cf_iv.do"
+do "2_Scripts/3_Estimation/07_specC_nonapplicant_hazard_iv.do"
+do "2_Scripts/3_Estimation/08_specC_radius_robustness.do"
 
 * Timing and mechanism scripts remain placeholders until the next layer
 * is locked and should be run explicitly when implemented.

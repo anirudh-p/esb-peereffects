@@ -18,10 +18,11 @@ From `2_Scripts/1_Preparation/02_build_panel_dataset.py`:
 
 From `2_Scripts/1_Preparation/03_build_spatial_design_exposure.py`:
 
-- `analysis_hazard_panel_spatial.csv`: full annual panel with hybrid KNN spatial exposures, EDGE-only K=6 sensitivity exposures, and design-BH expected/recentered R1 exposure.
+- `analysis_hazard_panel_spatial.csv`: full annual panel with hybrid KNN spatial exposures, EDGE-only K=6 sensitivity exposures, EDGE radius-graph sensitivity exposures, and design-BH expected/recentered R1 exposure.
 - `analysis_hazard_panel_spatial.dta`: lean Stata-ready version focused on the primary K=6 estimation surface.
 - `knn_weights_hybrid_k*.npz`: hybrid KNN matrices using EDGE centroids plus WRI point-coordinate fallback.
 - `knn_weights_edge_k6.npz`: EDGE-only K=6 matrix for sample-drop sensitivity checks.
+- `radius_weights_edge_r*.npz`: EDGE-only radius matrices for the 15, 30, and 60 mile robustness graphs.
 - `spatial_neighbor_order_*.csv`: row orders for the saved KNN matrices.
 
 This folder is ignored by Git except for this README. Rebuild generated files from scripts rather than editing them manually.

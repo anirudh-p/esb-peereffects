@@ -44,6 +44,7 @@ CSB_REBATES_XLSX = RAW_DIR / "WRI" / "CSB_Rebates.xlsx"
 CSBP_APPLICANTS_XLSX = RAW_DIR / "WRI" / "CSBP Applicants waitlisted and rejected_11.18.25.xlsx"
 
 K_VALUES = [4, 6, 8, 10]
+RADIUS_VALUES = [15, 30, 60]
 PRIMARY_K = 6
 METERS_PER_MILE = 1609.344
 R1_DESIGN_SIM_N = int(os.getenv("R1_DESIGN_SIM_N", "25000"))
@@ -686,6 +687,15 @@ def build_knn_matrix(coords: np.ndarray, k: int) -> tuple[csr_matrix, np.ndarray
     return matrix, neighbor_indices, neighbor_distances
 
 
+def build_radius_matrix(coords: np.ndarray, radius_miles: int) -> csr_matrix:
+    radius_meters = radius_miles * METERS_PER_MILE
+    nbrs = NearestNeighbors(radius=radius_meters, algorithm="ball_tree").fit(coords)
+    matrix = nbrs.radius_neighbors_graph(coords, mode="connectivity")
+    matrix.setdiag(0)
+    matrix.eliminate_zeros()
+    return matrix.tocsr()
+
+
 def add_static_exposures(
     exposure: pd.DataFrame,
     ordered: pd.DataFrame,
@@ -737,6 +747,33 @@ def build_dynamic_exposures(
             block[f"{prefix}{k}_r1rcsim_tm1_n"] = np.asarray(W.dot(z_sim)).reshape(-1) * available
             block[f"{prefix}{k}_r1expall_tm1_n"] = np.asarray(W.dot(pi_all)).reshape(-1) * available
             block[f"{prefix}{k}_r1rcall_tm1_n"] = np.asarray(W.dot(z_all)).reshape(-1) * available
+        rows.append(block)
+    return pd.concat(rows, ignore_index=True)
+
+
+def build_radius_design_exposures(
+    ordered: pd.DataFrame,
+    W_by_radius: dict[str, csr_matrix],
+    years: list[int],
+    prefix: str,
+) -> pd.DataFrame:
+    rows = []
+    award_year = to_numeric(ordered["first_award_year"]).to_numpy(dtype=float)
+    pi_sim = to_numeric(ordered["pi_r1_design_sim"]).fillna(0).to_numpy(dtype=float)
+    z_sim = to_numeric(ordered["z_r1_recenter_sim"]).fillna(0).to_numpy(dtype=float)
+    pi_all = to_numeric(ordered["pi_r1_allapply_bh"]).fillna(0).to_numpy(dtype=float)
+    z_all = to_numeric(ordered["z_r1_recenter_allapply"]).fillna(0).to_numpy(dtype=float)
+
+    for year in years:
+        block = pd.DataFrame({"nces_id": ordered["nces_id"].to_numpy(), "year": year})
+        adopted = np.nan_to_num(award_year, nan=9999.0) <= (year - 1)
+        available = float(year >= 2023)
+        for radius_label, W in W_by_radius.items():
+            block[f"{prefix}{radius_label}_award_tm1_n"] = np.asarray(W.dot(adopted.astype(float))).reshape(-1)
+            block[f"{prefix}{radius_label}_r1expsim_tm1_n"] = np.asarray(W.dot(pi_sim)).reshape(-1) * available
+            block[f"{prefix}{radius_label}_r1rcsim_tm1_n"] = np.asarray(W.dot(z_sim)).reshape(-1) * available
+            block[f"{prefix}{radius_label}_r1expall_tm1_n"] = np.asarray(W.dot(pi_all)).reshape(-1) * available
+            block[f"{prefix}{radius_label}_r1rcall_tm1_n"] = np.asarray(W.dot(z_all)).reshape(-1) * available
         rows.append(block)
     return pd.concat(rows, ignore_index=True)
 
@@ -843,7 +880,7 @@ def write_dta(df: pd.DataFrame, path: Path) -> None:
     exposure_cols = [
         col
         for col in df.columns
-        if (col.startswith("w6_") or col.startswith("edge_w6_")) and not col.endswith("_s")
+        if (col.startswith("w6_") or col.startswith("edge_w6_") or col.startswith("edge_r")) and not col.endswith("_s")
     ]
     keep_cols = []
     for col in core_cols + exposure_cols:
@@ -936,6 +973,31 @@ def summarize_sample_flags(geo: pd.DataFrame) -> pd.DataFrame:
         .reset_index()
         .sort_values(["geometry_source", "districts"], ascending=[True, False])
     )
+
+
+def summarize_radius_graphs(edge_only: pd.DataFrame, radius_degree: pd.DataFrame) -> pd.DataFrame:
+    rows = []
+    merged = edge_only[["nces_id", "main_estimation_sample"]].merge(radius_degree, on="nces_id", how="left")
+    for radius in RADIUS_VALUES:
+        degree_col = f"edge_r{radius}_degree_n"
+        for sample_name, mask in [
+            ("all_edge", merged["nces_id"].notna()),
+            ("main_estimation_sample", merged["main_estimation_sample"].eq(1)),
+        ]:
+            degree = pd.to_numeric(merged.loc[mask, degree_col], errors="coerce").fillna(0.0)
+            rows.append(
+                {
+                    "radius_miles": radius,
+                    "sample": sample_name,
+                    "districts": int(mask.sum()),
+                    "mean_neighbors": float(degree.mean()),
+                    "median_neighbors": float(degree.median()),
+                    "min_neighbors": float(degree.min()),
+                    "max_neighbors": float(degree.max()),
+                    "isolates": int(degree.eq(0).sum()),
+                }
+            )
+    return pd.DataFrame(rows)
 
 
 def build_distance_flags(ordered: pd.DataFrame, neighbor_distances: np.ndarray, prefix: str) -> pd.DataFrame:
@@ -1131,8 +1193,26 @@ def main() -> None:
     edge_dynamic = build_dynamic_exposures(edge_only, {PRIMARY_K: W_edge}, years, "edge_w")
     write_neighbor_audit(edge_only, edge_neighbors, edge_distances, AUDIT_DIR / "spatial_knn_neighbors_edge_k6.csv")
     edge_distance_flags = build_distance_flags(edge_only, edge_distances, "edge")
+
+    edge_radius_degree = edge_only[["nces_id"]].copy()
+    edge_radius_weights: dict[str, csr_matrix] = {}
+    for radius in RADIUS_VALUES:
+        radius_label = f"r{radius}"
+        W_radius = build_radius_matrix(edge_coords, radius)
+        edge_radius_weights[radius_label] = W_radius
+        save_npz(CLEANED_DIR / f"radius_weights_edge_{radius_label}.npz", W_radius)
+        degree = np.asarray(W_radius.sum(axis=1)).reshape(-1)
+        edge_radius_degree[f"edge_{radius_label}_degree_n"] = degree
+        edge_radius_degree[f"edge_{radius_label}_isolated"] = (degree == 0).astype(int)
+    edge_radius_dynamic = build_radius_design_exposures(edge_only, edge_radius_weights, years, "edge_")
+    summarize_radius_graphs(edge_only, edge_radius_degree).to_csv(
+        AUDIT_DIR / "spatial_radius_edge_summary.csv",
+        index=False,
+    )
     edge_exposure = downcast_numeric_frame(edge_exposure)
     edge_dynamic = downcast_numeric_frame(edge_dynamic)
+    edge_radius_degree = downcast_numeric_frame(edge_radius_degree)
+    edge_radius_dynamic = downcast_numeric_frame(edge_radius_dynamic)
     hybrid_distance_flags = downcast_numeric_frame(hybrid_distance_flags)
     edge_distance_flags = downcast_numeric_frame(edge_distance_flags)
 
@@ -1146,11 +1226,14 @@ def main() -> None:
     panel_out = panel_out.merge(dynamic, on=["nces_id", "year"], how="left")
     panel_out = panel_out.merge(edge_exposure, on="nces_id", how="left")
     panel_out = panel_out.merge(edge_dynamic, on=["nces_id", "year"], how="left")
+    panel_out = panel_out.merge(edge_radius_degree, on="nces_id", how="left")
+    panel_out = panel_out.merge(edge_radius_dynamic, on=["nces_id", "year"], how="left")
     panel_out = panel_out.merge(hybrid_distance_flags, on="nces_id", how="left")
     panel_out = panel_out.merge(edge_distance_flags, on="nces_id", how="left")
     panel_out["main_noisol_edge_k6_50"] = (
         panel_out["main_estimation_sample"].eq(1) & panel_out["edge_isolated_k6_50"].fillna(1).eq(0)
     ).astype(int)
+    panel_out = downcast_numeric_frame(panel_out)
 
     if "w6_r1win_n" in panel_out.columns:
         panel_out["w6_r1win_tm1_chk"] = panel_out["w6_r1win_n"] * panel_out["year"].ge(2023).astype(int)

@@ -15,6 +15,6 @@ Raw-to-cleaned data construction.
 
 `02_build_panel_dataset.py` writes annual hazard-panel files to `1_Data/Cleaned` and panel diagnostics to `3_Output/Audit`.
 
-`03_build_spatial_design_exposure.py` writes spatial/design panel files to `1_Data/Cleaned` and geometry/sample-drop diagnostics to `3_Output/Audit`. It also writes `r1_design_bh_priority_rates.csv`, `r1_design_allapply_priority_rates.csv`, `r1_design_sim_summary.csv`, and application/district probability audits for the simulated R1 design layer.
+`03_build_spatial_design_exposure.py` writes spatial/design panel files to `1_Data/Cleaned` and geometry/sample-drop diagnostics to `3_Output/Audit`. It also writes `r1_design_bh_priority_rates.csv`, `r1_design_allapply_priority_rates.csv`, `r1_design_sim_summary.csv`, application/district probability audits for the simulated R1 design layer, and `spatial_radius_edge_summary.csv` for EDGE radius-graph diagnostics.
 
 Generated data/output files are intentionally ignored by Git.

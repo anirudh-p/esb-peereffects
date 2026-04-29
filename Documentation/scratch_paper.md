@@ -234,6 +234,45 @@ Main sample estimates:
 
 Interpretation: this sensitivity sharply restores the positive raw-IV style effect. Relative to Spec C, the change is not coming from the regression sample or fixed-effects structure; it comes from moving expected exposure off the observed applicant network and onto an all-district universe. That is useful evidence that applicant-pool conditioning is doing substantial work. At the same time, Spec D should be framed as a counterfactual sensitivity rather than the preferred causal design, because non-applicant districts were never actually in the R1 lottery.
 
+## 2026-04-29 Build Note: Spec C Non-Applicant Restriction
+
+Implemented `2_Scripts/3_Estimation/07_specC_nonapplicant_hazard_iv.do`, which writes `07_specC_nonapplicant_hazard_iv.tex/.csv`. This keeps the Spec C simulated design-BH setup but restricts the focal sample to districts that did not apply in R1.
+
+This is a useful check on the concern that later focal adoption might partly reflect the district's own R1 application readiness or persistence rather than spillovers from randomized neighbor wins. If the design-BH result becomes strongly positive once focal R1 applicants are removed, that would suggest the main null was being masked by own-applicant dynamics. That does not happen here.
+
+Main estimates:
+
+- First stage: 0.8141, SE 0.0169, first-stage F = 2,310.
+- Reduced form: -0.00215, SE 0.00285, p = 0.450.
+- Non-applicant 2SLS: -0.00264, SE 0.00324, p = 0.414.
+- Non-applicant no-isolated-K6 2SLS: -0.00342, SE 0.00327, p = 0.295, first-stage F = 2,247.
+
+Interpretation: restricting the focal sample to R1 non-applicants leaves the Spec C result qualitatively unchanged. The simulated design-BH peer-award effect remains close to zero and imprecisely estimated rather than flipping positive. This suggests the main Spec C null is not being driven simply by focal districts that themselves applied in R1 and later adopted for their own reasons.
+
+## 2026-04-29 Build Note: Spec C Radius Robustness
+
+Implemented radius-graph robustness inside the preparation layer and estimated it in `2_Scripts/3_Estimation/08_specC_radius_robustness.do`, which writes `08_specC_radius_robustness.tex/.csv`. The preparation script now writes EDGE-only radius exposures for 15, 30, and 60 mile graphs, along with a radius audit table.
+
+Radius graph diagnostics in the main estimation sample:
+
+- 15 miles: mean neighbors 11.22, median 5, isolates 1,828 districts.
+- 30 miles: mean neighbors 37.39, median 20, isolates 157 districts.
+- 60 miles: mean neighbors 116.93, median 77, isolates 9 districts.
+
+The estimating sample for each column drops radius isolates and then re-runs the Spec C simulated design-BH IV using:
+
+`peer_awards_it(radius) = number of EDGE neighbors within radius with first awards by t-1`
+
+instrumented by the matching radius recentered neighbor R1 shock and controlling for the matching radius expected exposure.
+
+Main estimates:
+
+- 15 miles: 2SLS = -0.00677, SE 0.02248, p = 0.763, first-stage F = 14.21.
+- 30 miles: 2SLS = -0.01383, SE 0.01710, p = 0.419, first-stage F = 7.20.
+- 60 miles: 2SLS = -0.00116, SE 0.00430, p = 0.788, first-stage F = 24.69.
+
+Interpretation: the radius versions do not recover a positive peer effect. If anything, they are noisier than the KNN baseline, especially at 15 and 30 miles where the variable-degree peer set changes sharply across districts and a nontrivial share of districts have no neighbors inside the radius. For the Brown pitch, KNN-6 remains the cleaner baseline object; radius is best treated as a robustness family rather than a replacement.
+
 ## 2026-04-28 Spec C Design Notes: Shocks, Applicants, and State-Year Confounding
 
 ### Additional Shocks
@@ -255,6 +294,62 @@ This is not a flaw so much as an estimand boundary. The project should separate:
 1. Application-stage spillovers: are nearby prior adopters, vendors, consultants, or peer districts associated with applying?
 2. Award/adoption-stage lottery shocks: conditional on the applicant network, do randomized nearby wins cause later focal awards/adoption?
 3. Later response channels: does R1 exposure predict R3 application, grant seeking, third-party use, vendor choice, or timing?
+
+### Strategic Waiting Through R3
+
+The clean next mechanism/timing object is not to fold R3 into the baseline first-award IV, but to use R3 application itself as an outcome. The leading question is whether nearby randomized R1 wins cause focal districts to enter the next lottery round rather than adopt immediately.
+
+A practical specification is a 2023 cross-section rather than a district-FE panel, because R3 application is a one-year event in the current data. The cleanest outcome is:
+
+`R3Apply_i = 1{district i applies in R3}`
+
+and the endogenous exposure is nearby first-award exposure by the time R3 opens:
+
+`PeerAward_i^{R1} = number of nearby districts with first awards by end of 2022}`
+
+instrumented by the same recentered R1 design shock:
+
+`PeerShock_i^{R1} = realized nearby R1 wins - expected nearby R1 wins`
+
+The estimating equation can be written as:
+
+`R3Apply_i = beta * PeerAward_i^{R1} + gamma * ExpectedPeerShock_i^{R1} + X_i'pi + state_FE + u_i`
+
+with `PeerAward_i^{R1}` instrumented by `PeerShock_i^{R1}`.
+
+Recommended sample splits:
+
+1. All districts at risk of R3 application.
+2. R1 non-applicants only: this is the cleanest "strategic waiting" margin.
+3. R1 applicants who did not win: this isolates repeat application or persistence after an initial loss.
+
+Interpretation:
+
+- A positive effect among R1 non-applicants is strong evidence of waiting or later-round learning.
+- A positive effect among R1 losers is more consistent with repeat application or persistence.
+- If R1 exposure raises R3 application but not immediate first-award adoption, that is exactly the pattern one would call strategic waiting.
+
+### Heterogeneity by Locale
+
+Time-invariant district characteristics such as `locale_broad` can still be used in a district-FE IV by interacting them with the time-varying peer exposure and the instrument. The group dummy itself is absorbed by district fixed effects; the interaction is not.
+
+If `Suburban` is the omitted group, the FE-IV equation is:
+
+`y_it = alpha_i + lambda_t + beta_0 * PeerAward_it + beta_U * (PeerAward_it x Urban_i) + beta_R * (PeerAward_it x Rural_i) + gamma_0 * Expected_it + gamma_U * (Expected_it x Urban_i) + gamma_R * (Expected_it x Rural_i) + e_it`
+
+Instrument:
+
+- `PeerAward_it` with `Shock_it`
+- `PeerAward_it x Urban_i` with `Shock_it x Urban_i`
+- `PeerAward_it x Rural_i` with `Shock_it x Rural_i`
+
+Then:
+
+- suburban effect = `beta_0`
+- urban effect = `beta_0 + beta_U`
+- rural effect = `beta_0 + beta_R`
+
+Important design choice: the raw WRI locale field includes `Town` as a separate category. For a three-way Brown table, the cleanest route is either to map `Town` into a broader nonmetro/rural bin ex ante, or to keep a four-way appendix and then collapse to three groups only if the pattern is stable.
 
 ### State-Level Policy Shocks
 
