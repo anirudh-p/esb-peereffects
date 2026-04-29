@@ -16,6 +16,7 @@ variables provide an EDGE-only sensitivity surface for the primary K=6 graph.
 from __future__ import annotations
 
 import sys
+import os
 from pathlib import Path
 from typing import Iterable
 
@@ -45,6 +46,13 @@ CSBP_APPLICANTS_XLSX = RAW_DIR / "WRI" / "CSBP Applicants waitlisted and rejecte
 K_VALUES = [4, 6, 8, 10]
 PRIMARY_K = 6
 METERS_PER_MILE = 1609.344
+R1_DESIGN_SIM_N = int(os.getenv("R1_DESIGN_SIM_N", "25000"))
+R1_DESIGN_SIM_SEED = int(os.getenv("R1_DESIGN_SIM_SEED", "20260427"))
+R1_DESIGN_BUDGET_MODE = os.getenv("R1_DESIGN_BUDGET_MODE", "observed_2022_r1")
+R1_GUIDE_ZE_BUDGET = float(os.getenv("R1_GUIDE_ZE_BUDGET", "250000000"))
+R1_GUIDE_CLEAN_BUDGET = float(os.getenv("R1_GUIDE_CLEAN_BUDGET", "250000000"))
+R1_STATE_CAP_SHARE = float(os.getenv("R1_STATE_CAP_SHARE", "0.10"))
+EPS = 1e-9
 NON_CONTIGUOUS_STATES = {"AK", "HI", "AS", "GU", "MP", "PR", "VI"}
 REGULAR_PUBLIC_TYPES = {
     "Regular public school district that is not a component of a supervisory union",
@@ -94,6 +102,11 @@ EXPOSURE_SHORT_NAMES = {
     "z_r1_recenter_bh": "r1rcbh",
     "r1_design_priority": "r1dpri",
     "r1_design_app_rows": "r1dapps",
+    "pi_r1_design_sim": "r1pisim",
+    "z_r1_recenter_sim": "r1rcsim",
+    "r1_design_sim_priority": "r1spri",
+    "r1_design_sim_app_rows": "r1sapps",
+    "r1_design_sim_selected": "r1ssel",
 }
 
 DYNAMIC_EVENT_COLS = {
@@ -134,6 +147,11 @@ def to_numeric(values: Iterable[object]) -> pd.Series:
 def yes_priority(values: Iterable[object]) -> pd.Series:
     text = pd.Series(values, copy=False).astype("string").str.strip().str.lower()
     return text.str.startswith("yes").fillna(False).astype(int)
+
+
+def normalize_app_name(values: Iterable[object]) -> pd.Series:
+    text = pd.Series(values, copy=False).astype("string").fillna("").str.upper()
+    return text.str.split().str.join(" ")
 
 
 def first_year_from_flags(df: pd.DataFrame, flag_year_pairs: list[tuple[str, int]]) -> pd.Series:
@@ -226,6 +244,338 @@ def build_r1_design_probabilities(base: pd.DataFrame) -> tuple[pd.DataFrame, pd.
     design["z_r1_recenter_bh"] = design["z_r1_recenter_bh"].fillna(0.0)
 
     return design, rate_table
+
+
+def numeric_col(df: pd.DataFrame, col: str) -> pd.Series:
+    if col not in df.columns:
+        return pd.Series(0.0, index=df.index)
+    return to_numeric(df[col]).fillna(0.0).astype(float)
+
+
+def pick_first_feasible(
+    candidates: np.ndarray,
+    rank_pos: np.ndarray,
+    selected: np.ndarray,
+    costs: np.ndarray,
+    state_idx: np.ndarray,
+    state_spend: np.ndarray,
+    state_cap: float,
+    pool_remaining: float,
+) -> int | None:
+    if candidates.size == 0:
+        return None
+    ordered = candidates[np.argsort(rank_pos[candidates])]
+    for idx in ordered:
+        if selected[idx]:
+            continue
+        cost = costs[idx]
+        state = state_idx[idx]
+        if cost <= pool_remaining + EPS and state_spend[state] + cost <= state_cap + EPS:
+            return int(idx)
+    return None
+
+
+def construct_r1_application_universe() -> pd.DataFrame:
+    selected = pd.read_excel(CSB_REBATES_XLSX)
+    selected = selected[selected["Funding Year"] == 2022].copy()
+    selected_std = pd.DataFrame(
+        {
+            "nces_id": clean_nces(selected["NCES District ID"]),
+            "state": selected["School District State"].astype("string").str.strip().str.upper(),
+            "app_org": normalize_app_name(selected["Applicant Organization Name"]),
+            "prioritized": yes_priority(selected["Prioritization"]).astype(bool),
+            "num_e": numeric_col(selected, "Number of Electric Buses"),
+            "num_p": numeric_col(selected, "Number of Propane Buses"),
+            "num_c": numeric_col(selected, "Number of CNG Buses"),
+            "total_buses": numeric_col(selected, "Total Number of Buses"),
+            "cost": numeric_col(selected, "Total Awarded"),
+            "selected_actual": 1,
+            "source": "selected",
+        }
+    )
+
+    not_selected = pd.read_excel(CSBP_APPLICANTS_XLSX)
+    not_selected = not_selected[
+        (not_selected["Funding Year"] == 2022)
+        & not_selected["Round"].astype("string").str.contains("R1", na=False)
+    ].copy()
+    not_selected_std = pd.DataFrame(
+        {
+            "nces_id": clean_nces(not_selected["NCES District ID"]),
+            "state": not_selected["School District State"].astype("string").str.strip().str.upper(),
+            "app_org": normalize_app_name(not_selected["Applicant Organization Name"]),
+            "prioritized": yes_priority(not_selected["School District Prioritized"]).astype(bool),
+            "num_e": numeric_col(not_selected, "Number of Electric Buses"),
+            "num_p": numeric_col(not_selected, "Number of Propane Buses"),
+            "num_c": numeric_col(not_selected, "Number of CNG Buses"),
+            "total_buses": numeric_col(not_selected, "Total Number of Buses"),
+            "cost": numeric_col(not_selected, "Total Funds"),
+            "selected_actual": 0,
+            "source": "waitlist_or_rejected",
+        }
+    )
+
+    selected_keys = set((selected_std["nces_id"].astype(str) + "|" + selected_std["app_org"]).tolist())
+    not_selected_key = not_selected_std["nces_id"].astype(str) + "|" + not_selected_std["app_org"]
+    not_selected_std = not_selected_std.loc[~not_selected_key.isin(selected_keys)].copy()
+
+    apps = pd.concat([selected_std, not_selected_std], ignore_index=True)
+    apps = apps.dropna(subset=["nces_id"]).copy()
+    apps["state"] = apps["state"].astype("string").str.slice(0, 2)
+    apps = apps.loc[
+        apps["state"].notna()
+        & apps["state"].ne("")
+        & apps["total_buses"].gt(0)
+        & apps["cost"].gt(0)
+    ].copy()
+
+    dup_key = (
+        apps["nces_id"].astype(str)
+        + "|"
+        + apps["app_org"].astype(str)
+        + "|"
+        + apps["num_e"].round(0).astype(int).astype(str)
+        + "|"
+        + apps["num_p"].round(0).astype(int).astype(str)
+        + "|"
+        + apps["num_c"].round(0).astype(int).astype(str)
+        + "|"
+        + apps["total_buses"].round(0).astype(int).astype(str)
+        + "|"
+        + apps["cost"].round(2).astype(str)
+    )
+    apps = apps.assign(_dup_key=dup_key)
+    apps = apps.sort_values(["_dup_key", "selected_actual"], ascending=[True, False])
+    apps = apps.drop_duplicates("_dup_key", keep="first").drop(columns="_dup_key").copy()
+
+    apps["exclusive_ze"] = apps["num_e"].gt(0) & apps["num_p"].eq(0) & apps["num_c"].eq(0)
+    apps["requests_clean"] = apps["num_p"].gt(0) | apps["num_c"].gt(0)
+    apps["requests_any"] = apps["total_buses"].gt(0)
+    apps = apps.reset_index(drop=True)
+    apps["app_id"] = np.arange(len(apps))
+    return apps
+
+
+def get_r1_design_budgets(apps: pd.DataFrame) -> tuple[float, float, float, float]:
+    if R1_DESIGN_BUDGET_MODE == "guide_2022":
+        ze_budget = R1_GUIDE_ZE_BUDGET
+        clean_budget = R1_GUIDE_CLEAN_BUDGET
+    else:
+        selected = apps["selected_actual"].eq(1)
+        ze_budget = float(apps.loc[selected & apps["exclusive_ze"], "cost"].sum())
+        clean_budget = float(apps.loc[selected & ~apps["exclusive_ze"], "cost"].sum())
+    total_budget = ze_budget + clean_budget
+    state_cap = R1_STATE_CAP_SHARE * total_budget
+    return ze_budget, clean_budget, total_budget, state_cap
+
+
+def run_r1_design_simulation(apps: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, dict[str, object]]:
+    ze_budget, clean_budget, total_budget, state_cap = get_r1_design_budgets(apps)
+
+    n = len(apps)
+    states = np.sort(apps["state"].astype(str).unique())
+    state_to_idx = {state: idx for idx, state in enumerate(states)}
+    state_idx = apps["state"].astype(str).map(state_to_idx).to_numpy(dtype=int)
+    costs = apps["cost"].to_numpy(dtype=float)
+    prioritized = apps["prioritized"].to_numpy(dtype=bool)
+    exclusive_ze = apps["exclusive_ze"].to_numpy(dtype=bool)
+    requests_clean = apps["requests_clean"].to_numpy(dtype=bool)
+    requests_any = apps["requests_any"].to_numpy(dtype=bool)
+
+    ze_pri_by_state = [
+        np.where((state_idx == state) & exclusive_ze & prioritized)[0]
+        for state in range(len(states))
+    ]
+    ze_nonpri_by_state = [
+        np.where((state_idx == state) & exclusive_ze & ~prioritized)[0]
+        for state in range(len(states))
+    ]
+    clean_pri_by_state = [
+        np.where((state_idx == state) & requests_clean & prioritized)[0]
+        for state in range(len(states))
+    ]
+    clean_nonpri_by_state = [
+        np.where((state_idx == state) & requests_clean & ~prioritized)[0]
+        for state in range(len(states))
+    ]
+    clean_pool_priority = prioritized & requests_any
+    clean_pool_any = requests_any
+    ze_pool_priority = exclusive_ze & prioritized
+    ze_pool_any = exclusive_ze
+
+    district_codes, district_uniques = pd.factorize(apps["nces_id"].astype(str), sort=True)
+    app_counts = np.zeros(n, dtype=np.int64)
+    district_counts = np.zeros(len(district_uniques), dtype=np.int64)
+    selected_apps_total = 0
+    selected_districts_total = 0
+    rng = np.random.default_rng(R1_DESIGN_SIM_SEED)
+
+    for _ in range(R1_DESIGN_SIM_N):
+        order = rng.permutation(n)
+        rank_pos = np.empty(n, dtype=np.int32)
+        rank_pos[order] = np.arange(n, dtype=np.int32)
+
+        selected = np.zeros(n, dtype=bool)
+        state_spend = np.zeros(len(states), dtype=float)
+        state_selected_step1 = np.zeros(len(states), dtype=bool)
+        ze_remaining = ze_budget
+        clean_remaining = clean_budget
+
+        def try_select(idx: int, pool: str) -> bool:
+            nonlocal ze_remaining, clean_remaining
+            cost = costs[idx]
+            state = state_idx[idx]
+            remaining = ze_remaining if pool == "ze" else clean_remaining
+            if cost > remaining + EPS:
+                return False
+            if state_spend[state] + cost > state_cap + EPS:
+                return False
+            selected[idx] = True
+            state_spend[state] += cost
+            if pool == "ze":
+                ze_remaining -= cost
+            else:
+                clean_remaining -= cost
+            return True
+
+        # Step 1: ZE pool, one top-ranked application per state, priority first.
+        for state in range(len(states)):
+            idx = pick_first_feasible(
+                ze_pri_by_state[state],
+                rank_pos,
+                selected,
+                costs,
+                state_idx,
+                state_spend,
+                state_cap,
+                ze_remaining,
+            )
+            if idx is None:
+                idx = pick_first_feasible(
+                    ze_nonpri_by_state[state],
+                    rank_pos,
+                    selected,
+                    costs,
+                    state_idx,
+                    state_spend,
+                    state_cap,
+                    ze_remaining,
+                )
+            if idx is not None and try_select(idx, "ze"):
+                state_selected_step1[state] = True
+
+        # Step 2: Clean pool, one top-ranked clean request for states missed in step 1.
+        for state in range(len(states)):
+            if state_selected_step1[state]:
+                continue
+            idx = pick_first_feasible(
+                clean_pri_by_state[state],
+                rank_pos,
+                selected,
+                costs,
+                state_idx,
+                state_spend,
+                state_cap,
+                clean_remaining,
+            )
+            if idx is None:
+                idx = pick_first_feasible(
+                    clean_nonpri_by_state[state],
+                    rank_pos,
+                    selected,
+                    costs,
+                    state_idx,
+                    state_spend,
+                    state_cap,
+                    clean_remaining,
+                )
+            if idx is not None:
+                try_select(idx, "clean")
+
+        # Remaining clean-pool selections, then remaining ZE-pool selections.
+        for idx in order[clean_pool_priority[order]]:
+            if not selected[idx]:
+                try_select(int(idx), "clean")
+        for idx in order[clean_pool_any[order]]:
+            if not selected[idx]:
+                try_select(int(idx), "clean")
+        for idx in order[ze_pool_priority[order]]:
+            if not selected[idx]:
+                try_select(int(idx), "ze")
+        for idx in order[ze_pool_any[order]]:
+            if not selected[idx]:
+                try_select(int(idx), "ze")
+
+        app_counts += selected.astype(np.int64)
+        selected_districts = np.unique(district_codes[selected])
+        district_counts[selected_districts] += 1
+        selected_apps_total += int(selected.sum())
+        selected_districts_total += int(selected_districts.size)
+
+    app_probs = apps.copy()
+    app_probs["pi_r1_design_app"] = app_counts / float(R1_DESIGN_SIM_N)
+
+    district_probs = pd.DataFrame(
+        {
+            "nces_id": district_uniques.astype(str),
+            "pi_r1_design_sim": district_counts / float(R1_DESIGN_SIM_N),
+        }
+    )
+    district_info = (
+        apps.groupby("nces_id", as_index=False)
+        .agg(
+            r1_design_sim_app_rows=("app_id", "size"),
+            r1_design_sim_priority=("prioritized", "max"),
+            r1_design_sim_selected=("selected_actual", "max"),
+            r1_design_sim_sources=("source", lambda s: "; ".join(sorted(set(map(str, s))))),
+        )
+    )
+    district_probs = district_probs.merge(district_info, on="nces_id", how="left")
+
+    winners = app_probs["selected_actual"].eq(1)
+    summary = {
+        "budget_mode": R1_DESIGN_BUDGET_MODE,
+        "simulations": R1_DESIGN_SIM_N,
+        "seed": R1_DESIGN_SIM_SEED,
+        "ze_budget": ze_budget,
+        "clean_budget": clean_budget,
+        "total_budget": total_budget,
+        "state_cap_share": R1_STATE_CAP_SHARE,
+        "state_cap": state_cap,
+        "applications": len(app_probs),
+        "applicant_districts": district_probs["nces_id"].nunique(),
+        "states_territories": len(states),
+        "priority_applications": int(app_probs["prioritized"].sum()),
+        "exclusive_ze_applications": int(app_probs["exclusive_ze"].sum()),
+        "clean_request_applications": int(app_probs["requests_clean"].sum()),
+        "actual_selected_applications": int(app_probs["selected_actual"].sum()),
+        "actual_selected_districts": int(app_probs.loc[winners, "nces_id"].nunique()),
+        "mean_simulated_selected_applications": selected_apps_total / float(R1_DESIGN_SIM_N),
+        "mean_simulated_selected_districts": selected_districts_total / float(R1_DESIGN_SIM_N),
+        "mean_app_pi_actual_winners": float(app_probs.loc[winners, "pi_r1_design_app"].mean()),
+        "mean_app_pi_nonwinners": float(app_probs.loc[~winners, "pi_r1_design_app"].mean()),
+        "mean_district_pi": float(district_probs["pi_r1_design_sim"].mean()),
+    }
+    return app_probs, district_probs, summary
+
+
+def build_r1_design_simulated_probabilities(
+    base: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    apps = construct_r1_application_universe()
+    app_probs, district_probs, summary = run_r1_design_simulation(apps)
+
+    design = base[["nces_id"]].merge(district_probs, on="nces_id", how="left")
+    int_cols = ["r1_design_sim_app_rows", "r1_design_sim_priority", "r1_design_sim_selected"]
+    for col in int_cols:
+        design[col] = design[col].fillna(0).astype(int)
+        district_probs[col] = district_probs[col].fillna(0).astype(int)
+    design["pi_r1_design_sim"] = design["pi_r1_design_sim"].fillna(0.0)
+    design["z_r1_recenter_sim"] = design["r1_design_sim_selected"] - design["pi_r1_design_sim"]
+    district_probs["z_r1_recenter_sim"] = district_probs["r1_design_sim_selected"] - district_probs["pi_r1_design_sim"]
+
+    summary_df = pd.DataFrame([summary])
+    return design, app_probs, district_probs, summary_df
 
 
 def build_geometry_coverage(base: pd.DataFrame, edge: pd.DataFrame) -> pd.DataFrame:
@@ -332,6 +682,8 @@ def build_dynamic_exposures(
     r1_win = to_numeric(ordered["r1_rebate_winner"]).fillna(0).to_numpy(dtype=float)
     pi_bh = to_numeric(ordered["pi_r1_bh_priority"]).fillna(0).to_numpy(dtype=float)
     z_rc = to_numeric(ordered["z_r1_recenter_bh"]).fillna(0).to_numpy(dtype=float)
+    pi_sim = to_numeric(ordered["pi_r1_design_sim"]).fillna(0).to_numpy(dtype=float)
+    z_sim = to_numeric(ordered["z_r1_recenter_sim"]).fillna(0).to_numpy(dtype=float)
 
     for year in years:
         block = pd.DataFrame({"nces_id": ordered["nces_id"].to_numpy(), "year": year})
@@ -344,6 +696,8 @@ def build_dynamic_exposures(
             block[f"{prefix}{k}_r1win_tm1_n"] = np.asarray(W.dot(r1_win)).reshape(-1) * available
             block[f"{prefix}{k}_r1expbh_tm1_n"] = np.asarray(W.dot(pi_bh)).reshape(-1) * available
             block[f"{prefix}{k}_r1rcbh_tm1_n"] = np.asarray(W.dot(z_rc)).reshape(-1) * available
+            block[f"{prefix}{k}_r1expsim_tm1_n"] = np.asarray(W.dot(pi_sim)).reshape(-1) * available
+            block[f"{prefix}{k}_r1rcsim_tm1_n"] = np.asarray(W.dot(z_sim)).reshape(-1) * available
         rows.append(block)
     return pd.concat(rows, ignore_index=True)
 
@@ -436,6 +790,11 @@ def write_dta(df: pd.DataFrame, path: Path) -> None:
         "r1_design_selected",
         "pi_r1_bh_priority",
         "z_r1_recenter_bh",
+        "r1_design_sim_app_rows",
+        "r1_design_sim_priority",
+        "r1_design_sim_selected",
+        "pi_r1_design_sim",
+        "z_r1_recenter_sim",
     ]
     exposure_cols = [
         col
@@ -568,8 +927,10 @@ def main() -> None:
     panel = pd.read_csv(PANEL_FILE, dtype={"nces_id": "string"}, low_memory=False)
     edge = load_edge_points()
     design, design_rates = build_r1_design_probabilities(base)
+    design_sim, app_probs, district_probs, sim_summary = build_r1_design_simulated_probabilities(base)
 
     base = base.merge(design, on="nces_id", how="left")
+    base = base.merge(design_sim, on="nces_id", how="left")
     base["first_lottery_apply_year"] = first_year_from_flags(
         base,
         [("r1_lottery_applicant", 2022), ("r3_lottery_applicant", 2023)],
@@ -585,6 +946,9 @@ def main() -> None:
     interesting_unmatched.to_csv(AUDIT_DIR / "spatial_unmatched_interesting_leas.csv", index=False)
     summarize_sample_flags(geo).to_csv(AUDIT_DIR / "spatial_unit_flag_summary.csv", index=False)
     design_rates.to_csv(AUDIT_DIR / "r1_design_bh_priority_rates.csv", index=False)
+    app_probs.to_csv(AUDIT_DIR / "r1_design_sim_probabilities_by_application.csv", index=False)
+    district_probs.to_csv(AUDIT_DIR / "r1_design_sim_probabilities_by_district.csv", index=False)
+    sim_summary.to_csv(AUDIT_DIR / "r1_design_sim_summary.csv", index=False)
 
     geo_keep = [
         "nces_id",
@@ -613,6 +977,11 @@ def main() -> None:
         "r1_design_selected",
         "pi_r1_bh_priority",
         "z_r1_recenter_bh",
+        "r1_design_sim_app_rows",
+        "r1_design_sim_priority",
+        "r1_design_sim_selected",
+        "pi_r1_design_sim",
+        "z_r1_recenter_sim",
     ]
     geo[geo_keep].to_csv(AUDIT_DIR / "spatial_geometry_coverage.csv", index=False)
 
@@ -637,7 +1006,17 @@ def main() -> None:
             W,
             k,
             "w",
-            ["pi_r1_bh_priority", "z_r1_recenter_bh", "r1_design_priority", "r1_design_app_rows"],
+            [
+                "pi_r1_bh_priority",
+                "z_r1_recenter_bh",
+                "r1_design_priority",
+                "r1_design_app_rows",
+                "pi_r1_design_sim",
+                "z_r1_recenter_sim",
+                "r1_design_sim_priority",
+                "r1_design_sim_app_rows",
+                "r1_design_sim_selected",
+            ],
         )
         if k == PRIMARY_K:
             primary_neighbors = neighbors
@@ -663,7 +1042,17 @@ def main() -> None:
         W_edge,
         PRIMARY_K,
         "edge_w",
-        ["pi_r1_bh_priority", "z_r1_recenter_bh", "r1_design_priority", "r1_design_app_rows"],
+        [
+            "pi_r1_bh_priority",
+            "z_r1_recenter_bh",
+            "r1_design_priority",
+            "r1_design_app_rows",
+            "pi_r1_design_sim",
+            "z_r1_recenter_sim",
+            "r1_design_sim_priority",
+            "r1_design_sim_app_rows",
+            "r1_design_sim_selected",
+        ],
     )
     edge_dynamic = build_dynamic_exposures(edge_only, {PRIMARY_K: W_edge}, years, "edge_w")
     write_neighbor_audit(edge_only, edge_neighbors, edge_distances, AUDIT_DIR / "spatial_knn_neighbors_edge_k6.csv")

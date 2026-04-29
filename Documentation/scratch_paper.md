@@ -187,20 +187,28 @@ Interpretation: Spec B is a useful bridge to the prior branch rather than the pr
 
 ## 2026-04-28 Build Note: Spec C Design-BH IV
 
-Implemented `2_Scripts/3_Estimation/03_specC_hazard_panel_design_bh_iv.do`, which writes `03_specC_hazard_panel_design_bh_iv.tex/.csv`. The script keeps the corrected Spec B hazard-IV sample: main EDGE estimation sample, first-award risk set, and focal R1 winners excluded. It instruments lagged K6 neighbor awards with recentered K6 neighbor R1 exposure:
+Implemented `2_Scripts/3_Estimation/03_specC_hazard_panel_design_bh_iv.do`, which writes `03_specC_hazard_panel_design_bh_iv.tex/.csv`. The script keeps the corrected Spec B hazard-IV sample: main EDGE estimation sample, first-award risk set, and focal R1 winners excluded. The first version used the simple priority-cell BH recentering:
 
 `edge_w6_r1rcbh_tm1_n = realized K6 neighbor R1 wins - design-expected K6 neighbor R1 wins`.
 
-All columns include district fixed effects, year fixed effects, the design-expected exposure control `edge_w6_r1expbh_tm1_n`, and district-clustered standard errors. Focal R3 timing remains out of the baseline because it can be a post-exposure response.
+This simple version is retained in the data as an audit/robustness object. The upgraded main Spec C now uses a simulated R1 selection-rule recentering:
+
+`edge_w6_r1rcsim_tm1_n = realized K6 neighbor R1 wins - simulated design-expected K6 neighbor R1 wins`.
+
+The simulation ports the cleaner Spatial_Spillovers design engine into the Brown branch, but fixes one important issue: district-level probabilities are computed directly as the share of simulations in which any application for the district is selected, rather than collapsing multiple application-level probabilities with an independence approximation. The simulation uses the observed 2022 R1 applicant universe, priority status, ZE/clean request structure, requested funding amounts, state/territory first-selection steps, remaining priority/nonpriority selections, observed-budget calibration, and the 10 percent state cap.
+
+Current simulation diagnostics: 1,905 applications, 1,902 applicant districts, 54 states/territories, 1,285 priority applications, 1,724 exclusive-ZE applications, and 181 clean-request applications. Using 25,000 simulations and observed 2022 R1 budget calibration, the engine selects an average of 383.23 applications and 383.11 districts per simulation, versus 368 observed selected applications/districts. Mean district selection probability among applicant districts is 0.2014.
+
+All columns include district fixed effects, year fixed effects, the simulated design-expected exposure control `edge_w6_r1expsim_tm1_n`, and district-clustered standard errors. Focal R3 timing remains out of the baseline because it can be a post-exposure response.
 
 Main sample estimates:
 
-- First stage: 0.8366, SE 0.0148, first-stage F = 3,182.
-- Reduced form: -0.0017, SE 0.0038, p = 0.645.
-- Design-BH 2SLS: -0.0021, SE 0.0042, p = 0.618.
-- No-isolated-K6 design-BH 2SLS: -0.0025, SE 0.0042, p = 0.550, first-stage F = 3,104.
+- First stage: 0.8095, SE 0.0154, first-stage F = 2,776.
+- Reduced form: -0.0020, SE 0.0037, p = 0.580.
+- Simulated design-BH 2SLS: -0.0025, SE 0.0042, p = 0.550.
+- No-isolated-K6 simulated design-BH 2SLS: -0.0032, SE 0.0043, p = 0.461, first-stage F = 2,710.
 
-Interpretation: the raw-IV positive effect in Spec B disappears once the R1 neighbor shock is recentered against design-expected exposure. This is consistent with the older branch: geographic exposure to raw R1 winners is partly picking up non-random applicant-neighborhood composition. For the Brown pitch, Spec C should be the preferred causal table; Spec B should be framed as a bridge and diagnostic.
+Interpretation: the raw-IV positive effect in Spec B disappears once the R1 neighbor shock is recentered against simulated design-expected exposure. This is consistent with the older branch: geographic exposure to raw R1 winners is partly picking up non-random applicant-neighborhood composition. For the Brown pitch, Spec C should be the preferred causal table; Spec B should be framed as a bridge and diagnostic.
 
 ## 2026-04-28 Spec C Design Notes: Shocks, Applicants, and State-Year Confounding
 
@@ -212,7 +220,7 @@ However, R3 occurs after R1 and after potential peer learning from R1. If nearby
 
 Grants are weaker as instruments. The program materials distinguish rebates from grants: rebates are lottery-based, while grants are selected based on application materials. The grant workbook is still useful for mechanisms, controls, and competing funding channels, but grants should not be treated as quasi-random shocks unless future data reveal scores, cutoffs, reviewer ranks, or another transparent assignment rule.
 
-Best next design upgrade: build an exact or approximate simulation engine for R1 first, before adding R3. Current Spec C uses a simple priority-cell expected probability. The 2022 guide has a richer selection rule: random list, ZE and clean funding pools, state/territory first selections, priority ordering, funding pool exhaustion, and a 10 percent state cap. A simulation engine would reconstruct the applicant pool, repeatedly draw random ranks, apply the published selection rule and funding constraints, estimate each applicant's selection probability, and then construct `selected_i - pi_i`. R3 can then be built analogously as a separate later-shock layer.
+Design upgrade completed for R1 in the Brown branch: current Spec C uses the simulated selection-rule recentering. The simple priority-cell expected probability remains in the data for transparency, but it is no longer the main Spec C instrument. R3 can be built analogously as a separate later-shock layer once the R1 result is locked.
 
 ### R1 Applicant Endogeneity
 

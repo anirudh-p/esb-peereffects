@@ -9,8 +9,8 @@ use "${SPATIAL_PANEL}", clear
 
 local y "y_first_award"
 local p "edge_w6_award_tm1_n"
-local z "edge_w6_r1rcbh_tm1_n"
-local expected "edge_w6_r1expbh_tm1_n"
+local z "edge_w6_r1rcsim_tm1_n"
+local expected "edge_w6_r1expsim_tm1_n"
 local controls "c.`expected'"
 local main_sample "main_estimation_sample == 1 & risk_first_award == 1 & exclude_own_r1_winner == 0"
 local noisol_sample "main_noisol_edge_k6_50 == 1 & risk_first_award == 1 & exclude_own_r1_winner == 0"
@@ -92,14 +92,14 @@ local fs_mean_main = r(outcome_mean)
 test `z'
 local fs_f_main = r(F)
 post `specc_post' ("First stage") ("Main risk set") ("Peer awards by t-1") ///
-    ("Recentered neighbor R1 shock") (`fs_coef_main') (`fs_se_main') (`fs_p_main') (`fs_f_main') ///
+    ("Simulated design R1 shock") (`fs_coef_main') (`fs_se_main') (`fs_p_main') (`fs_f_main') ///
     (`fs_obs_main') (`fs_districts_main') (`fs_mean_main')
 
 * Main sample: reduced form.
 areg `y' c.`z' `controls' i.year if `main_sample', absorb(district_panel_id) vce(cluster district_panel_id)
 collect_reg_stats, outcome(`y') coefvar(`z')
 post `specc_post' ("Reduced form") ("Main risk set") ("First award hazard") ///
-    ("Recentered neighbor R1 shock") (r(coef)) (r(se)) (r(p)) (.) ///
+    ("Simulated design R1 shock") (r(coef)) (r(se)) (r(p)) (.) ///
     (r(obs)) (r(districts)) (r(outcome_mean))
 
 * Main sample: design-BH IV via FWL residualization.
@@ -157,7 +157,7 @@ file write specc_tex "\hline\hline" _n
 file write specc_tex " & (1) & (2) & (3) & (4) \\" _n
 file write specc_tex " & First stage & Reduced form & 2SLS & 2SLS no isolated \\" _n
 file write specc_tex "\hline" _n
-file write specc_tex "Recentered neighbor R1 shock & `b1' & `b2' &  &  \\" _n
+file write specc_tex "Simulated design R1 shock & `b1' & `b2' &  &  \\" _n
 file write specc_tex " & `se1' & `se2' &  &  \\" _n
 file write specc_tex "Peer awards by t-1, K6 &  &  & `b3' & `b4' \\" _n
 file write specc_tex " &  &  & `se3' & `se4' \\" _n
@@ -173,7 +173,7 @@ file write specc_tex "Focal R1 winners excluded & Yes & Yes & Yes & Yes \\" _n
 file write specc_tex "Focal R3 controls & No & No & No & No \\" _n
 file write specc_tex "\hline\hline" _n
 file write specc_tex "\end{tabular}" _n
-file write specc_tex "\begin{flushleft}\footnotesize Notes: Outcome in columns 2--4 is first ESB award in district-year t, restricted to districts still at risk of first award and excluding focal districts that won R1 rebates. The endogenous peer variable is the number of six EDGE-nearest neighboring districts with first awards by t-1. The instrument is recentered K6 neighbor R1 exposure: realized neighbor R1 wins minus design-expected neighbor R1 wins, switched on for post-R1 years. All columns control for design-expected K6 neighbor R1 exposure. Focal R3 timing is not controlled in the baseline because it may be a downstream response to nearby R1 exposure. The 2SLS columns are computed after Frisch-Waugh-Lovell residualization of district fixed effects, year fixed effects, and the expected-exposure control. Column 4 drops districts whose sixth EDGE neighbor is more than 50 miles away. Standard errors are clustered by district.\end{flushleft}" _n
+file write specc_tex "\begin{flushleft}\footnotesize Notes: Outcome in columns 2--4 is first ESB award in district-year t, restricted to districts still at risk of first award and excluding focal districts that won R1 rebates. The endogenous peer variable is the number of six EDGE-nearest neighboring districts with first awards by t-1. The instrument is recentered K6 neighbor R1 exposure: realized neighbor R1 wins minus simulated design-expected neighbor R1 wins, switched on for post-R1 years. The simulation reconstructs the 2022 R1 selection rule using the observed applicant universe, priority status, fuel-pool requests, funding amounts, state/territory first-selection steps, pool budgets calibrated to observed 2022 R1 awards, and the 10 percent state cap. All columns control for simulated design-expected K6 neighbor R1 exposure. Focal R3 timing is not controlled in the baseline because it may be a downstream response to nearby R1 exposure. The 2SLS columns are computed after Frisch-Waugh-Lovell residualization of district fixed effects, year fixed effects, and the expected-exposure control. Column 4 drops districts whose sixth EDGE neighbor is more than 50 miles away. Standard errors are clustered by district.\end{flushleft}" _n
 file write specc_tex "\end{table}" _n
 file close specc_tex
 
