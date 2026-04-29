@@ -150,7 +150,7 @@ Implemented the first Stata outputs:
 
 1. `2_Scripts/2_Preliminaries/01_descriptive_statistics.do` writes `00_sample_selection.tex/.csv`.
 2. `2_Scripts/3_Estimation/01_specA_hazard_panel_ols.do` writes `01_specA_hazard_panel_ols.tex/.csv`.
-3. `2_Scripts/3_Estimation/00_run_all.do` now runs only the implemented sequence: sample selection and Spec A.
+3. `2_Scripts/3_Estimation/00_run_all.do` is the branch-level Stata runner and now runs the implemented sequence through Spec C.
 
 The main first-award hazard risk set has 85,972 district-years, 12,642 districts, and 1,303 first-award events. The no-isolated K6 risk-set robustness has 84,285 district-years, 12,392 districts, and 1,276 first-award events.
 
@@ -184,3 +184,20 @@ Result: the raw R1 neighbor-win instrument has a very strong first stage, and th
 - No-isolated-K6 raw 2SLS: 0.0058, SE 0.0032, p = 0.071, first-stage F = 6,149.
 
 Interpretation: Spec B is a useful bridge to the prior branch rather than the preferred causal estimate. It shows that the old positive raw-IV result was not purely an artifact, but the raw instrument still has a demanding exclusion restriction because nearby R1 wins can affect focal districts through learning, vendors, consultants, visibility, or capacity. The next decisive object is Spec C, using the design-BH/recentered exposure and expected-exposure controls.
+
+## 2026-04-28 Build Note: Spec C Design-BH IV
+
+Implemented `2_Scripts/3_Estimation/03_specC_hazard_panel_design_bh_iv.do`, which writes `03_specC_hazard_panel_design_bh_iv.tex/.csv`. The script keeps the corrected Spec B hazard-IV sample: main EDGE estimation sample, first-award risk set, and focal R1 winners excluded. It instruments lagged K6 neighbor awards with recentered K6 neighbor R1 exposure:
+
+`edge_w6_r1rcbh_tm1_n = realized K6 neighbor R1 wins - design-expected K6 neighbor R1 wins`.
+
+All columns include district fixed effects, year fixed effects, the design-expected exposure control `edge_w6_r1expbh_tm1_n`, and district-clustered standard errors. Focal R3 timing remains out of the baseline because it can be a post-exposure response.
+
+Main sample estimates:
+
+- First stage: 0.8366, SE 0.0148, first-stage F = 3,182.
+- Reduced form: -0.0017, SE 0.0038, p = 0.645.
+- Design-BH 2SLS: -0.0021, SE 0.0042, p = 0.618.
+- No-isolated-K6 design-BH 2SLS: -0.0025, SE 0.0042, p = 0.550, first-stage F = 3,104.
+
+Interpretation: the raw-IV positive effect in Spec B disappears once the R1 neighbor shock is recentered against design-expected exposure. This is consistent with the older branch: geographic exposure to raw R1 winners is partly picking up non-random applicant-neighborhood composition. For the Brown pitch, Spec C should be the preferred causal table; Spec B should be framed as a bridge and diagnostic.
