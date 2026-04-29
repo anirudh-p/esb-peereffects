@@ -201,3 +201,31 @@ Main sample estimates:
 - No-isolated-K6 design-BH 2SLS: -0.0025, SE 0.0042, p = 0.550, first-stage F = 3,104.
 
 Interpretation: the raw-IV positive effect in Spec B disappears once the R1 neighbor shock is recentered against design-expected exposure. This is consistent with the older branch: geographic exposure to raw R1 winners is partly picking up non-random applicant-neighborhood composition. For the Brown pitch, Spec C should be the preferred causal table; Spec B should be framed as a bridge and diagnostic.
+
+## 2026-04-28 Spec C Design Notes: Shocks, Applicants, and State-Year Confounding
+
+### Additional Shocks
+
+R3 rebates are lottery-based and potentially usable, but not as a simple add-on to the main first-award IV. The 2023 program guide says eligible rebate applications enter a random-number lottery after threshold eligibility review, with selection rules that first pick the top-ranked application from each state/territory and then continue through prioritized applications subject to funding and state caps. The local workbooks contain the ingredients for an R3 design layer: selected rebate rows from `CSB_Rebates.xlsx` and waitlisted R3 applicants from `CSBP Applicants waitlisted and rejected_11.18.25.xlsx`, with NCES ID, state, applicant organization, requested buses/funds, fuel mix, priority, and self-certification fields.
+
+However, R3 occurs after R1 and after potential peer learning from R1. If nearby R1 exposure induces a focal district to apply in R3, then the R3 applicant pool is post-treatment. Conditioning on R3 application or using R3 wins as a second instrument changes the estimand. It can identify later subsidy shocks among R3 applicants, but it should not be folded into the baseline R1 total-effect specification.
+
+Grants are weaker as instruments. The program materials distinguish rebates from grants: rebates are lottery-based, while grants are selected based on application materials. The grant workbook is still useful for mechanisms, controls, and competing funding channels, but grants should not be treated as quasi-random shocks unless future data reveal scores, cutoffs, reviewer ranks, or another transparent assignment rule.
+
+Best next design upgrade: build an exact or approximate simulation engine for R1 first, before adding R3. Current Spec C uses a simple priority-cell expected probability. The 2022 guide has a richer selection rule: random list, ZE and clean funding pools, state/territory first selections, priority ordering, funding pool exhaustion, and a 10 percent state cap. A simulation engine would reconstruct the applicant pool, repeatedly draw random ranks, apply the published selection rule and funding constraints, estimate each applicant's selection probability, and then construct `selected_i - pi_i`. R3 can then be built analogously as a separate later-shock layer.
+
+### R1 Applicant Endogeneity
+
+R1 applicant endogeneity is real and substantively important. The recentered R1 design conditions on the applicant pool. It answers: among districts exposed to a given local composition of R1 applicants, does randomized neighbor selection affect later focal adoption? It does not identify peer effects that operate by causing districts to apply to R1, because pre-R1 application itself is not randomized.
+
+This is not a flaw so much as an estimand boundary. The project should separate:
+
+1. Application-stage spillovers: are nearby prior adopters, vendors, consultants, or peer districts associated with applying?
+2. Award/adoption-stage lottery shocks: conditional on the applicant network, do randomized nearby wins cause later focal awards/adoption?
+3. Later response channels: does R1 exposure predict R3 application, grant seeking, third-party use, vendor choice, or timing?
+
+### State-Level Policy Shocks
+
+With district fixed effects, plain state fixed effects are redundant. The relevant policy-shock control is state-by-year fixed effects. These absorb state-specific adoption conditions such as state funding, procurement delays, utility bottlenecks, state technical assistance, or state political momentum.
+
+State-year fixed effects do not mechanically absorb all district-level peer exposure, because KNN exposure still varies across districts within the same state-year. But they can absorb part of the useful variation if exposure is highly state-clustered or if the spillover itself operates through a state-level response. The right treatment is therefore: baseline Spec C with district FE, year FE, and design-expected exposure; Spec D robustness with state-year FE. A temporary check showed that adding state-year FE does not recover a positive design-BH effect in the current Brown panel.
