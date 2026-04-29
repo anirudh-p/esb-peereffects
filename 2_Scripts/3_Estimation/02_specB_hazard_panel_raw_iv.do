@@ -10,9 +10,8 @@ use "${SPATIAL_PANEL}", clear
 local y "y_first_award"
 local p "edge_w6_award_tm1_n"
 local z "edge_w6_r1win_tm1_n"
-local controls "own_r1_win_post own_r3_win_post"
-local main_sample "main_estimation_sample == 1 & risk_first_award == 1"
-local noisol_sample "main_noisol_edge_k6_50 == 1 & risk_first_award == 1"
+local main_sample "main_estimation_sample == 1 & risk_first_award == 1 & exclude_own_r1_winner == 0"
+local noisol_sample "main_noisol_edge_k6_50 == 1 & risk_first_award == 1 & exclude_own_r1_winner == 0"
 
 capture program drop collect_reg_stats
 program define collect_reg_stats, rclass
@@ -40,17 +39,17 @@ end
 capture program drop run_fwl_iv
 program define run_fwl_iv, rclass
     version 16
-    syntax , Sample(string asis) Outcome(name) Endog(name) Instrument(name) Controls(string asis)
+    syntax , Sample(string asis) Outcome(name) Endog(name) Instrument(name)
 
     tempvar y_resid p_resid z_resid esample district_tag
 
-    quietly areg `outcome' `controls' i.year if `sample', absorb(district_panel_id)
+    quietly areg `outcome' i.year if `sample', absorb(district_panel_id)
     predict double `y_resid' if e(sample), resid
 
-    quietly areg `endog' `controls' i.year if `sample', absorb(district_panel_id)
+    quietly areg `endog' i.year if `sample', absorb(district_panel_id)
     predict double `p_resid' if e(sample), resid
 
-    quietly areg `instrument' `controls' i.year if `sample', absorb(district_panel_id)
+    quietly areg `instrument' i.year if `sample', absorb(district_panel_id)
     predict double `z_resid' if e(sample), resid
 
     ivregress 2sls `y_resid' (`p_resid' = `z_resid') if `sample', nocons vce(cluster district_panel_id)
@@ -80,7 +79,7 @@ postfile `specb_post' str34 model str24 sample str24 dependent ///
     using `specb_results', replace
 
 * Main sample: first stage.
-areg `p' c.`z' `controls' i.year if `main_sample', absorb(district_panel_id) vce(cluster district_panel_id)
+areg `p' c.`z' i.year if `main_sample', absorb(district_panel_id) vce(cluster district_panel_id)
 collect_reg_stats, outcome(`p') coefvar(`z')
 local fs_coef_main = r(coef)
 local fs_se_main = r(se)
@@ -95,24 +94,24 @@ post `specb_post' ("First stage") ("Main risk set") ("Peer awards by t-1") ///
     (`fs_obs_main') (`fs_districts_main') (`fs_mean_main')
 
 * Main sample: reduced form.
-areg `y' c.`z' `controls' i.year if `main_sample', absorb(district_panel_id) vce(cluster district_panel_id)
+areg `y' c.`z' i.year if `main_sample', absorb(district_panel_id) vce(cluster district_panel_id)
 collect_reg_stats, outcome(`y') coefvar(`z')
 post `specb_post' ("Reduced form") ("Main risk set") ("First award hazard") ///
     ("Raw neighbor R1 wins") (r(coef)) (r(se)) (r(p)) (.) ///
     (r(obs)) (r(districts)) (r(outcome_mean))
 
 * Main sample: raw IV via FWL residualization.
-run_fwl_iv, sample(`main_sample') outcome(`y') endog(`p') instrument(`z') controls(`controls')
+run_fwl_iv, sample(`main_sample') outcome(`y') endog(`p') instrument(`z')
 post `specb_post' ("2SLS") ("Main risk set") ("First award hazard") ///
     ("Peer awards by t-1") (r(coef)) (r(se)) (r(p)) (`fs_f_main') ///
     (r(obs)) (r(districts)) (r(outcome_mean))
 
 * No-isolated K6 robustness: first stage F and raw IV via FWL residualization.
-areg `p' c.`z' `controls' i.year if `noisol_sample', absorb(district_panel_id) vce(cluster district_panel_id)
+areg `p' c.`z' i.year if `noisol_sample', absorb(district_panel_id) vce(cluster district_panel_id)
 test `z'
 local fs_f_noisol = r(F)
 
-run_fwl_iv, sample(`noisol_sample') outcome(`y') endog(`p') instrument(`z') controls(`controls')
+run_fwl_iv, sample(`noisol_sample') outcome(`y') endog(`p') instrument(`z')
 post `specb_post' ("2SLS") ("No isolated risk set") ("First award hazard") ///
     ("Peer awards by t-1") (r(coef)) (r(se)) (r(p)) (`fs_f_noisol') ///
     (r(obs)) (r(districts)) (r(outcome_mean))
@@ -167,10 +166,11 @@ file write specb_tex "Districts & `districts1' & `districts2' & `districts3' & `
 file write specb_tex "Mean dependent variable & `mean1' & `mean2' & `mean3' & `mean4' \\" _n
 file write specb_tex "District FE & Yes & Yes & Yes & Yes \\" _n
 file write specb_tex "Year FE & Yes & Yes & Yes & Yes \\" _n
-file write specb_tex "Own rebate-win controls & Yes & Yes & Yes & Yes \\" _n
+file write specb_tex "Focal R1 winners excluded & Yes & Yes & Yes & Yes \\" _n
+file write specb_tex "Focal R3 controls & No & No & No & No \\" _n
 file write specb_tex "\hline\hline" _n
 file write specb_tex "\end{tabular}" _n
-file write specb_tex "\begin{flushleft}\footnotesize Notes: Outcome in columns 2--4 is first ESB award in district-year t, restricted to districts still at risk of first award. The endogenous peer variable is the number of six EDGE-nearest neighboring districts with first awards by t-1. The raw instrument is the number of six EDGE-nearest neighboring districts that won R1 rebates, switched on for post-R1 years. The 2SLS columns are computed after Frisch-Waugh-Lovell residualization of district fixed effects, year fixed effects, and own rebate-win timing controls. Column 4 drops districts whose sixth EDGE neighbor is more than 50 miles away. Standard errors are clustered by district. This is a raw-IV bridge specification; the design-BH IV is the intended causal specification.\end{flushleft}" _n
+file write specb_tex "\begin{flushleft}\footnotesize Notes: Outcome in columns 2--4 is first ESB award in district-year t, restricted to districts still at risk of first award and excluding focal districts that won R1 rebates. The endogenous peer variable is the number of six EDGE-nearest neighboring districts with first awards by t-1. The raw instrument is the number of six EDGE-nearest neighboring districts that won R1 rebates, switched on for post-R1 years. Focal R3 timing is not controlled in the baseline because it may be a downstream response to nearby R1 exposure. The 2SLS columns are computed after Frisch-Waugh-Lovell residualization of district and year fixed effects. Column 4 drops districts whose sixth EDGE neighbor is more than 50 miles away. Standard errors are clustered by district. This is a raw-IV bridge specification; the design-BH IV is the intended causal specification.\end{flushleft}" _n
 file write specb_tex "\end{table}" _n
 file close specb_tex
 

@@ -172,13 +172,15 @@ Implemented `2_Scripts/3_Estimation/02_specB_hazard_panel_raw_iv.do`, which writ
 2. reduced form: first-award hazard on lagged K6 raw neighbor R1 rebate wins;
 3. raw 2SLS: first-award hazard on lagged K6 neighbor awards, instrumented by lagged K6 raw neighbor R1 rebate wins.
 
-All columns include district fixed effects, year fixed effects, own R1/R3 rebate-win timing controls, and district-clustered standard errors. The 2SLS columns are computed through Frisch-Waugh-Lovell residualization to avoid `xtivreg` memory/state issues while preserving the same linear IV estimand.
+The corrected baseline follows the old Spatial_Spillovers logic more closely: focal R1 winners are excluded from the risk set, the only excluded instrument is neighbor R1 exposure, and focal R3 timing is not controlled. This is the right raw-IV bridge because focal own R1 wins are direct treatment, not peer exposure, and focal R3 wins may be a downstream response to nearby R1 exposure.
 
-Result: the raw R1 neighbor-win instrument has a very strong first stage, but the reduced form is small and not statistically distinguishable from zero. Main sample estimates:
+All columns include district fixed effects, year fixed effects, and district-clustered standard errors. The 2SLS columns are computed through Frisch-Waugh-Lovell residualization to avoid `xtivreg` memory/state issues while preserving the same linear IV estimand.
 
-- First stage: 0.8995, SE 0.0114, first-stage F = 6,270.
-- Reduced form: 0.0018, SE 0.0026.
-- Raw 2SLS: 0.0020, SE 0.0026.
-- No-isolated-K6 raw 2SLS: 0.0021, SE 0.0027, first-stage F = 6,154.
+Result: the raw R1 neighbor-win instrument has a very strong first stage, and the reduced form/2SLS return to a positive marginal pattern once focal R1 winners are excluded and focal R3 timing is left out. Main sample estimates:
 
-Interpretation: Spec B does not reproduce the positive descriptive OLS pattern once peer awards are isolated with raw R1 neighbor-win variation. This is useful: it suggests the Spec A spatial fact is likely driven by endogenous local adoption clustering, broad common shocks, or non-random vendor/policy targeting rather than a simple raw lottery-win channel. The next decisive object is Spec C, using the design-BH/recentered exposure and expected-exposure controls.
+- First stage: 0.9000, SE 0.0114, first-stage F = 6,266.
+- Reduced form: 0.0052, SE 0.0031, p = 0.090.
+- Raw 2SLS: 0.0058, SE 0.0031, p = 0.067.
+- No-isolated-K6 raw 2SLS: 0.0058, SE 0.0032, p = 0.071, first-stage F = 6,149.
+
+Interpretation: Spec B is a useful bridge to the prior branch rather than the preferred causal estimate. It shows that the old positive raw-IV result was not purely an artifact, but the raw instrument still has a demanding exclusion restriction because nearby R1 wins can affect focal districts through learning, vendors, consultants, visibility, or capacity. The next decisive object is Spec C, using the design-BH/recentered exposure and expected-exposure controls.
