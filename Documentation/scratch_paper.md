@@ -351,6 +351,26 @@ Then:
 
 Important design choice: the raw WRI locale field includes `Town` as a separate category. For a three-way Brown table, the cleanest route is either to map `Town` into a broader nonmetro/rural bin ex ante, or to keep a four-way appendix and then collapse to three groups only if the pattern is stable.
 
+### 2026-04-29 Build Note: Spec C Shock Diagnostics
+
+To check whether the Spec C estimation sample is mechanically tilted toward positive recentered neighbor shock after excluding focal R1 winners, a simple diagnostic uses the 2023 cross-section of main-estimation-sample districts. This is the right place to look because the simulated R1 recentered shock is fixed once the post-R1 period begins.
+
+The first result is that the included Spec C sample is **not** a positive-shock sample on average. Among all main-estimation-sample districts in 2023 (`N = 12,683`), mean recentered K6 EDGE neighbor shock is `-0.0078`. Among districts actually included in the Spec C risk set (`N = 11,838`), mean shock is still slightly negative at `-0.0071`. The share with positive shock is only `0.130`, the share with negative shock is `0.278`, and the implied mass at exactly zero shock is about `0.592`.
+
+Excluded focal R1 winners do look more negative on average, which is directionally consistent with the finite-budget/state-cap intuition. Their mean recentered neighbor shock is `-0.0259`, compared with `-0.0071` in the included sample. They also sit in higher expected-exposure places: mean expected K6 neighbor R1 exposure is `0.327` for excluded focal R1 winners versus `0.156` for the included sample. So dropping focal R1 winners does make the remaining sample *less negative*, but it does **not** turn the included sample into a positive-shock group.
+
+Expected-exposure bins are also informative. Because there is a large mass point at zero expected local R1 exposure, the tercile split is not balanced:
+
+- zero expected exposure bin: `N = 7,007`, mean expected exposure `0`, mean realized neighbor R1 wins `0`, mean recentered shock `0`;
+- mid expected bin: `N = 885`, mean expected exposure `0.123`, mean realized neighbor R1 wins `0.153`, mean recentered shock `+0.030`;
+- high expected bin: `N = 3,946`, mean expected exposure `0.442`, mean realized neighbor R1 wins `0.414`, mean recentered shock `-0.028`.
+
+The correlation between recentered shock and expected exposure in the included sample is only `-0.0356`. So higher expected local R1 activity is associated with a slightly more negative recentered shock on average, but not in a way that dominates the sample. The sharper empirical fact is that much of the included sample simply has **no** local R1 lottery exposure at all.
+
+Locale patterns suggest where supply-demand forces may matter most. In the included Spec C 2023 sample, mean recentered shock is `-0.0058` in rural districts, `-0.0117` in suburban districts, `+0.0014` in towns, and `-0.0320` in urban districts. Yet 2023 first-award hazard is highest in urban districts (`0.103`) and lowest in rural districts (`0.0069`). That is consistent with stronger baseline adoption intensity in urban markets even when the randomized excess neighbor shock is somewhat negative.
+
+Interpretation: the current Spec C null is **not** well explained by a simple sample-selection story in which dropping focal R1 winners leaves only districts with positive excess neighbor shock. What the data show instead is a post-R1 sample dominated by zero-shock districts, plus a subset of higher-expected-exposure places where the net randomized excess shock is slightly negative on average. This reinforces the idea that Spec C is a net local-treatment-effect design: any positive demand-side learning from nearby wins may be offset by supply, vendor, or implementation congestion precisely in the places where local R1 activity is thickest.
+
 ### State-Level Policy Shocks
 
 With district fixed effects, plain state fixed effects are redundant. The relevant policy-shock control is state-by-year fixed effects. These absorb state-specific adoption conditions such as state funding, procurement delays, utility bottlenecks, state technical assistance, or state political momentum.
