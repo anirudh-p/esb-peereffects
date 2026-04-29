@@ -1,77 +1,33 @@
-* Spec C: Hazard Panel Design-BH IV.
+* Spec C: Hazard Panel Design-BH IV
 * Purpose: main design-based causal specification for the Brown pitch.
+
+* ------------------------------------------------------------------------------
+* Preamble
+* ------------------------------------------------------------------------------
 do "2_Scripts/3_Estimation/00_globals.do"
 
 capture log close
 log using "${LOGS}/03_specC_hazard_panel_design_bh_iv_log.txt", replace text
 
-use "${SPATIAL_PANEL}", clear
+section_header, title("Spec C: Hazard Panel Design-BH IV") ///
+    detail("Main specification using simulated design-expected exposure and the recentered R1 neighbor shock.")
 
-local y "y_first_award"
-local p "edge_w6_award_tm1_n"
-local z "edge_w6_r1rcsim_tm1_n"
-local expected "edge_w6_r1expsim_tm1_n"
-local controls "c.`expected'"
-local main_sample "main_estimation_sample == 1 & risk_first_award == 1 & exclude_own_r1_winner == 0"
-local noisol_sample "main_noisol_edge_k6_50 == 1 & risk_first_award == 1 & exclude_own_r1_winner == 0"
+* ------------------------------------------------------------------------------
+* Setup
+* ------------------------------------------------------------------------------
+prepare_spatial_panel
 
-capture program drop collect_reg_stats
-program define collect_reg_stats, rclass
-    version 16
-    syntax , Outcome(name) Coefvar(name)
+local outcome_first_award "y_first_award"
+local peer_award_k6_lag "edge_w6_award_tm1_n"
+local instrument_rcsim_k6 "edge_w6_r1rcsim_tm1_n"
+local control_expected_rcsim_k6 "edge_w6_r1expsim_tm1_n"
+local controls_expected "c.`control_expected_rcsim_k6'"
+local sample_main_risk "main_estimation_sample == 1 & risk_first_award == 1 & exclude_own_r1_winner == 0"
+local sample_noisol_risk "main_noisol_edge_k6_50 == 1 & risk_first_award == 1 & exclude_own_r1_winner == 0"
 
-    tempvar esample district_tag
-    gen byte `esample' = e(sample)
-    egen byte `district_tag' = tag(district_panel_id) if `esample'
-
-    quietly count if `esample'
-    return scalar obs = r(N)
-
-    quietly count if `district_tag' == 1
-    return scalar districts = r(N)
-
-    quietly summarize `outcome' if `esample', meanonly
-    return scalar outcome_mean = r(mean)
-
-    return scalar coef = _b[`coefvar']
-    return scalar se = _se[`coefvar']
-    return scalar p = 2 * normal(-abs(_b[`coefvar'] / _se[`coefvar']))
-end
-
-capture program drop run_fwl_iv
-program define run_fwl_iv, rclass
-    version 16
-    syntax , Sample(string asis) Outcome(name) Endog(name) Instrument(name) Controls(string asis)
-
-    tempvar y_resid p_resid z_resid esample district_tag
-
-    quietly areg `outcome' `controls' i.year if `sample', absorb(district_panel_id)
-    predict double `y_resid' if e(sample), resid
-
-    quietly areg `endog' `controls' i.year if `sample', absorb(district_panel_id)
-    predict double `p_resid' if e(sample), resid
-
-    quietly areg `instrument' `controls' i.year if `sample', absorb(district_panel_id)
-    predict double `z_resid' if e(sample), resid
-
-    ivregress 2sls `y_resid' (`p_resid' = `z_resid') if `sample', nocons vce(cluster district_panel_id)
-
-    gen byte `esample' = e(sample)
-    egen byte `district_tag' = tag(district_panel_id) if `esample'
-
-    quietly count if `esample'
-    return scalar obs = r(N)
-
-    quietly count if `district_tag' == 1
-    return scalar districts = r(N)
-
-    quietly summarize `outcome' if `esample', meanonly
-    return scalar outcome_mean = r(mean)
-
-    return scalar coef = _b[`p_resid']
-    return scalar se = _se[`p_resid']
-    return scalar p = 2 * normal(-abs(_b[`p_resid'] / _se[`p_resid']))
-end
+label variable `peer_award_k6_lag' "Lagged EDGE K6 peer first-award count"
+label variable `instrument_rcsim_k6' "Lagged EDGE K6 recentered simulated R1 shock"
+label variable `control_expected_rcsim_k6' "Lagged EDGE K6 simulated expected R1 wins"
 
 tempfile specc_results
 tempname specc_post
@@ -80,45 +36,69 @@ postfile `specc_post' str34 model str24 sample str24 dependent ///
     long obs districts double outcome_mean ///
     using `specc_results', replace
 
-* Main sample: first stage.
-areg `p' c.`z' `controls' i.year if `main_sample', absorb(district_panel_id) vce(cluster district_panel_id)
-collect_reg_stats, outcome(`p') coefvar(`z')
-local fs_coef_main = r(coef)
-local fs_se_main = r(se)
-local fs_p_main = r(p)
-local fs_obs_main = r(obs)
-local fs_districts_main = r(districts)
-local fs_mean_main = r(outcome_mean)
-test `z'
-local fs_f_main = r(F)
-post `specc_post' ("First stage") ("Main risk set") ("Peer awards by t-1") ///
-    ("Simulated design R1 shock") (`fs_coef_main') (`fs_se_main') (`fs_p_main') (`fs_f_main') ///
-    (`fs_obs_main') (`fs_districts_main') (`fs_mean_main')
+* ------------------------------------------------------------------------------
+* Specification
+* ------------------------------------------------------------------------------
+section_header, title("Specification") ///
+    detail("Estimate first-stage, reduced-form, and 2SLS design-BH models with compact logs.")
 
-* Main sample: reduced form.
-areg `y' c.`z' `controls' i.year if `main_sample', absorb(district_panel_id) vce(cluster district_panel_id)
-collect_reg_stats, outcome(`y') coefvar(`z')
+quietly areg `peer_award_k6_lag' c.`instrument_rcsim_k6' `controls_expected' i.year ///
+    if `sample_main_risk', absorb(district_panel_id) vce(cluster district_panel_id)
+collect_estimation_stats, outcome(`peer_award_k6_lag') coefvar(`instrument_rcsim_k6')
+local first_stage_coef_main = r(coef)
+local first_stage_se_main = r(se)
+local first_stage_p_main = r(p)
+local first_stage_obs_main = r(obs)
+local first_stage_districts_main = r(districts)
+local first_stage_mean_main = r(outcome_mean)
+test `instrument_rcsim_k6'
+local first_stage_f_main = r(F)
+post `specc_post' ("First stage") ("Main risk set") ("Peer awards by t-1") ///
+    ("Simulated design R1 shock") (`first_stage_coef_main') (`first_stage_se_main') ///
+    (`first_stage_p_main') (`first_stage_f_main') ///
+    (`first_stage_obs_main') (`first_stage_districts_main') (`first_stage_mean_main')
+di as res "First stage, main sample: coef = " %9.4f `first_stage_coef_main' ///
+    ", se = " %9.4f `first_stage_se_main' ", F = " %9.2f `first_stage_f_main'
+
+quietly areg `outcome_first_award' c.`instrument_rcsim_k6' `controls_expected' i.year ///
+    if `sample_main_risk', absorb(district_panel_id) vce(cluster district_panel_id)
+collect_estimation_stats, outcome(`outcome_first_award') coefvar(`instrument_rcsim_k6')
 post `specc_post' ("Reduced form") ("Main risk set") ("First award hazard") ///
     ("Simulated design R1 shock") (r(coef)) (r(se)) (r(p)) (.) ///
     (r(obs)) (r(districts)) (r(outcome_mean))
+di as res "Reduced form, main sample: coef = " %9.4f r(coef) ///
+    ", se = " %9.4f r(se) ", p = " %9.4f r(p)
 
-* Main sample: design-BH IV via FWL residualization.
-run_fwl_iv, sample(`main_sample') outcome(`y') endog(`p') instrument(`z') controls(`controls')
+run_fwl_iv, sample(`sample_main_risk') outcome(`outcome_first_award') ///
+    endogenous(`peer_award_k6_lag') instrument(`instrument_rcsim_k6') ///
+    controls(`controls_expected')
 post `specc_post' ("2SLS") ("Main risk set") ("First award hazard") ///
-    ("Peer awards by t-1") (r(coef)) (r(se)) (r(p)) (`fs_f_main') ///
+    ("Peer awards by t-1") (r(coef)) (r(se)) (r(p)) (`first_stage_f_main') ///
     (r(obs)) (r(districts)) (r(outcome_mean))
+di as res "2SLS, main sample: coef = " %9.4f r(coef) ///
+    ", se = " %9.4f r(se) ", p = " %9.4f r(p)
 
-* No-isolated K6 robustness: first-stage F and design-BH IV via FWL residualization.
-areg `p' c.`z' `controls' i.year if `noisol_sample', absorb(district_panel_id) vce(cluster district_panel_id)
-test `z'
-local fs_f_noisol = r(F)
+quietly areg `peer_award_k6_lag' c.`instrument_rcsim_k6' `controls_expected' i.year ///
+    if `sample_noisol_risk', absorb(district_panel_id) vce(cluster district_panel_id)
+test `instrument_rcsim_k6'
+local first_stage_f_noisol = r(F)
 
-run_fwl_iv, sample(`noisol_sample') outcome(`y') endog(`p') instrument(`z') controls(`controls')
+run_fwl_iv, sample(`sample_noisol_risk') outcome(`outcome_first_award') ///
+    endogenous(`peer_award_k6_lag') instrument(`instrument_rcsim_k6') ///
+    controls(`controls_expected')
 post `specc_post' ("2SLS") ("No isolated risk set") ("First award hazard") ///
-    ("Peer awards by t-1") (r(coef)) (r(se)) (r(p)) (`fs_f_noisol') ///
+    ("Peer awards by t-1") (r(coef)) (r(se)) (r(p)) (`first_stage_f_noisol') ///
     (r(obs)) (r(districts)) (r(outcome_mean))
+di as res "2SLS, no-isolate sample: coef = " %9.4f r(coef) ///
+    ", se = " %9.4f r(se) ", p = " %9.4f r(p)
 
 postclose `specc_post'
+
+* ------------------------------------------------------------------------------
+* Export
+* ------------------------------------------------------------------------------
+section_header, title("Export") ///
+    detail("Write compact CSV and LaTeX outputs for the main design-BH specification.")
 
 use `specc_results', clear
 export delimited using "${TABLES}/03_specC_hazard_panel_design_bh_iv.csv", replace
@@ -157,9 +137,9 @@ file write specc_tex "\hline\hline" _n
 file write specc_tex " & (1) & (2) & (3) & (4) \\" _n
 file write specc_tex " & First stage & Reduced form & 2SLS & 2SLS no isolated \\" _n
 file write specc_tex "\hline" _n
-file write specc_tex "Simulated design R1 shock & `b1' & `b2' &  &  \\" _n
+file write specc_tex "Lagged EDGE K6 recentered R1 shock & `b1' & `b2' &  &  \\" _n
 file write specc_tex " & `se1' & `se2' &  &  \\" _n
-file write specc_tex "Peer awards by t-1, K6 &  &  & `b3' & `b4' \\" _n
+file write specc_tex "Lagged EDGE K6 peer awards &  &  & `b3' & `b4' \\" _n
 file write specc_tex " &  &  & `se3' & `se4' \\" _n
 file write specc_tex "\hline" _n
 file write specc_tex "First-stage F & `fsf1' &  & `fsf3' & `fsf4' \\" _n
@@ -173,7 +153,7 @@ file write specc_tex "Focal R1 winners excluded & Yes & Yes & Yes & Yes \\" _n
 file write specc_tex "Focal R3 controls & No & No & No & No \\" _n
 file write specc_tex "\hline\hline" _n
 file write specc_tex "\end{tabular}" _n
-file write specc_tex "\begin{flushleft}\footnotesize Notes: Outcome in columns 2--4 is first ESB award in district-year t, restricted to districts still at risk of first award and excluding focal districts that won R1 rebates. The endogenous peer variable is the number of six EDGE-nearest neighboring districts with first awards by t-1. The instrument is recentered K6 neighbor R1 exposure: realized neighbor R1 wins minus simulated design-expected neighbor R1 wins, switched on for post-R1 years. The simulation reconstructs the 2022 R1 selection rule using the observed applicant universe, priority status, fuel-pool requests, funding amounts, state/territory first-selection steps, pool budgets calibrated to observed 2022 R1 awards, and the 10 percent state cap. All columns control for simulated design-expected K6 neighbor R1 exposure. Focal R3 timing is not controlled in the baseline because it may be a downstream response to nearby R1 exposure. The 2SLS columns are computed after Frisch-Waugh-Lovell residualization of district fixed effects, year fixed effects, and the expected-exposure control. Column 4 drops districts whose sixth EDGE neighbor is more than 50 miles away. Standard errors are clustered by district.\end{flushleft}" _n
+file write specc_tex "\begin{flushleft}\footnotesize Notes: Outcome in columns 2--4 is first ESB award in district-year t, restricted to districts still at risk of first award and excluding focal districts that won R1 rebates. The endogenous peer variable is the number of six EDGE-nearest neighboring districts with first awards by t-1. The instrument is recentered K6 neighbor R1 exposure: realized neighbor R1 wins minus simulated design-expected neighbor R1 wins, switched on for post-R1 years. The simulation reconstructs the 2022 R1 selection rule using the observed applicant universe, priority status, fuel-pool requests, funding amounts, state and territory first-selection steps, pool budgets calibrated to observed 2022 R1 awards, and the 10 percent state cap. All columns control for simulated design-expected K6 neighbor R1 exposure. Focal R3 timing is not controlled in the baseline because it may be a downstream response to nearby R1 exposure. The 2SLS columns are computed after Frisch-Waugh-Lovell residualization of district fixed effects, year fixed effects, and the expected-exposure control. Column 4 drops districts whose sixth EDGE neighbor is more than 50 miles away. Standard errors are clustered by district.\end{flushleft}" _n
 file write specc_tex "\end{table}" _n
 file close specc_tex
 

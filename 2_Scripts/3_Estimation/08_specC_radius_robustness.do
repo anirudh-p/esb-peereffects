@@ -1,82 +1,80 @@
-* Spec C Radius Robustness: Hazard Panel Design-BH IV.
-* Purpose: compare simulated design-BH IV using EDGE radius graphs.
+* Spec C Radius Robustness: Hazard Panel Design-BH IV
+* Purpose: compare simulated design-BH IV estimates across EDGE radius graphs.
+
+* ------------------------------------------------------------------------------
+* Preamble
+* ------------------------------------------------------------------------------
 do "2_Scripts/3_Estimation/00_globals.do"
 
 capture log close
 log using "${LOGS}/08_specC_radius_robustness_log.txt", replace text
 
-use "${SPATIAL_PANEL}", clear
+section_header, title("Spec C Radius Robustness") ///
+    detail("Compare the design-BH IV using 15, 30, and 60 mile EDGE radius graphs.")
 
-local y "y_first_award"
-local main_base "main_estimation_sample == 1 & risk_first_award == 1 & exclude_own_r1_winner == 0"
-local radii "15 30 60"
+* ------------------------------------------------------------------------------
+* Setup
+* ------------------------------------------------------------------------------
+prepare_spatial_panel
 
-capture program drop run_fwl_iv
-program define run_fwl_iv, rclass
-    version 16
-    syntax , Sample(string asis) Outcome(name) Endog(name) Instrument(name) Controls(string asis)
-
-    tempvar y_resid p_resid z_resid esample district_tag
-
-    quietly areg `outcome' `controls' i.year if `sample', absorb(district_panel_id)
-    predict double `y_resid' if e(sample), resid
-
-    quietly areg `endog' `controls' i.year if `sample', absorb(district_panel_id)
-    predict double `p_resid' if e(sample), resid
-
-    quietly areg `instrument' `controls' i.year if `sample', absorb(district_panel_id)
-    predict double `z_resid' if e(sample), resid
-
-    ivregress 2sls `y_resid' (`p_resid' = `z_resid') if `sample', nocons vce(cluster district_panel_id)
-
-    gen byte `esample' = e(sample)
-    egen byte `district_tag' = tag(district_panel_id) if `esample'
-
-    quietly count if `esample'
-    return scalar obs = r(N)
-
-    quietly count if `district_tag' == 1
-    return scalar districts = r(N)
-
-    quietly summarize `outcome' if `esample', meanonly
-    return scalar outcome_mean = r(mean)
-
-    return scalar coef = _b[`p_resid']
-    return scalar se = _se[`p_resid']
-    return scalar p = 2 * normal(-abs(_b[`p_resid'] / _se[`p_resid']))
-end
+local outcome_first_award "y_first_award"
+local sample_main_base "main_estimation_sample == 1 & risk_first_award == 1 & exclude_own_r1_winner == 0"
+local radius_list "15 30 60"
 
 tempfile radius_results
 tempname radius_post
 postfile `radius_post' int radius double iv_coef iv_se iv_p ///
-    double fs_coef fs_se fs_p fs_f mean_neighbors ///
+    double first_stage_coef first_stage_se first_stage_p first_stage_f mean_neighbors ///
     long obs districts double outcome_mean ///
     using `radius_results', replace
 
-foreach R of local radii {
-    local p "edge_r`R'_award_tm1_n"
-    local z "edge_r`R'_r1rcsim_tm1_n"
-    local expected "edge_r`R'_r1expsim_tm1_n"
-    local degree "edge_r`R'_degree_n"
-    local sample "`main_base' & `degree' > 0"
+* ------------------------------------------------------------------------------
+* Specification
+* Loop across radius definitions and estimate the matching first-stage and 2SLS.
+* ------------------------------------------------------------------------------
+section_header, title("Specification") ///
+    detail("Estimate radius-specific design-BH IV models after dropping radius isolates.")
 
-    areg `p' c.`z' c.`expected' i.year if `sample', absorb(district_panel_id) vce(cluster district_panel_id)
-    local fs_coef = _b[`z']
-    local fs_se = _se[`z']
-    local fs_p = 2 * normal(-abs(_b[`z'] / _se[`z']))
-    test `z'
-    local fs_f = r(F)
+foreach radius_miles of local radius_list {
+    local peer_award_radius_lag "edge_r`radius_miles'_award_tm1_n"
+    local instrument_radius "edge_r`radius_miles'_r1rcsim_tm1_n"
+    local control_expected_radius "edge_r`radius_miles'_r1expsim_tm1_n"
+    local radius_degree_count "edge_r`radius_miles'_degree_n"
+    local sample_radius "`sample_main_base' & `radius_degree_count' > 0"
 
-    quietly summarize `degree' if `sample', meanonly
+    label variable `peer_award_radius_lag' "Lagged EDGE radius-`radius_miles' peer first-award count"
+    label variable `instrument_radius' "Lagged EDGE radius-`radius_miles' recentered simulated R1 shock"
+    label variable `control_expected_radius' "Lagged EDGE radius-`radius_miles' simulated expected R1 wins"
+
+    quietly areg `peer_award_radius_lag' c.`instrument_radius' c.`control_expected_radius' i.year ///
+        if `sample_radius', absorb(district_panel_id) vce(cluster district_panel_id)
+    local first_stage_coef = _b[`instrument_radius']
+    local first_stage_se = _se[`instrument_radius']
+    local first_stage_p = 2 * normal(-abs(_b[`instrument_radius'] / _se[`instrument_radius']))
+    test `instrument_radius'
+    local first_stage_f = r(F)
+
+    quietly summarize `radius_degree_count' if `sample_radius', meanonly
     local mean_neighbors = r(mean)
 
-    run_fwl_iv, sample(`sample') outcome(`y') endog(`p') instrument(`z') controls(c.`expected')
-    post `radius_post' (`R') (r(coef)) (r(se)) (r(p)) ///
-        (`fs_coef') (`fs_se') (`fs_p') (`fs_f') (`mean_neighbors') ///
-        (r(obs)) (r(districts)) (r(outcome_mean))
+    run_fwl_iv, sample(`sample_radius') outcome(`outcome_first_award') ///
+        endogenous(`peer_award_radius_lag') instrument(`instrument_radius') ///
+        controls(c.`control_expected_radius')
+    post `radius_post' (`radius_miles') (r(coef)) (r(se)) (r(p)) ///
+        (`first_stage_coef') (`first_stage_se') (`first_stage_p') (`first_stage_f') ///
+        (`mean_neighbors') (r(obs)) (r(districts)) (r(outcome_mean))
+
+    di as res "Radius `radius_miles' miles: 2SLS coef = " %9.4f r(coef) ///
+        ", se = " %9.4f r(se) ", F = " %9.2f `first_stage_f'
 }
 
 postclose `radius_post'
+
+* ------------------------------------------------------------------------------
+* Export
+* ------------------------------------------------------------------------------
+section_header, title("Export") ///
+    detail("Write compact CSV and LaTeX outputs for the radius robustness table.")
 
 use `radius_results', clear
 export delimited using "${TABLES}/08_specC_radius_robustness.csv", replace
@@ -92,13 +90,13 @@ forvalues j = 1/`=_N' {
     local se`j' : display %9.4f iv_se[`j']
     local se`j' = "(" + strtrim("`se`j''") + ")"
 
-    local fsb`j' : display %9.4f fs_coef[`j']
+    local fsb`j' : display %9.4f first_stage_coef[`j']
     local fsb`j' = strtrim("`fsb`j''")
 
-    local fss`j' : display %9.4f fs_se[`j']
+    local fss`j' : display %9.4f first_stage_se[`j']
     local fss`j' = "(" + strtrim("`fss`j''") + ")"
 
-    local fsf`j' : display %9.2f fs_f[`j']
+    local fsf`j' : display %9.2f first_stage_f[`j']
     local fsf`j' = strtrim("`fsf`j''")
 
     local deg`j' : display %9.2f mean_neighbors[`j']
@@ -122,9 +120,9 @@ file write radius_tex "\hline\hline" _n
 file write radius_tex " & (1) & (2) & (3) \\" _n
 file write radius_tex " & 15 miles & 30 miles & 60 miles \\" _n
 file write radius_tex "\hline" _n
-file write radius_tex "Peer awards by t-1 & `b1' & `b2' & `b3' \\" _n
+file write radius_tex "Lagged EDGE radius peer awards & `b1' & `b2' & `b3' \\" _n
 file write radius_tex " & `se1' & `se2' & `se3' \\" _n
-file write radius_tex "First-stage coeff. & `fsb1' & `fsb2' & `fsb3' \\" _n
+file write radius_tex "First-stage coefficient & `fsb1' & `fsb2' & `fsb3' \\" _n
 file write radius_tex " & `fss1' & `fss2' & `fss3' \\" _n
 file write radius_tex "\hline" _n
 file write radius_tex "First-stage F & `fsf1' & `fsf2' & `fsf3' \\" _n

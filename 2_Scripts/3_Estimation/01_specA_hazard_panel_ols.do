@@ -1,44 +1,48 @@
-* Spec A: Hazard Panel OLS.
+* Spec A: Hazard Panel OLS
 * Purpose: descriptive spatial fact, not a causal estimate.
+
+* ------------------------------------------------------------------------------
+* Preamble
+* Load common globals, helper programs, and the labeled spatial panel.
+* ------------------------------------------------------------------------------
 do "2_Scripts/3_Estimation/00_globals.do"
 
 capture log close
 log using "${LOGS}/01_specA_hazard_panel_ols_log.txt", replace text
 
-use "${SPATIAL_PANEL}", clear
+section_header, title("Spec A: Hazard Panel OLS") ///
+    detail("Descriptive benchmark relating lagged neighbor awards to the first-award hazard.")
 
-encode state, gen(state_id)
-xtset district_panel_id year
+* ------------------------------------------------------------------------------
+* Setup
+* Define labeled analysis variables and estimation samples.
+* ------------------------------------------------------------------------------
+prepare_spatial_panel
 
-gen ln_students = ln(students + 1) if students >= 0
-gen ln_income = ln(median_income + 1) if median_income >= 0
+local outcome_first_award "y_first_award"
+local peer_award_k6_lag "edge_w6_award_tm1_n"
+local sample_main_risk "main_estimation_sample == 1 & risk_first_award == 1"
+local sample_noisol_risk "main_noisol_edge_k6_50 == 1 & risk_first_award == 1"
 
-local y "y_first_award"
-local x_edge "edge_w6_award_tm1_n"
-local main_sample "main_estimation_sample == 1 & risk_first_award == 1"
-local noisol_sample "main_noisol_edge_k6_50 == 1 & risk_first_award == 1"
+label variable `outcome_first_award' "First ESB award in district-year"
+label variable `peer_award_k6_lag' "Lagged EDGE K6 peer first-award count"
 
+* ------------------------------------------------------------------------------
+* Construction
+* Collect a compact set of post-estimation sample statistics for each model.
+* ------------------------------------------------------------------------------
 capture program drop collect_speca_stats
 program define collect_speca_stats, rclass
     version 16
     syntax , Outcome(name) Exposure(name)
 
-    tempvar esample district_tag
-    gen byte `esample' = e(sample)
-    egen byte `district_tag' = tag(district_panel_id) if `esample'
-
-    quietly count if `esample'
-    return scalar obs = r(N)
-
-    quietly count if `district_tag' == 1
-    return scalar districts = r(N)
-
-    quietly summarize `outcome' if `esample', meanonly
-    return scalar outcome_mean = r(mean)
-
-    return scalar coef = _b[`exposure']
-    return scalar se = _se[`exposure']
-    return scalar p = 2 * ttail(e(df_r), abs(_b[`exposure'] / _se[`exposure']))
+    collect_estimation_stats, outcome(`outcome') coefvar(`exposure')
+    return scalar obs = r(obs)
+    return scalar districts = r(districts)
+    return scalar outcome_mean = r(outcome_mean)
+    return scalar coef = r(coef)
+    return scalar se = r(se)
+    return scalar p = r(p)
 end
 
 tempfile speca_results
@@ -47,37 +51,59 @@ postfile `speca_post' str44 model str26 sample str24 fixed_effects ///
     byte own_rebate_controls double coef se p long obs districts double outcome_mean ///
     using `speca_results', replace
 
-regress `y' c.`x_edge' ${CORE_CONTROLS} i.state_id i.year ///
-    if `main_sample', vce(cluster district_panel_id)
-collect_speca_stats, outcome(`y') exposure(`x_edge')
+* ------------------------------------------------------------------------------
+* Specification
+* Estimate the descriptive OLS variants while suppressing long FE coefficient dumps.
+* ------------------------------------------------------------------------------
+section_header, title("Specification") ///
+    detail("Estimate state-FE, district-FE, own-win, state-year, and no-isolate variants.")
+
+quietly regress `outcome_first_award' c.`peer_award_k6_lag' ${CORE_CONTROLS} ///
+    i.state_id i.year if `sample_main_risk', vce(cluster district_panel_id)
+collect_speca_stats, outcome(`outcome_first_award') exposure(`peer_award_k6_lag')
 post `speca_post' ("State FE plus controls") ("Main risk set") ("State and year") ///
     (0) (r(coef)) (r(se)) (r(p)) (r(obs)) (r(districts)) (r(outcome_mean))
+di as res "State FE plus controls: coef = " %9.4f r(coef) ", se = " %9.4f r(se) ", p = " %9.4f r(p)
 
-xtreg `y' c.`x_edge' i.year ///
-    if `main_sample', fe vce(cluster district_panel_id)
-collect_speca_stats, outcome(`y') exposure(`x_edge')
+quietly xtreg `outcome_first_award' c.`peer_award_k6_lag' i.year ///
+    if `sample_main_risk', fe vce(cluster district_panel_id)
+collect_speca_stats, outcome(`outcome_first_award') exposure(`peer_award_k6_lag')
 post `speca_post' ("District FE") ("Main risk set") ("District and year") ///
     (0) (r(coef)) (r(se)) (r(p)) (r(obs)) (r(districts)) (r(outcome_mean))
+di as res "District FE: coef = " %9.4f r(coef) ", se = " %9.4f r(se) ", p = " %9.4f r(p)
 
-xtreg `y' c.`x_edge' own_r1_win_post own_r3_win_post i.year ///
-    if `main_sample', fe vce(cluster district_panel_id)
-collect_speca_stats, outcome(`y') exposure(`x_edge')
+quietly xtreg `outcome_first_award' c.`peer_award_k6_lag' ///
+    own_r1_win_post own_r3_win_post i.year ///
+    if `sample_main_risk', fe vce(cluster district_panel_id)
+collect_speca_stats, outcome(`outcome_first_award') exposure(`peer_award_k6_lag')
 post `speca_post' ("District FE plus own wins") ("Main risk set") ("District and year") ///
     (1) (r(coef)) (r(se)) (r(p)) (r(obs)) (r(districts)) (r(outcome_mean))
+di as res "District FE plus own wins: coef = " %9.4f r(coef) ", se = " %9.4f r(se) ", p = " %9.4f r(p)
 
-xtreg `y' c.`x_edge' own_r1_win_post own_r3_win_post i.state_id#i.year ///
-    if `main_sample', fe vce(cluster district_panel_id)
-collect_speca_stats, outcome(`y') exposure(`x_edge')
+quietly xtreg `outcome_first_award' c.`peer_award_k6_lag' ///
+    own_r1_win_post own_r3_win_post i.state_id#i.year ///
+    if `sample_main_risk', fe vce(cluster district_panel_id)
+collect_speca_stats, outcome(`outcome_first_award') exposure(`peer_award_k6_lag')
 post `speca_post' ("State-year FE") ("Main risk set") ("District and state-year") ///
     (1) (r(coef)) (r(se)) (r(p)) (r(obs)) (r(districts)) (r(outcome_mean))
+di as res "State-year FE: coef = " %9.4f r(coef) ", se = " %9.4f r(se) ", p = " %9.4f r(p)
 
-xtreg `y' c.`x_edge' own_r1_win_post own_r3_win_post i.year ///
-    if `noisol_sample', fe vce(cluster district_panel_id)
-collect_speca_stats, outcome(`y') exposure(`x_edge')
+quietly xtreg `outcome_first_award' c.`peer_award_k6_lag' ///
+    own_r1_win_post own_r3_win_post i.year ///
+    if `sample_noisol_risk', fe vce(cluster district_panel_id)
+collect_speca_stats, outcome(`outcome_first_award') exposure(`peer_award_k6_lag')
 post `speca_post' ("No isolated K6") ("No isolated risk set") ("District and year") ///
     (1) (r(coef)) (r(se)) (r(p)) (r(obs)) (r(districts)) (r(outcome_mean))
+di as res "No isolated K6: coef = " %9.4f r(coef) ", se = " %9.4f r(se) ", p = " %9.4f r(p)
 
 postclose `speca_post'
+
+* ------------------------------------------------------------------------------
+* Export
+* Write compact CSV and LaTeX tables with FE summarized as short indicator rows.
+* ------------------------------------------------------------------------------
+section_header, title("Export") ///
+    detail("Write concise table outputs and print the compact results listing.")
 
 use `speca_results', clear
 export delimited using "${TABLES}/01_specA_hazard_panel_ols.csv", replace
@@ -110,7 +136,7 @@ file write speca_tex "\hline\hline" _n
 file write speca_tex " & (1) & (2) & (3) & (4) & (5) \\" _n
 file write speca_tex " & State FE & District FE & Own wins & State-year FE & No isolated \\" _n
 file write speca_tex "\hline" _n
-file write speca_tex "Peer awards by t-1, K6 & `b1' & `b2' & `b3' & `b4' & `b5' \\" _n
+file write speca_tex "Lagged EDGE K6 peer awards & `b1' & `b2' & `b3' & `b4' & `b5' \\" _n
 file write speca_tex " & `se1' & `se2' & `se3' & `se4' & `se5' \\" _n
 file write speca_tex "\hline" _n
 file write speca_tex "Observations & `obs1' & `obs2' & `obs3' & `obs4' & `obs5' \\" _n

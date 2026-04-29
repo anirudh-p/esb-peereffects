@@ -1,18 +1,26 @@
 * Diagnostic table for Spec C sample composition and recentered-neighbor shock.
+
+* ------------------------------------------------------------------------------
+* Preamble
+* ------------------------------------------------------------------------------
 do "2_Scripts/3_Estimation/00_globals.do"
 
 capture log close
 log using "${LOGS}/04_specC_shock_diagnostics_log.txt", replace text
 
-use "${SPATIAL_PANEL}", clear
+section_header, title("Spec C Shock Diagnostics") ///
+    detail("Audit whether the Spec C onset sample is mechanically tilted toward positive or negative recentered neighbor shock.")
+
+* ------------------------------------------------------------------------------
+* Setup
+* Load the labeled spatial panel and merge in locale for the 2023 onset cross-section.
+* ------------------------------------------------------------------------------
+prepare_spatial_panel
 
 tempfile base_locale
 preserve
-import delimited using "${CLEANED}/analysis_district_base.csv", clear varnames(1) stringcols(1)
+use "${CLEANED}/analysis_district_base.dta", clear
 keep nces_id locale_broad
-gen str7 nces_id_short = nces_id
-drop nces_id
-rename nces_id_short nces_id
 duplicates drop nces_id, force
 save `base_locale', replace
 restore
@@ -21,6 +29,7 @@ merge m:1 nces_id using `base_locale', nogen keep(master match)
 keep if year == 2023 & main_estimation_sample == 1
 
 gen byte specc_included = risk_first_award == 1 & exclude_own_r1_winner == 0
+label variable specc_included "Included in Spec C 2023 risk set"
 
 gen str28 sample_group = ""
 replace sample_group = "Included Spec C" if specc_included == 1
@@ -37,6 +46,14 @@ replace expected_group = "High expected" if expected_tercile == 3
 gen str20 locale_group = locale_broad
 replace locale_group = "Missing" if trim(locale_group) == ""
 
+label variable edge_w6_r1rcsim_tm1_n "Lagged EDGE K6 recentered simulated R1 shock"
+label variable edge_w6_r1expsim_tm1_n "Lagged EDGE K6 simulated expected R1 wins"
+label variable edge_w6_r1win_tm1_n "Lagged EDGE K6 realized neighbor R1 wins"
+
+* ------------------------------------------------------------------------------
+* Construction
+* Summarize shock composition by sample status, expected-exposure tercile, and locale.
+* ------------------------------------------------------------------------------
 capture program drop collect_diag_stats
 program define collect_diag_stats, rclass
     version 16
@@ -112,6 +129,12 @@ local corr_included = r(rho)
 
 postclose `diag_post'
 
+* ------------------------------------------------------------------------------
+* Export
+* ------------------------------------------------------------------------------
+section_header, title("Export") ///
+    detail("Write compact CSV and LaTeX diagnostics and print the key correlation.")
+
 use `diagnostics', clear
 export delimited using "${TABLES}/prelim_specC_shock_diagnostics.csv", replace
 
@@ -159,6 +182,6 @@ file write diag_tex "\begin{flushleft}\footnotesize Notes: Diagnostics use the 2
 file write diag_tex "\end{table}" _n
 file close diag_tex
 
-display "Correlation between recentered shock and expected exposure in included sample: " %9.4f `corr_included'
+di as res "Correlation between recentered shock and expected exposure in included sample: " %9.4f `corr_included'
 
 log close

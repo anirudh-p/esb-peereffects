@@ -1,11 +1,25 @@
 * Sample-selection table and first descriptive counts for the Brown pitch.
+
+* ------------------------------------------------------------------------------
+* Preamble
+* ------------------------------------------------------------------------------
 do "2_Scripts/3_Estimation/00_globals.do"
 
 capture log close
 log using "${LOGS}/01_descriptive_statistics_log.txt", replace text
 
-use "${SPATIAL_PANEL}", clear
+section_header, title("Descriptive Statistics") ///
+    detail("Build the sample-selection table and first-award risk-set counts.")
 
+* ------------------------------------------------------------------------------
+* Setup
+* ------------------------------------------------------------------------------
+prepare_spatial_panel
+
+* ------------------------------------------------------------------------------
+* Construction
+* Tabulate the staged sample restrictions used in the Brown hazard-panel analyses.
+* ------------------------------------------------------------------------------
 capture program drop sample_stage_counts
 program define sample_stage_counts, rclass
     version 16
@@ -80,6 +94,12 @@ post `sample_post' ("No isolated K6 risk set") ///
     (r(first_lottery_apply_events)) (r(award_risk_rows))
 
 postclose `sample_post'
+
+* ------------------------------------------------------------------------------
+* Export
+* ------------------------------------------------------------------------------
+section_header, title("Export") ///
+    detail("Write compact CSV and LaTeX sample-selection tables.")
 
 use `sample_selection', clear
 export delimited using "${TABLES}/00_sample_selection.csv", replace
