@@ -107,6 +107,8 @@ EXPOSURE_SHORT_NAMES = {
     "r1_design_sim_priority": "r1spri",
     "r1_design_sim_app_rows": "r1sapps",
     "r1_design_sim_selected": "r1ssel",
+    "pi_r1_allapply_bh": "r1piall",
+    "z_r1_recenter_allapply": "r1rcall",
 }
 
 DYNAMIC_EVENT_COLS = {
@@ -244,6 +246,39 @@ def build_r1_design_probabilities(base: pd.DataFrame) -> tuple[pd.DataFrame, pd.
     design["z_r1_recenter_bh"] = design["z_r1_recenter_bh"].fillna(0.0)
 
     return design, rate_table
+
+
+def build_r1_allapply_probabilities(base: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    design = base[["nces_id", "priority_2022_csbp", "r1_rebate_winner"]].copy()
+    design["r1_allapply_priority"] = to_numeric(design["priority_2022_csbp"]).fillna(0).astype(int)
+    design["r1_allapply_selected"] = to_numeric(design["r1_rebate_winner"]).fillna(0).astype(int)
+    design["r1_allapply_universe"] = 1
+
+    rate_table = (
+        design.groupby("r1_allapply_priority", as_index=False)
+        .agg(
+            districts=("nces_id", "size"),
+            selected=("r1_allapply_selected", "sum"),
+        )
+    )
+    rate_table["pi_r1_allapply_bh"] = rate_table["selected"] / rate_table["districts"]
+    rate_map = dict(zip(rate_table["r1_allapply_priority"], rate_table["pi_r1_allapply_bh"]))
+
+    design["pi_r1_allapply_bh"] = design["r1_allapply_priority"].map(rate_map).astype(float)
+    design["z_r1_recenter_allapply"] = design["r1_allapply_selected"] - design["pi_r1_allapply_bh"]
+    return (
+        design[
+            [
+                "nces_id",
+                "r1_allapply_universe",
+                "r1_allapply_priority",
+                "r1_allapply_selected",
+                "pi_r1_allapply_bh",
+                "z_r1_recenter_allapply",
+            ]
+        ],
+        rate_table,
+    )
 
 
 def numeric_col(df: pd.DataFrame, col: str) -> pd.Series:
@@ -684,6 +719,8 @@ def build_dynamic_exposures(
     z_rc = to_numeric(ordered["z_r1_recenter_bh"]).fillna(0).to_numpy(dtype=float)
     pi_sim = to_numeric(ordered["pi_r1_design_sim"]).fillna(0).to_numpy(dtype=float)
     z_sim = to_numeric(ordered["z_r1_recenter_sim"]).fillna(0).to_numpy(dtype=float)
+    pi_all = to_numeric(ordered["pi_r1_allapply_bh"]).fillna(0).to_numpy(dtype=float)
+    z_all = to_numeric(ordered["z_r1_recenter_allapply"]).fillna(0).to_numpy(dtype=float)
 
     for year in years:
         block = pd.DataFrame({"nces_id": ordered["nces_id"].to_numpy(), "year": year})
@@ -698,6 +735,8 @@ def build_dynamic_exposures(
             block[f"{prefix}{k}_r1rcbh_tm1_n"] = np.asarray(W.dot(z_rc)).reshape(-1) * available
             block[f"{prefix}{k}_r1expsim_tm1_n"] = np.asarray(W.dot(pi_sim)).reshape(-1) * available
             block[f"{prefix}{k}_r1rcsim_tm1_n"] = np.asarray(W.dot(z_sim)).reshape(-1) * available
+            block[f"{prefix}{k}_r1expall_tm1_n"] = np.asarray(W.dot(pi_all)).reshape(-1) * available
+            block[f"{prefix}{k}_r1rcall_tm1_n"] = np.asarray(W.dot(z_all)).reshape(-1) * available
         rows.append(block)
     return pd.concat(rows, ignore_index=True)
 
@@ -795,6 +834,11 @@ def write_dta(df: pd.DataFrame, path: Path) -> None:
         "r1_design_sim_selected",
         "pi_r1_design_sim",
         "z_r1_recenter_sim",
+        "r1_allapply_universe",
+        "r1_allapply_priority",
+        "r1_allapply_selected",
+        "pi_r1_allapply_bh",
+        "z_r1_recenter_allapply",
     ]
     exposure_cols = [
         col
@@ -809,6 +853,19 @@ def write_dta(df: pd.DataFrame, path: Path) -> None:
     for col in dta.select_dtypes(include=["object", "string"]).columns:
         dta[col] = dta[col].astype("string").fillna("").str.slice(0, 80)
     dta.to_stata(path, write_index=False, version=118)
+
+
+def downcast_numeric_frame(df: pd.DataFrame) -> pd.DataFrame:
+    out = df.copy()
+    for col in out.columns:
+        series = out[col]
+        if pd.api.types.is_bool_dtype(series):
+            out[col] = series.astype(np.int8)
+        elif pd.api.types.is_integer_dtype(series):
+            out[col] = pd.to_numeric(series, downcast="integer")
+        elif pd.api.types.is_float_dtype(series):
+            out[col] = pd.to_numeric(series, downcast="float")
+    return out
 
 
 def summarize_geometry(geo: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
@@ -928,9 +985,11 @@ def main() -> None:
     edge = load_edge_points()
     design, design_rates = build_r1_design_probabilities(base)
     design_sim, app_probs, district_probs, sim_summary = build_r1_design_simulated_probabilities(base)
+    allapply, allapply_rates = build_r1_allapply_probabilities(base)
 
     base = base.merge(design, on="nces_id", how="left")
     base = base.merge(design_sim, on="nces_id", how="left")
+    base = base.merge(allapply, on="nces_id", how="left")
     base["first_lottery_apply_year"] = first_year_from_flags(
         base,
         [("r1_lottery_applicant", 2022), ("r3_lottery_applicant", 2023)],
@@ -940,12 +999,16 @@ def main() -> None:
     ].notna().all(axis=1).astype(int)
 
     geo = build_geometry_coverage(base, edge)
+    base = downcast_numeric_frame(base)
+    panel = downcast_numeric_frame(panel)
+    geo = downcast_numeric_frame(geo)
     geometry_summary, unmatched_type_summary, interesting_unmatched = summarize_geometry(geo)
     geometry_summary.to_csv(AUDIT_DIR / "spatial_geometry_source_summary.csv", index=False)
     unmatched_type_summary.to_csv(AUDIT_DIR / "spatial_unmatched_lea_type_summary.csv", index=False)
     interesting_unmatched.to_csv(AUDIT_DIR / "spatial_unmatched_interesting_leas.csv", index=False)
     summarize_sample_flags(geo).to_csv(AUDIT_DIR / "spatial_unit_flag_summary.csv", index=False)
     design_rates.to_csv(AUDIT_DIR / "r1_design_bh_priority_rates.csv", index=False)
+    allapply_rates.to_csv(AUDIT_DIR / "r1_design_allapply_priority_rates.csv", index=False)
     app_probs.to_csv(AUDIT_DIR / "r1_design_sim_probabilities_by_application.csv", index=False)
     district_probs.to_csv(AUDIT_DIR / "r1_design_sim_probabilities_by_district.csv", index=False)
     sim_summary.to_csv(AUDIT_DIR / "r1_design_sim_summary.csv", index=False)
@@ -982,6 +1045,11 @@ def main() -> None:
         "r1_design_sim_selected",
         "pi_r1_design_sim",
         "z_r1_recenter_sim",
+        "r1_allapply_universe",
+        "r1_allapply_priority",
+        "r1_allapply_selected",
+        "pi_r1_allapply_bh",
+        "z_r1_recenter_allapply",
     ]
     geo[geo_keep].to_csv(AUDIT_DIR / "spatial_geometry_coverage.csv", index=False)
 
@@ -1016,6 +1084,8 @@ def main() -> None:
                 "r1_design_sim_priority",
                 "r1_design_sim_app_rows",
                 "r1_design_sim_selected",
+                "pi_r1_allapply_bh",
+                "z_r1_recenter_allapply",
             ],
         )
         if k == PRIMARY_K:
@@ -1024,9 +1094,11 @@ def main() -> None:
     if primary_neighbors is not None and primary_distances is not None:
         write_neighbor_audit(hybrid, primary_neighbors, primary_distances, AUDIT_DIR / "spatial_knn_neighbors_hybrid_k6.csv")
         hybrid_distance_flags = build_distance_flags(hybrid, primary_distances, "hybrid")
+    exposure = downcast_numeric_frame(exposure)
 
     years = sorted(panel["year"].unique())
     dynamic = build_dynamic_exposures(hybrid, W_by_k, years, "w")
+    dynamic = downcast_numeric_frame(dynamic)
 
     edge_only = project_points(geo[geo["spatial_eligible_edge"].eq(1)].copy())
     edge_only = edge_only.sort_values("nces_id").reset_index(drop=True)
@@ -1052,11 +1124,17 @@ def main() -> None:
             "r1_design_sim_priority",
             "r1_design_sim_app_rows",
             "r1_design_sim_selected",
+            "pi_r1_allapply_bh",
+            "z_r1_recenter_allapply",
         ],
     )
     edge_dynamic = build_dynamic_exposures(edge_only, {PRIMARY_K: W_edge}, years, "edge_w")
     write_neighbor_audit(edge_only, edge_neighbors, edge_distances, AUDIT_DIR / "spatial_knn_neighbors_edge_k6.csv")
     edge_distance_flags = build_distance_flags(edge_only, edge_distances, "edge")
+    edge_exposure = downcast_numeric_frame(edge_exposure)
+    edge_dynamic = downcast_numeric_frame(edge_dynamic)
+    hybrid_distance_flags = downcast_numeric_frame(hybrid_distance_flags)
+    edge_distance_flags = downcast_numeric_frame(edge_distance_flags)
 
     panel_out = panel.merge(
         geo[geo_keep],

@@ -210,6 +210,30 @@ Main sample estimates:
 
 Interpretation: the raw-IV positive effect in Spec B disappears once the R1 neighbor shock is recentered against simulated design-expected exposure. This is consistent with the older branch: geographic exposure to raw R1 winners is partly picking up non-random applicant-neighborhood composition. For the Brown pitch, Spec C should be the preferred causal table; Spec B should be framed as a bridge and diagnostic.
 
+## 2026-04-29 Build Note: Spec D All-Districts-Applied Sensitivity
+
+Implemented `2_Scripts/3_Estimation/04_specD_hazard_panel_design_bh_cf_iv.do`, which writes `04_specD_hazard_panel_design_bh_cf_iv.tex/.csv`. This specification keeps the same hazard-panel sample and regression structure as Spec C, but changes the recentering object. Instead of conditioning on the observed R1 applicant pool, it asks what the design-based shock would look like if all districts were treated as applicants.
+
+Operationally, this is not a full selection-rule simulation for non-applicants. That would require imposing application-level fuel-pool requests, bus counts, and requested funding for districts that never applied. The implemented sensitivity is therefore a simpler all-universe Borusyak-Hull-style recentering:
+
+`edge_w6_r1rcall_tm1_n = realized K6 neighbor R1 wins - expected K6 neighbor R1 wins under all-districts-applied rates`
+
+where expected win rates are assigned by 2022 district priority status across the full district base universe. Districts with missing 2022 priority status are treated as non-priority in this sensitivity. The resulting all-universe R1 rates are:
+
+- Non-priority: 19 wins out of 11,946 districts, for `pi = 0.00159`.
+- Priority: 349 wins out of 7,570 districts, for `pi = 0.04610`.
+
+All columns include district fixed effects, year fixed effects, the all-apply expected exposure control `edge_w6_r1expall_tm1_n`, and district-clustered standard errors. Focal R1 winners are excluded, matching Specs B and C.
+
+Main sample estimates:
+
+- First stage: 0.9292, SE 0.0114, first-stage F = 6,597.
+- Reduced form: 0.00795, SE 0.00309, p = 0.010.
+- All-districts-applied 2SLS: 0.00856, SE 0.00307, p = 0.005.
+- No-isolated-K6 all-districts-applied 2SLS: 0.00856, SE 0.00312, p = 0.006, first-stage F = 6,484.
+
+Interpretation: this sensitivity sharply restores the positive raw-IV style effect. Relative to Spec C, the change is not coming from the regression sample or fixed-effects structure; it comes from moving expected exposure off the observed applicant network and onto an all-district universe. That is useful evidence that applicant-pool conditioning is doing substantial work. At the same time, Spec D should be framed as a counterfactual sensitivity rather than the preferred causal design, because non-applicant districts were never actually in the R1 lottery.
+
 ## 2026-04-28 Spec C Design Notes: Shocks, Applicants, and State-Year Confounding
 
 ### Additional Shocks
@@ -236,4 +260,4 @@ This is not a flaw so much as an estimand boundary. The project should separate:
 
 With district fixed effects, plain state fixed effects are redundant. The relevant policy-shock control is state-by-year fixed effects. These absorb state-specific adoption conditions such as state funding, procurement delays, utility bottlenecks, state technical assistance, or state political momentum.
 
-State-year fixed effects do not mechanically absorb all district-level peer exposure, because KNN exposure still varies across districts within the same state-year. But they can absorb part of the useful variation if exposure is highly state-clustered or if the spillover itself operates through a state-level response. The right treatment is therefore: baseline Spec C with district FE, year FE, and design-expected exposure; Spec D robustness with state-year FE. A temporary check showed that adding state-year FE does not recover a positive design-BH effect in the current Brown panel.
+State-year fixed effects do not mechanically absorb all district-level peer exposure, because KNN exposure still varies across districts within the same state-year. But they can absorb part of the useful variation if exposure is highly state-clustered or if the spillover itself operates through a state-level response. The right treatment is therefore: baseline Spec C with district FE, year FE, and design-expected exposure; separate robustness with state-year FE if needed. A temporary check showed that adding state-year FE does not recover a positive design-BH effect in the current Brown panel.
